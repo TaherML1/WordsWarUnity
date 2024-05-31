@@ -1,0 +1,4 @@
+repository "wordswar@taheralmlhem@cloud"
+  path "/"
+    br "/main"
+    co "/main"
