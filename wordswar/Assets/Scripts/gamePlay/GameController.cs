@@ -23,12 +23,12 @@ public class GameController : MonoBehaviour
 {
 
     public static GameController instance;
-
+    public FeedbackManager feedbackManager;
 
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
     private DatabaseReference turnReference;
-   private FirebaseAuth auth;
+    private FirebaseAuth auth;
     private FirebaseFirestore db;
     private FirebaseFunctions functions;
 
@@ -56,6 +56,7 @@ public class GameController : MonoBehaviour
     public AudioSource incorrectSound;
 
     public GameObject gameOverPanel;
+   
 
     private string selectedTopic;
    
@@ -65,8 +66,9 @@ public class GameController : MonoBehaviour
 
     private bool gameActive = true;
     // Track whose turn it is
-    private float originalTimer = 10f; // Store the original timer value
+   
     private float timer; // Timer variable
+    private float originalTimer;
 
     string localPlayerId; // Assuming you have a way to identify the local player
     string enemyPlayerId;
@@ -119,6 +121,7 @@ public class GameController : MonoBehaviour
         ListenForScoreChanges(roomId);
         ListenForUsedWordsUpdates(roomId);
         WinnerValueChangedListener(roomId);
+        listenForTime(roomId);
 
     }
 
@@ -145,15 +148,17 @@ public class GameController : MonoBehaviour
         if (string.IsNullOrEmpty(currentInput))
         {
             Debug.LogWarning("Empty input word.");
-            // Handle the case where the input word is empty, for example, show a message to the player
-            return; // Exit the function early if the input word is empty
+
+            feedbackManager.ShowFeedback("Empty input word.");
+
+            return; 
         }
         wordIsUsed = await CheckIfWordIsUsed(roomId, currentInput);
         if (wordIsUsed)
         {
             // Handle the case where the word has already been used
             Debug.LogWarning("The word has already been used.");
-            invalidWordText.text = ArabicFixer.Fix("تم استخدام هذه الكلمة");
+            feedbackManager.ShowFeedback(ArabicFixer.Fix("تم استخدام هذه الكلمة"));
             return; // Exit the function early
         }
         Debug.Log("Current Input: " + currentInput);
@@ -161,35 +166,37 @@ public class GameController : MonoBehaviour
         wordExists = await CallCloudFunction(selectedTopicManager.selectedTopic, currentInput);
         if (wordExists)
         {
+
             Debug.Log("roomm id from submit word is : " + roomId);
             Debug.Log("Word exists in the database from word exist .");
             //UpdateScore();
-            resultText.text = "Correct!";
-
+            feedbackManager.ShowFeedback("Correct!");
+            timer = originalTimer;
             IncrementPlayerScore(roomId, localPlayerId);
             newSwitchTurn(roomId, localPlayerId);
             // SwitchTurn();
-            timer = originalTimer;
+       
             correctSound.Play();
             clearInputfiled();
             ListenForUsedWordsUpdates(roomId);
             // Update the used words in the database
             UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
-
+            
 
         }
         else
         {
             // The word does not exist in the database
             Debug.LogWarning("Word does not exist in the database from word exist.");
-            invalidWordText.text = ArabicFixer.Fix("خطا,كلمة لا تتعلق بالموضوع");
+            feedbackManager.ShowFeedback(ArabicFixer.Fix("خطا,كلمة لا تتعلق بالموضوع") );
             invalidWordText.gameObject.SetActive(true);
-            gameActive = false;
-            timer = 0f; // Set the timer to zero when a wrong answer is submitted
+            UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
+            // Set the timer to zero when a wrong answer is submitted
             incorrectSound.Play();
-            SetGameEnd(roomId);
+            ListenForUsedWordsUpdates(roomId);
+            clearInputfiled();
             //  Invoke("determinewinner", 1f);
-            
+
         }
 
     }
@@ -433,6 +440,8 @@ public class GameController : MonoBehaviour
             submitButton.interactable = true;
             jokerHintButton.interactable = true;
 
+            timer = originalTimer;
+
 
 
         }
@@ -445,9 +454,11 @@ public class GameController : MonoBehaviour
             playerInput.interactable = false;
             submitButton.interactable = false;
             jokerHintButton.interactable = false;
-
+           
+            timer = originalTimer;
         }
     }
+  
 
     public void IncrementPlayerScore(string gameId, string playerId)
     {
@@ -790,6 +801,35 @@ public class GameController : MonoBehaviour
         else
         {
             Debug.LogWarning("gameOverPanel is null!");
+        }
+    }
+
+    async void listenForTime(string roomId)
+    {
+        DatabaseReference timerRef = databaseReference.Child("games").Child(roomId).Child("gameInfo").Child("timer");
+        DataSnapshot snapshot = await timerRef.GetValueAsync();
+        if (snapshot != null && snapshot.Value != null)
+        {
+            originalTimer = Convert.ToSingle(snapshot.Value); // Store the original timer value
+            timer = originalTimer; // Set the timer to the original value
+            StartCoroutine(StartCountdown());
+        }
+    }
+
+    IEnumerator StartCountdown()
+    {
+        while (timer > 0)
+        {
+            // Display the remaining time
+            timerText.text = timer.ToString("F0"); // Display as integer
+            yield return new WaitForSeconds(1f); // Wait for 1 second
+            timer--;
+        }
+        timerText.text = "time is over"; // Ensure it shows 0 when finished
+
+        if (isLocalPlayerTurn)
+        {
+            SetGameEnd(roomId);
         }
     }
 

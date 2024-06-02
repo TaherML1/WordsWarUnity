@@ -1,5 +1,3 @@
-/* eslint-disable require-jsdoc */
-/* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 /**
  * Import function triggers from their respective submodules:
@@ -21,41 +19,72 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 const database = admin.database();
 
+exports.matchmaker = functions.database.ref("matchmaking/{playerId}")
+    .onCreate((snap, context) => {
+      const gameId = generateGameId();
 
-// Function to calculate the required XP for a given level
-function calculateRequiredXP(level) {
-  // Adjusted XP requirement based on level
-  return ((level - 1) * 25) + 50; // for example : level 2   2* 25 +50 = 100 required xp
-}
+      database.ref("matchmaking").once("value").then((players) => {
+        let secondPlayer = null;
+        players.forEach((player) => {
+          if (player.val() === "placeholder" && player.key !== context.params.playerId) {
+            secondPlayer = player;
+          }
+        });
 
+        if (secondPlayer === null) return null;
 
-exports.LevelUpUser = functions.firestore.document("users/{userId}")
-    .onUpdate(async (change, context) => {
-      try {
-        // Get the updated user data
-        const userData = change.after.data();
+        database.ref("matchmaking").transaction((matchmaking) => {
+          // If any of the players gets into another game during the transaction, abort the operation
+          if (matchmaking === null || matchmaking[context.params.playerId] !== "placeholder" || matchmaking[secondPlayer.key] !== "placeholder") return matchmaking;
 
-        // Calculate the required XP for the next level
-        const requiredXP = calculateRequiredXP(userData.level + 1);
+          matchmaking[context.params.playerId] = gameId;
+          matchmaking[secondPlayer.key] = gameId;
+          return matchmaking;
+        }).then((result) => {
+          if (result.snapshot.child(context.params.playerId).val() !== gameId) return;
 
-        // Check if the player has enough XP to level up
-        if (userData.xp >= requiredXP) {
-          // Player has enough XP to level up
-          const newLevel = userData.level + 1;
+          const game = {
+            gameInfo: {
+              gameId: gameId,
+              playersIds: [context.params.playerId, secondPlayer.key],
+              scores: {
+                [context.params.playerId]: 0, // Initialize player scores to 0
+                [secondPlayer.key]: 0,
+              },
+              usedwords: {
+                [context.params.playerId]: [""],
+                [secondPlayer.key]: [""],
+              },
+              timer: 15, // Initialize timer to 15 seconds
+            },
+            turn: context.params.playerId,
+          };
 
-          // Deduct the required XP for the next level from the player's XP
-          const remainingXP = userData.xp - requiredXP;
+          database.ref("games/" + gameId).set(game).then((snapshot) => {
+            console.log("Game created successfully!");
+            return null;
+          }).catch((error) => {
+            console.log(error);
+          });
 
-          // Update the user's level and XP in Firestore
-          await change.after.ref.update({level: newLevel, xp: remainingXP});
+          return null;
+        }).catch((error) => {
+          console.log(error);
+        });
 
-          console.log(`User ${context.params.userId} leveled up to level ${newLevel}. Remaining XP: ${remainingXP}.`);
-        } else {
-          // Player does not have enough XP to level up
-          console.log(`User ${context.params.userId} does not have enough XP to level up. Required XP for next level: ${requiredXP}.`);
-        }
-      } catch (error) {
-        // Handle errors
-        console.error("An error occurred while leveling up the user:", error);
-      }
+        return null;
+      }).catch((error) => {
+        console.log(error);
+      });
     });
+
+/**
+* Generates a random game ID.
+* @return {string} The randomly generated game ID.
+*/
+function generateGameId() {
+  const possibleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let gameId = "";
+  for (let j = 0; j < 20; j++) gameId += possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
+  return gameId;
+}

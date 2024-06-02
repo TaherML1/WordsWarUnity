@@ -99,6 +99,6 @@ public class FetchUserProfile : MonoBehaviour
         float fillAmount = (float)playerXP / requiredXP;
         progressBarFill.fillAmount = fillAmount;
         levelText.text = level.ToString();
-        xpText.text = $"your xp is : {playerXP} / {requiredXP}";
+        xpText.text = $" {playerXP} / {requiredXP}";
     }
 }
