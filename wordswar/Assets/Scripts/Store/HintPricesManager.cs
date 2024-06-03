@@ -26,7 +26,14 @@ public class HintPricesManager : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+
+        // Check if there's a parent GameObject
+        if (transform.parent == null)
+        {
+            GameObject parentObject = new GameObject("HintPricesManagerParent");
+            transform.SetParent(parentObject.transform);
+            DontDestroyOnLoad(parentObject);
+        }
 
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {

@@ -8,10 +8,8 @@ using Firebase.Database;
 using System.Collections.Generic;
 using Firebase.Auth;
 using System;
-using UnityEngine.Networking;
 using Firebase.Functions;
 using System.Threading.Tasks;
-using System.Linq;
 using Firebase.Firestore;
 
 
@@ -32,40 +30,41 @@ public class GameController : MonoBehaviour
     private FirebaseFirestore db;
     private FirebaseFunctions functions;
 
+
+    [Header("Stats")]
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI topicText;
-    public TMP_InputField playerInput;
     public TextMeshProUGUI resultText;
-    public TextMeshProUGUI localPlayScoreText;
-    public TextMeshProUGUI enemyScoreText;
-    public TextMeshProUGUI localPlayerNameText;
-    public TextMeshProUGUI enemyNameText;
     public TextMeshProUGUI invalidWordText;
-    public TextMeshProUGUI usedWordsText; // Reference to the UI element to display used words
-    public TextMeshProUGUI localPlayerUsedWordsText;
-    public TextMeshProUGUI enemyPlayerUsedWordsText;
     public TextMeshProUGUI winnerText;
-
-    public ScrollRect scrollView;
     public TextMeshProUGUI TurnLabel;
+    [Header("EnemyPlayer")]
+    public TextMeshProUGUI enemyScoreText;
+    public TextMeshProUGUI enemyNameText;
+   
+    [Header("lcoalPlayer")]
+    public TextMeshProUGUI localPlayScoreText;
+    public TextMeshProUGUI localPlayerNameText;
+ 
 
+    [Header("Ui Elements")]
+    public TMP_InputField playerInput;
+    public ScrollRect scrollView;
     public Button submitButton;
     public Button jokerHintButton;
-
     public AudioSource correctSound;
     public AudioSource incorrectSound;
-
     public GameObject gameOverPanel;
-   
+    public GameOverController gameOverController;
+
+    public GameObject Message;
+    public GameObject Content;
+
 
     private string selectedTopic;
    
     bool wordExists;
     bool wordIsUsed;
-
-
-    private bool gameActive = true;
-    // Track whose turn it is
    
     private float timer; // Timer variable
     private float originalTimer;
@@ -73,13 +72,8 @@ public class GameController : MonoBehaviour
     string localPlayerId; // Assuming you have a way to identify the local player
     string enemyPlayerId;
     bool isLocalPlayerTurn = true;
-
-
-
-    public GameOverController gameOverController;
-    
     string roomId;
-
+    HashSet<string> displayedMessages = new HashSet<string>(); // Maintain a set to store displayed messages
 
     async void Start()
     {
@@ -153,6 +147,9 @@ public class GameController : MonoBehaviour
 
             return; 
         }
+
+      
+        
         wordIsUsed = await CheckIfWordIsUsed(roomId, currentInput);
         if (wordIsUsed)
         {
@@ -188,7 +185,7 @@ public class GameController : MonoBehaviour
         {
             // The word does not exist in the database
             Debug.LogWarning("Word does not exist in the database from word exist.");
-            feedbackManager.ShowFeedback(ArabicFixer.Fix("خطا,كلمة لا تتعلق بالموضوع") );
+            feedbackManager.ShowFeedback("خطا,كلمة لا تتعلق بالموضوع") ;
             invalidWordText.gameObject.SetActive(true);
             UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
             // Set the timer to zero when a wrong answer is submitted
@@ -626,9 +623,7 @@ public class GameController : MonoBehaviour
 
             if (snapshot != null && snapshot.Exists)
             {
-                // Initialize separate lists to store used words for each player
-                List<string> localPlayerUsedWords = new List<string>();
-                List<string> enemyPlayerUsedWords = new List<string>();
+               
 
                 // Iterate through each child snapshot to retrieve used words
                 foreach (DataSnapshot playerSnapshot in snapshot.Children)
@@ -643,30 +638,31 @@ public class GameController : MonoBehaviour
                         // Determine which player used the word and add it to the corresponding list
                         if (playerId == localPlayerId)
                         {
-                            localPlayerUsedWords.Add(usedWord);
+                            
                             Debug.Log("the local player submit a :  " + usedWord);
                         }
                         else
                         {
-                            enemyPlayerUsedWords.Add(usedWord);
+                            
                             Debug.Log("the enemy player submit a :  " + usedWord);
+                        }
+
+                        // Check if the message has been displayed already
+                        if (!displayedMessages.Contains(usedWord))
+                        {
+                            // If not, display the message and add it to the set of displayed messages
+                            GetMessage(usedWord, playerId == localPlayerId);
+                            displayedMessages.Add(usedWord);
                         }
                     }
                 }
 
-                // Convert the lists of used words to strings
-                string localPlayerUsedWordsString = string.Join("\n", localPlayerUsedWords);
-                string enemyPlayerUsedWordsString = string.Join("\n", enemyPlayerUsedWords);
-
-                // Update the UI elements with the fetched used words for each player
-                localPlayerUsedWordsText.text = ArabicFixer.Fix(localPlayerUsedWordsString);
-                enemyPlayerUsedWordsText.text = ArabicFixer.Fix(enemyPlayerUsedWordsString);
+                
             }
             else
             {
                 // If no used words are found, display a message or clear the UI elements
-                localPlayerUsedWordsText.text = "No used words yet.";
-                enemyPlayerUsedWordsText.text = "No used words yet.";
+                
             }
         }
         catch (Exception ex)
@@ -676,7 +672,7 @@ public class GameController : MonoBehaviour
     }
 
 
-   
+
 
 
 
@@ -712,7 +708,7 @@ public class GameController : MonoBehaviour
 
                 string enemyPlayerUsedWordsString = string.Join("\n", enemyPlayerUsedWords);
 
-                enemyPlayerUsedWordsText.text = ArabicFixer.Fix(enemyPlayerUsedWordsString);
+               
             }
         }
     }
@@ -832,6 +828,27 @@ public class GameController : MonoBehaviour
             SetGameEnd(roomId);
         }
     }
+    public void GetMessage(string ReciveMessage, bool isLocalPlayer)
+    {
+        // Instantiate the message GameObject based on the player
+        GameObject M = Instantiate(Message, Vector3.zero, Quaternion.identity, Content.transform);
+
+        // Set the message text
+        M.GetComponent<Message>().MyMessage.text = ReciveMessage;
+
+        // Set the message color based on the player
+        if (isLocalPlayer)
+        {
+            // Message from local player (you)
+            M.GetComponent<Message>().MyMessage.color = Color.blue;
+        }
+        else
+        {
+            // Message from enemy player
+            M.GetComponent<Message>().MyMessage.color = Color.red;
+        }
+    }
+
 
     // Other existing methods...
 }
