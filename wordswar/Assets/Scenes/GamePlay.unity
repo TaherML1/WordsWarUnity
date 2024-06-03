@@ -8252,7 +8252,7 @@ MonoBehaviour:
   incorrectSound: {fileID: 2019885592}
   gameOverPanel: {fileID: 1386100891}
   gameOverController: {fileID: 1465354455}
-  Message: {fileID: 7931196132575810986, guid: d8968cd1e31ae924e8a1e5df25210f1a, type: 3}
+  Message: {fileID: 7699161539569588782, guid: d57106cfe35ed2d46a1c67401e038c04, type: 3}
   Content: {fileID: 2015655747}
 --- !u!4 &1465354454
 Transform:
@@ -11784,8 +11784,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -351, y: 0}
-  m_SizeDelta: {x: 709.14, y: 0}
+  m_AnchoredPosition: {x: 10, y: -0.00093202805}
+  m_SizeDelta: {x: 350, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2015655749
 MonoBehaviour:
