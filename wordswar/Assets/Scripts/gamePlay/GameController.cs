@@ -155,7 +155,7 @@ public class GameController : MonoBehaviour
         {
             // Handle the case where the word has already been used
             Debug.LogWarning("The word has already been used.");
-            feedbackManager.ShowFeedback(ArabicFixer.Fix("تم استخدام هذه الكلمة"));
+            feedbackManager.ShowFeedback("تم استخدام هذه الكلمة");
             return; // Exit the function early
         }
         Debug.Log("Current Input: " + currentInput);
@@ -623,8 +623,6 @@ public class GameController : MonoBehaviour
 
             if (snapshot != null && snapshot.Exists)
             {
-               
-
                 // Iterate through each child snapshot to retrieve used words
                 foreach (DataSnapshot playerSnapshot in snapshot.Children)
                 {
@@ -635,34 +633,34 @@ public class GameController : MonoBehaviour
                     {
                         string usedWord = wordSnapshot.Value.ToString();
 
-                        // Determine which player used the word and add it to the corresponding list
-                        if (playerId == localPlayerId)
+                        // Check if the word is not null or empty
+                        if (!string.IsNullOrEmpty(usedWord))
                         {
-                            
-                            Debug.Log("the local player submit a :  " + usedWord);
-                        }
-                        else
-                        {
-                            
-                            Debug.Log("the enemy player submit a :  " + usedWord);
-                        }
+                            // Determine which player used the word and add it to the corresponding list
+                            if (playerId == localPlayerId)
+                            {
+                                Debug.Log("The local player submitted: " + usedWord);
+                            }
+                            else
+                            {
+                                Debug.Log("The enemy player submitted: " + usedWord);
+                            }
 
-                        // Check if the message has been displayed already
-                        if (!displayedMessages.Contains(usedWord))
-                        {
-                            // If not, display the message and add it to the set of displayed messages
-                            GetMessage(usedWord, playerId == localPlayerId);
-                            displayedMessages.Add(usedWord);
+                            // Check if the message has been displayed already
+                            if (!displayedMessages.Contains(usedWord))
+                            {
+                                // If not, display the message and add it to the set of displayed messages
+                                GetMessage(usedWord, playerId == localPlayerId);
+                                displayedMessages.Add(usedWord);
+                            }
                         }
                     }
                 }
-
-                
             }
             else
             {
                 // If no used words are found, display a message or clear the UI elements
-                
+                // Optionally handle this case
             }
         }
         catch (Exception ex)
@@ -670,6 +668,9 @@ public class GameController : MonoBehaviour
             Debug.LogError("Failed to fetch and display used words: " + ex.Message);
         }
     }
+
+
+
 
 
 
