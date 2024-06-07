@@ -1902,7 +1902,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerInput: {fileID: 1699832378}
-  MessagePrefab: {fileID: 1534550099646630884, guid: d24c80671e37f2d4fa0c60123a34be0e, type: 3}
+  MessagePrefab: {fileID: 5586132016390684310, guid: 32f6a7ce99d959b4693ce269aa872e3c, type: 3}
   Content: {fileID: 1337667498}
   ScrollRect: {fileID: 1284750231}
 --- !u!1660057539 &9223372036854775807

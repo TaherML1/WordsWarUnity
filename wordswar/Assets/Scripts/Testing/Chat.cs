@@ -68,7 +68,7 @@ public class Chat : MonoBehaviour
         rectTransform.sizeDelta = new Vector2(Content.GetComponent<RectTransform>().rect.width - 20, rectTransform.sizeDelta.y);
     }
 
-    private IEnumerator SmoothScrollToBottom()
+    public IEnumerator SmoothScrollToBottom()
     {
         float duration = 0.3f; // Duration of the scroll in seconds
         float elapsedTime = 0f; // Time elapsed since the start of the scroll
