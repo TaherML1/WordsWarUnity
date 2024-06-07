@@ -65,7 +65,7 @@ public class Chat : MonoBehaviour
 
         // Adjust the position to accommodate for new messages
         rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, -Content.transform.childCount * 20);
-        rectTransform.sizeDelta = new Vector2(Content.GetComponent<RectTransform>().rect.width - 20, rectTransform.sizeDelta.y);
+    
     }
 
     public IEnumerator SmoothScrollToBottom()
