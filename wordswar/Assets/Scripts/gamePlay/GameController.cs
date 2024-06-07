@@ -22,6 +22,7 @@ public class GameController : MonoBehaviour
 
     public static GameController instance;
     public FeedbackManager feedbackManager;
+    public Chat ChatInstance;
 
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
@@ -41,11 +42,11 @@ public class GameController : MonoBehaviour
     [Header("EnemyPlayer")]
     public TextMeshProUGUI enemyScoreText;
     public TextMeshProUGUI enemyNameText;
-   
+
     [Header("lcoalPlayer")]
     public TextMeshProUGUI localPlayScoreText;
     public TextMeshProUGUI localPlayerNameText;
- 
+
 
     [Header("Ui Elements")]
     public TMP_InputField playerInput;
@@ -57,15 +58,11 @@ public class GameController : MonoBehaviour
     public GameObject gameOverPanel;
     public GameOverController gameOverController;
 
-    public GameObject Message;
-    public GameObject Content;
-
-
     private string selectedTopic;
-   
+
     bool wordExists;
     bool wordIsUsed;
-   
+
     private float timer; // Timer variable
     private float originalTimer;
 
@@ -93,7 +90,7 @@ public class GameController : MonoBehaviour
             db = FirebaseFirestore.DefaultInstance;
             localPlayerId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
 
-            
+
 
             InitializeGame();
 
@@ -145,11 +142,11 @@ public class GameController : MonoBehaviour
 
             feedbackManager.ShowFeedback("Empty input word.");
 
-            return; 
+            return;
         }
 
-      
-        
+
+
         wordIsUsed = await CheckIfWordIsUsed(roomId, currentInput);
         if (wordIsUsed)
         {
@@ -172,20 +169,20 @@ public class GameController : MonoBehaviour
             IncrementPlayerScore(roomId, localPlayerId);
             newSwitchTurn(roomId, localPlayerId);
             // SwitchTurn();
-       
+
             correctSound.Play();
             clearInputfiled();
             ListenForUsedWordsUpdates(roomId);
             // Update the used words in the database
             UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
-            
+
 
         }
         else
         {
             // The word does not exist in the database
             Debug.LogWarning("Word does not exist in the database from word exist.");
-            feedbackManager.ShowFeedback("خطا,كلمة لا تتعلق بالموضوع") ;
+            feedbackManager.ShowFeedback("خطا,كلمة لا تتعلق بالموضوع");
             invalidWordText.gameObject.SetActive(true);
             UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
             // Set the timer to zero when a wrong answer is submitted
@@ -451,11 +448,11 @@ public class GameController : MonoBehaviour
             playerInput.interactable = false;
             submitButton.interactable = false;
             jokerHintButton.interactable = false;
-           
+
             timer = originalTimer;
         }
     }
-  
+
 
     public void IncrementPlayerScore(string gameId, string playerId)
     {
@@ -598,7 +595,7 @@ public class GameController : MonoBehaviour
             return false;
         }
     }
-   
+
     void ListenForUsedWordsUpdates(string roomId)
     {
         // Construct the reference to the used words node for the specific game
@@ -650,7 +647,8 @@ public class GameController : MonoBehaviour
                             if (!displayedMessages.Contains(usedWord))
                             {
                                 // If not, display the message and add it to the set of displayed messages
-                                GetMessage(usedWord, playerId == localPlayerId);
+                                ChatInstance.GetMessage(usedWord, playerId == localPlayerId);
+                                
                                 displayedMessages.Add(usedWord);
                             }
                         }
@@ -709,7 +707,7 @@ public class GameController : MonoBehaviour
 
                 string enemyPlayerUsedWordsString = string.Join("\n", enemyPlayerUsedWords);
 
-               
+
             }
         }
     }
@@ -735,7 +733,7 @@ public class GameController : MonoBehaviour
                 }
             });
     }
-    private void determinewinner(string roomId , string localplayerId)
+    private void determinewinner(string roomId, string localplayerId)
     {
         databaseReference.Child("games").Child(roomId).Child("winner").SetValueAsync(localplayerId)
             .ContinueWith(task =>
@@ -829,32 +827,8 @@ public class GameController : MonoBehaviour
             SetGameEnd(roomId);
         }
     }
-    public void GetMessage(string ReciveMessage, bool isLocalPlayer)
-    {
-        // Instantiate the message GameObject based on the player
-        GameObject M = Instantiate(Message, Vector3.zero, Quaternion.identity, Content.transform);
 
-        // Set the message text
-        M.GetComponent<Message>().MyMessage.text = ReciveMessage;
-
-        // Set the message color based on the player
-        if (isLocalPlayer)
-        {
-            // Message from local player (you)
-            M.GetComponent<Message>().MyMessage.color = Color.blue;
-        }
-        else
-        {
-            // Message from enemy player
-            M.GetComponent<Message>().MyMessage.color = Color.red;
-        }
-    }
-
-
-    // Other existing methods...
 }
-
-
 
 public static class selectedTopicManager
 {

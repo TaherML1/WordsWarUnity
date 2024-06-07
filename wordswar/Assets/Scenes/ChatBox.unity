@@ -829,8 +829,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 10, y: -0.00093202805}
-  m_SizeDelta: {x: 350, y: 0}
+  m_AnchoredPosition: {x: -381, y: 0.00017535298}
+  m_SizeDelta: {x: 750, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1428358546
 GameObject:
@@ -1902,8 +1902,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerInput: {fileID: 1699832378}
-  Message: {fileID: 0}
+  MessagePrefab: {fileID: 1534550099646630884, guid: d24c80671e37f2d4fa0c60123a34be0e, type: 3}
   Content: {fileID: 1337667498}
+  ScrollRect: {fileID: 1284750231}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -8214,6 +8214,7 @@ GameObject:
   - component: {fileID: 1465354456}
   - component: {fileID: 1465354457}
   - component: {fileID: 1465354458}
+  - component: {fileID: 1465354459}
   m_Layer: 0
   m_Name: MasterControl
   m_TagString: Untagged
@@ -8234,6 +8235,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   feedbackManager: {fileID: 1465354458}
+  ChatInstance: {fileID: 1465354459}
   timerText: {fileID: 1684746811}
   topicText: {fileID: 761872167}
   resultText: {fileID: 526812052}
@@ -8325,6 +8327,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   feedbackText: {fileID: 1297514956}
+--- !u!114 &1465354459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465354452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdc6f0df00c10604fab710c97e90a350, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerInput: {fileID: 0}
+  MessagePrefab: {fileID: 1534550099646630884, guid: d24c80671e37f2d4fa0c60123a34be0e, type: 3}
+  Content: {fileID: 2015655747}
+  ScrollRect: {fileID: 115175688}
 --- !u!1 &1476698516
 GameObject:
   m_ObjectHideFlags: 0
@@ -11784,8 +11802,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 10, y: -0.00093202805}
-  m_SizeDelta: {x: 350, y: 0}
+  m_AnchoredPosition: {x: -387, y: -0.00041696808}
+  m_SizeDelta: {x: 700, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2015655749
 MonoBehaviour:
