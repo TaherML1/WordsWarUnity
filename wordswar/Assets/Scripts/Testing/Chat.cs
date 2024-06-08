@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class Chat : MonoBehaviour
 {
-    static Chat instance;
+   
 
     public TMP_InputField playerInput;
     public GameObject MessagePrefab;
@@ -48,7 +48,7 @@ public class Chat : MonoBehaviour
         {
             rectTransform.anchorMin = new Vector2(1, 0.5f);
             rectTransform.anchorMax = new Vector2(1, 0.5f);
-            rectTransform.pivot = new Vector2(1, 0.5f);
+            rectTransform.pivot = new Vector2(1.66f, 0.5f);
             messageText.alignment = TextAlignmentOptions.Right;
 
             messageText.margin = new Vector4(0, 0, 10, 0);
@@ -58,7 +58,7 @@ public class Chat : MonoBehaviour
         {
             rectTransform.anchorMin = new Vector2(0, 0.5f);
             rectTransform.anchorMax = new Vector2(0, 0.5f);
-            rectTransform.pivot = new Vector2(0.03f, 0.5f);
+            rectTransform.pivot = new Vector2(-0.67f, 0.5f);
             messageText.alignment = TextAlignmentOptions.Left;
             messageText.margin = new Vector4(10, 0, 0, 0);
         }

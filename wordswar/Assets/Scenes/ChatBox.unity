@@ -309,8 +309,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7099c9b23dc36eb41b6164b9f771b6cd, type: 2}
+  m_sharedMaterial: {fileID: -4040742509014020974, guid: 7099c9b23dc36eb41b6164b9f771b6cd, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1255,8 +1255,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7099c9b23dc36eb41b6164b9f771b6cd, type: 2}
+  m_sharedMaterial: {fileID: -4040742509014020974, guid: 7099c9b23dc36eb41b6164b9f771b6cd, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1704,7 +1704,7 @@ MonoBehaviour:
   m_CharacterValidation: 0
   m_RegexValue: 
   m_GlobalPointSize: 14
-  m_CharacterLimit: 0
+  m_CharacterLimit: 12
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls: []
@@ -1737,7 +1737,7 @@ MonoBehaviour:
   m_CaretWidth: 1
   m_ReadOnly: 0
   m_RichText: 1
-  m_GlobalFontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_GlobalFontAsset: {fileID: 11400000, guid: 7099c9b23dc36eb41b6164b9f771b6cd, type: 2}
   m_OnFocusSelectAll: 1
   m_ResetOnDeActivation: 1
   m_RestoreOriginalTextOnEscape: 1
@@ -1902,7 +1902,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerInput: {fileID: 1699832378}
-  MessagePrefab: {fileID: 5586132016390684310, guid: 32f6a7ce99d959b4693ce269aa872e3c, type: 3}
+  MessagePrefab: {fileID: 7398452139131925533, guid: 2ceacd6a8f8339a4b9a75486f54ccd51, type: 3}
   Content: {fileID: 1337667498}
   ScrollRect: {fileID: 1284750231}
 --- !u!1660057539 &9223372036854775807
