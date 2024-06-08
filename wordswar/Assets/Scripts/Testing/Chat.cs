@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -12,6 +11,16 @@ public class Chat : MonoBehaviour
     public GameObject MessagePrefab;
     public GameObject Content;
     public ScrollRect ScrollRect; // Reference to the ScrollRect component
+    public Color localPlayerColor;
+    public Color nonLocalPlayerColor;
+
+
+    void Start()
+    {
+        // Initialize colors using hex values
+        ColorUtility.TryParseHtmlString("#B2FBF5", out localPlayerColor);
+        ColorUtility.TryParseHtmlString("#F0C97B", out nonLocalPlayerColor);
+    }
 
     public void SendMessage()
     {
@@ -43,24 +52,27 @@ public class Chat : MonoBehaviour
         messageText.text = receivedMessage;
 
         RectTransform rectTransform = messageObject.GetComponent<RectTransform>();
+        Image background = messageObject.GetComponentInChildren<Image>();
 
         if (isLocalPlayer)
         {
             rectTransform.anchorMin = new Vector2(1, 0.5f);
             rectTransform.anchorMax = new Vector2(1, 0.5f);
-            rectTransform.pivot = new Vector2(1.66f, 0.5f);
+            rectTransform.pivot = new Vector2(1.84f, 0.5f);
             messageText.alignment = TextAlignmentOptions.Right;
 
             messageText.margin = new Vector4(0, 0, 10, 0);
-            
+            background.color = localPlayerColor; // Set local player color
+
         }
         else
         {
             rectTransform.anchorMin = new Vector2(0, 0.5f);
             rectTransform.anchorMax = new Vector2(0, 0.5f);
-            rectTransform.pivot = new Vector2(-0.67f, 0.5f);
+            rectTransform.pivot = new Vector2(-0.85f, 0.5f);
             messageText.alignment = TextAlignmentOptions.Left;
             messageText.margin = new Vector4(10, 0, 0, 0);
+            background.color = nonLocalPlayerColor;
         }
 
         // Adjust the position to accommodate for new messages
