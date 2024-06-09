@@ -132,7 +132,7 @@ public class GameController : MonoBehaviour
 
     public async void submitAnswer()
     {
-
+        submitButton.interactable = false;
         string currentInput = playerInput.text.ToLower();
         currentInput = NormalizeWord(currentInput);
 
@@ -190,6 +190,7 @@ public class GameController : MonoBehaviour
             ListenForUsedWordsUpdates(roomId);
             clearInputfiled();
             //  Invoke("determinewinner", 1f);
+            submitButton.interactable = true;
 
         }
 
@@ -582,6 +583,7 @@ public class GameController : MonoBehaviour
                         if (usedWord.ToLower() == word.ToLower())
                         {
                             Debug.LogWarning("The word '" + word + "' has already been used.");
+                            submitButton.interactable = true;
                             return true;
                         }
                     }

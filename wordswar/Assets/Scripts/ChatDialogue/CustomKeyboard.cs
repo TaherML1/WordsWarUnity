@@ -1,6 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Windows;
 
 public class CustomKeyboard : MonoBehaviour
 {
@@ -21,6 +22,35 @@ public class CustomKeyboard : MonoBehaviour
             inputField.text = inputField.text.Substring(0, inputField.text.Length - 1);
         }
     }
+    public void Space()
+    {
+        if (!string.IsNullOrEmpty(inputField.text))
+        {
+            inputField.text = AddSpaceBetweenWords(inputField.text);
+        }
+    }
+
+    private string AddSpaceBetweenWords(string input)
+    {
+        // Check if the input string is null or empty
+        if (string.IsNullOrEmpty(input))
+        {
+            Debug.LogWarning("Input string is null or empty.");
+            return input;
+        }
+
+        // Split the input string by spaces
+        string[] words = input.Split(' ');
+
+        // Join the words with a space between them
+        string result = string.Join(" ", words);
+
+        return result;
+    }
+
+
+
+
 
     // Function to clear the whole input field
     public void ClearInput()
