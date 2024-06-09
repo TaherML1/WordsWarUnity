@@ -114,7 +114,7 @@ public class PurchaseItem : MonoBehaviour
         };
 
         // Call the Cloud Function
-        functions.GetHttpsCallable("purchaseHint")
+        functions.GetHttpsCallable("purchaseHint2")
             .CallAsync(data)
             .ContinueWithOnMainThread(task =>
             {

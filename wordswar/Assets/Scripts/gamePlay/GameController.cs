@@ -272,7 +272,7 @@ public class GameController : MonoBehaviour
         try
         {
             // Call the Cloud Function
-            HttpsCallableReference func = functions.GetHttpsCallable("checkTopicAndWordExistence");
+            HttpsCallableReference func = functions.GetHttpsCallable("checkTopicAndWordExistence2");
             HttpsCallableResult result = await func.CallAsync(data);
 
             // Handle the result

@@ -15,37 +15,73 @@
 
 // index.js (assuming this is your Cloud Function file name)
 
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-admin.initializeApp();
-const database = admin.database();
+/* eslint-disable no-unused-vars */
+/* eslint-disable max-len */
+/**
+ * Import function triggers from their respective submodules:
+ *
+ * const {onCall} = require("firebase-functions/v2/https");
+ * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+ *
+ * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ */
 
-exports.checkTopicAndWordExistence = functions.https.onCall(async (data, context) => {
-  const topicName = data.topicName;
-  const word = data.word;
-  console.log("topic name: " + topicName + "word : " + word);
+
+// Create and deploy your first functions
+// https://firebase.google.com/docs/functions/get-started
+
+// index.js (assuming this is your Cloud Function file name)
+
+const {onCall} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore} = require("firebase-admin/firestore");
+
+initializeApp();
+const firestore = getFirestore();
+
+exports.setUser2 = onCall(async (request) => {
+  const {data, auth} = request;
+
   try {
-    console.log(`Checking existence of topic '${topicName}' and word '${word}'`);
-
-    const topicSnapshot = await admin.database().ref(`/topics/${topicName}`).once("value");
-    if (!topicSnapshot.exists()) {
-      console.log(`Topic '${topicName}' does not exist.`);
-      throw new Error(`Topic '${topicName}' does not exist.`);
+    // Check if the request is authenticated
+    if (!auth) {
+      throw new Error("You must be authenticated to call this function.");
     }
 
-    console.log(`Topic '${topicName}' exists.`);
+    // Get the user ID from the authenticated user
+    const userId = auth.uid;
 
-    const wordSnapshot = await admin.database().ref(`/topics/${topicName}/${word}`).once("value");
-    if (!wordSnapshot.exists()) {
-      console.log(`Word '${word}' does not exist under the topic '${topicName}'.`);
-      throw new Error(`Word '${word}' does not exist under the topic '${topicName}'.`);
-    }
+    // Get the user data from the request
+    const {username, ...additionalUserData} = data;
 
-    console.log(`Word '${word}' exists under the topic '${topicName}'.`);
+    // Set default values for user data
+    const userData = {
+      username: username,
+      gems: 0,
+      coins: 0,
+      level: 1,
+      scores: 0,
+      xp: 0,
+      email: auth.token.email || null,
+      profileComplete: true,
+      ...additionalUserData,
+    };
 
-    return true; // Both topic and word exist
+    // Set the user data in Firestore
+    await firestore.collection("users").doc(userId).set(userData);
+
+    // Add hints document for the user
+    await firestore.collection("users").doc(userId).collection("hints").doc("hintsData").set({
+      joker: 0, // Default value for joker
+      extraTime: 0, // Default value for extraTime
+      // Add more hint fields as needed
+    });
+
+    return {success: true, message: "User data and hints set successfully."};
   } catch (error) {
-    console.error(`Error occurred: ${error.message}`);
-    throw new functions.https.HttpsError("internal", error.message);
+    // Handle errors
+    throw new Error("An error occurred while setting user data and hints.");
   }
 });
+
+

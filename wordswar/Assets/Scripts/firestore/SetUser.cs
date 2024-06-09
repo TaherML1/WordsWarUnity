@@ -59,7 +59,7 @@ public class SetUser : MonoBehaviour
         try
         {
             // Call the Cloud Function
-            var result = await functions.GetHttpsCallable("setUser").CallAsync(data);
+            var result = await functions.GetHttpsCallable("setUser2").CallAsync(data);
 
             // Handle the result
             Debug.Log(result.Data);

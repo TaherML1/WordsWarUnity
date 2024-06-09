@@ -97,7 +97,7 @@ public class hints : MonoBehaviour
         };
 
         // Call the Cloud Function
-        functions.GetHttpsCallable("getJokerHint")
+        functions.GetHttpsCallable("getJokerHint2")
             .CallAsync(data).ContinueWithOnMainThread(task =>
             {
                 if (task.IsFaulted)
