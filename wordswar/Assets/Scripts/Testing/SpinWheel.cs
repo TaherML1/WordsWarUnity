@@ -1,138 +1,102 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using System.Collections.Generic;
 
 public class SpinWheel : MonoBehaviour
 {
-    public GameObject wheel;             // Reference to the wheel GameObject
-    public float spinDuration = 3f;      // Duration of the spin
-    public Button spinButton;            // Reference to the spin button
-
+    public Button spinButton; // Reference to the spin button
+    public float minSpinSpeed = 500f; // Minimum speed of the wheel in degrees per second
+    public float maxSpinSpeed = 2000f; // Maximum speed of the wheel in degrees per second
+    public float minSpinDuration = 10f; // Minimum duration for the wheel to spin
+    public float maxSpinDuration = 12f; // Maximum duration for the wheel to spin
     private bool isSpinning = false;
-    private Dictionary<string, float> rewards = new Dictionary<string, float>();
-    private List<string> rewardList = new List<string>();
-    private List<float> cumulativeProbabilities = new List<float>();
-    float endAngle = 0;
+    private float currentSpeed;
+    private float spinTime;
+    private float timeElapsed;
 
     void Start()
     {
-        // Initialize rewards with probabilities
-        rewards.Add("10 Gold", 0.5f);   // Red
-        rewards.Add("50 Gold", 0.3f);   // Blue
-        rewards.Add("100 Gold", 0.15f); // Green
-        rewards.Add("Gems", 0.05f);     // Magenta
-
-        // Prepare reward list and cumulative probabilities for random selection
-        CalculateCumulativeProbabilities();
-
-        // Add listener to the button
-        spinButton.onClick.AddListener(Spin);
+        // Assign the button onClick event
+        spinButton.onClick.AddListener(StartSpin);
     }
 
-    void CalculateCumulativeProbabilities()
+    void Update()
     {
-        float cumulative = 0f;
-        foreach (var reward in rewards)
+        if (isSpinning)
         {
-            cumulative += reward.Value;
-            cumulativeProbabilities.Add(cumulative);
-            rewardList.Add(reward.Key);
-        }
+            // Rotate the wheel
+            float step = currentSpeed * Time.deltaTime;
+            transform.Rotate(0, 0, -step); // Rotate counterclockwise
 
-        // Debug logs for cumulative probabilities
-        Debug.Log("Cumulative Probabilities: ");
-        for (int i = 0; i < cumulativeProbabilities.Count; i++)
-        {
-            Debug.Log($"Reward: {rewardList[i]}, Cumulative Probability: {cumulativeProbabilities[i]}");
+            // Increase the elapsed time
+            timeElapsed += Time.deltaTime;
+
+            // Apply friction or slowing effect
+            float t = timeElapsed / spinTime;
+            currentSpeed = Mathf.Lerp(currentSpeed, 0, t * t); // Smooth quadratic deceleration
+
+            // Check if the spinning should stop
+            if (timeElapsed >= spinTime || currentSpeed < 0.1f)
+            {
+                isSpinning = false;
+                DetermineWinningSegment();
+            }
         }
     }
 
-    public void Spin()
+    public void StartSpin()
     {
-        if (!isSpinning)
-        {
-            StartCoroutine(SpinTheWheel());
-        }
-    }
+        if (isSpinning) return; // Prevent multiple spins at once
 
-    private IEnumerator SpinTheWheel()
-    {
         isSpinning = true;
-        float elapsedTime = 0f;
-        float startAngle = wheel.transform.eulerAngles.z;
-         endAngle = startAngle + Random.Range(720f, 1440f); // Randomly choosing spin amount
+        timeElapsed = 0;
 
-        while (elapsedTime < spinDuration)
-        {
-            float currentAngle = Mathf.Lerp(startAngle, endAngle, elapsedTime / spinDuration);
-            wheel.transform.eulerAngles = new Vector3(0, 0, currentAngle);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-
-        // Ensuring the wheel ends at the final angle
-        wheel.transform.eulerAngles = new Vector3(0, 0, endAngle);
-
-        // Determine reward
-        string reward = DetermineReward();
-        Debug.Log("You won: " + reward);
-        // Implement reward granting logic here
-
-        isSpinning = false;
+        // Randomize the spin speed and duration
+        currentSpeed = Random.Range(minSpinSpeed, maxSpinSpeed);
+        spinTime = Random.Range(minSpinDuration, maxSpinDuration);
     }
 
-    private string DetermineReward()
+    void DetermineWinningSegment()
     {
-        // Generate a random number between 0 and 1
-        float randomValue = Random.Range(0f, 1f);
-        Debug.Log("Random Value: " + randomValue);
+        // Determine the angle where the wheel stopped
+        float stoppedAngle = transform.eulerAngles.z;
+        float adjustedAngle = (360 - stoppedAngle + 90) % 360; // Adjust for arrow position at 0 degrees
 
-        // Determine which reward is won based on cumulative probabilities
-        for (int i = 0; i < cumulativeProbabilities.Count; i++)
+        // Calculate the segment based on the adjusted angle
+        int numberOfSegments = 8; // Number of segments
+        float segmentAngle = 360f / numberOfSegments;
+
+        int selectedSegment = Mathf.FloorToInt(adjustedAngle / segmentAngle);
+
+        // Translate segment index to readable format
+        string segmentName = "Unknown";
+        switch (selectedSegment)
         {
-            if (randomValue <= cumulativeProbabilities[i])
-            {
-                Debug.Log($"Random Value {randomValue} is less than or equal to Cumulative Probability {cumulativeProbabilities[i]}");
-                Debug.Log("Selected Reward: " + rewardList[i]);
-                ShowSelectedSegment(endAngle);
-                return rewardList[i];
-            }
-            else
-            {
-                Debug.Log($"Random Value {randomValue} is greater than Cumulative Probability {cumulativeProbabilities[i]}");
-            }
+            case 0:
+                segmentName = "100xp";
+                break;
+            case 1:
+                segmentName = "10 coins";
+                break;
+            case 2:
+                segmentName = "10 gems";
+                break;
+            case 3:
+                segmentName = "bad luck";
+                break;
+            case 4:
+                segmentName = "100 coins";
+                break;
+            case 5:
+                segmentName = "extra time";
+                break;
+            case 6:
+                segmentName = "100 gems";
+                break;
+            case 7:
+                segmentName = "joker";
+                break;
         }
 
-        // Fallback, should never reach here if probabilities are set correctly
-        Debug.Log("Fallback to default reward");
-        ShowSelectedSegment(endAngle);
-        return rewardList[0];
-    }
-
-    private void ShowSelectedSegment(float endAngle)
-    {
-        // Normalize the angle to a [0, 360) range and convert to clockwise
-        float normalizedAngle = endAngle % 360f;
-        normalizedAngle = 360f - normalizedAngle;
-        Debug.Log("Normalized Angle (Clockwise): " + normalizedAngle);
-
-        // Determine the segment based on the normalized angle
-        if (normalizedAngle >= 0 && normalizedAngle < 90)
-        {
-            Debug.Log("Pointer lands on Magenta (0 to 90 degrees): Gems");
-        }
-        else if (normalizedAngle >= 90 && normalizedAngle < 180)
-        {
-            Debug.Log("Pointer lands on Green (90 to 180 degrees): 100 Gold");
-        }
-        else if (normalizedAngle >= 180 && normalizedAngle < 270)
-        {
-            Debug.Log("Pointer lands on Blue (180 to 270 degrees): 50 Gold");
-        }
-        else if (normalizedAngle >= 270 && normalizedAngle < 360)
-        {
-            Debug.Log("Pointer lands on Red (270 to 360 degrees): 10 Gold");
-        }
+        Debug.Log("Wheel stopped at: " + segmentName);
     }
 }

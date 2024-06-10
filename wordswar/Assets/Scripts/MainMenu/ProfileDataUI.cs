@@ -8,6 +8,7 @@ public class ProfileDataUI : MonoBehaviour
     public GameObject mainMenuUi;
     public GameObject SearchingUi;
     public GameObject storeUI;
+    public GameObject SpinWheelUI;
    
 
     private void Awake()
@@ -29,6 +30,7 @@ public class ProfileDataUI : MonoBehaviour
         ProfileDataUi.SetActive(false);
         SearchingUi.SetActive(false);
         storeUI.SetActive(false);
+        SpinWheelUI.SetActive(false);
     }
 
     public void MainMenuScreen()
@@ -54,6 +56,10 @@ public class ProfileDataUI : MonoBehaviour
         storeUI.SetActive(true);
     }
 
-   
+   public void SpinWheelScreen()
+    {
+        CleanScreen();
+        SpinWheelUI.SetActive(true);
+    }
    
 }
