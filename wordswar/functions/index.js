@@ -1,95 +1,71 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable max-len */
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+// index.js
 
+const {onCall} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+initializeApp();
+const firestore = getFirestore();
 
-// index.js (assuming this is your Cloud Function file name)
-
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-admin.initializeApp();
-const database = admin.database();
-
-
-exports.checkGameEnd = functions.database.ref("/games/{gameId}/gameEnd").onCreate(async (snapshot, context) => {
-  const gameId = context.params.gameId;
+exports.processSpinResult = onCall(async (request) => {
+  const {data, auth} = request;
 
   try {
-    // Retrieve game information
-    const gameSnapshot = await admin.database().ref(`/games/${gameId}`).once("value");
-    const game = gameSnapshot.val();
-
-    // Extract player IDs and scores
-    const player1Id = game.gameInfo.playersIds[0];
-    const player2Id = game.gameInfo.playersIds[1];
-    const player1Score = game.gameInfo.scores[player1Id];
-    const player2Score = game.gameInfo.scores[player2Id];
-
-    // Determine winner and loser
-    let winner = "";
-    let loser = "";
-    if (player1Score > player2Score) {
-      winner = player1Id;
-      loser = player2Id;
-    } else if (player1Score < player2Score) {
-      winner = player2Id;
-      loser = player1Id;
-    } else {
-      // If both players have the same score, determine the loser based on the current turn
-      const currentTurn = game.turn;
-      if (currentTurn === player1Id) {
-        // Player 1 is the loser if it's their turn
-        winner = player2Id;
-        loser = player1Id;
-      } else {
-        // Player 2 is the loser if it's their turn
-        winner = player1Id;
-        loser = player2Id;
-      }
+    // Check if the request is authenticated
+    if (!auth) {
+      throw new Error("You must be authenticated to call this function.");
     }
 
-    // Update game state
-    await admin.database().ref(`/games/${gameId}`).update({
-      winner: winner,
-      loser: loser,
-      status: "ended", // You can update other game status as needed
-    });
+    // Get the user ID from the authenticated user
+    const userId = auth.uid;
 
-    // Update coins for the winner and loser in Firestore
-    const winnerRef = admin.firestore().collection("users").doc(winner);
-    const loserRef = admin.firestore().collection("users").doc(loser);
+    // Get the spin result from the request data
+    const {reward} = data;
 
-    await admin.firestore().runTransaction(async (transaction) => {
-      const winnerDoc = await transaction.get(winnerRef);
-      const loserDoc = await transaction.get(loserRef);
+    // Define the document references
+    const userDocRef = firestore.collection("users").doc(userId);
+    const hintsDocRef = userDocRef.collection("hints").doc("hintsData");
 
-      const winnerCoins = winnerDoc.data().coins + 20; // Add 20 coins for the winner
-      const winnerScores = winnerDoc.data().scores + 100;
-      const winnerXP = winnerDoc.data().xp + 25; // Add 20 XP for the winner
-      const winnerMatchesWon = winnerDoc.data().matchesWon + 1;
-      const loserCoins = loserDoc.data().coins + 10; // Add 10 coins for the loser
-      const loserXP = loserDoc.data().xp + 15; // Add 10 XP for the loser
-      const loserScore = loserDoc.data().scores + 50;
-      const loserMatchLost = loserDoc.data().matchesLost + 1;
+    // Initialize an update object
+    let updateData = {};
 
-      transaction.update(winnerRef, {coins: winnerCoins, xp: winnerXP, scores: winnerScores, matchesWon: winnerMatchesWon});
-      transaction.update(loserRef, {coins: loserCoins, xp: loserXP, scores: loserScore, matchesLost: loserMatchLost});
-      console.log("winner Coins : ", winnerCoins);
-      console.log("loser Coins : ", loserCoins);
-    });
+    // Determine the update based on the reward
+    switch (reward) {
+      case "100xp":
+        updateData = {xp: FieldValue.increment(100)};
+        break;
+      case "10 coins":
+        updateData = {coins: FieldValue.increment(10)};
+        break;
+      case "10 gems":
+        updateData = {gems: FieldValue.increment(10)};
+        break;
+      case "bad luck":
+        // No reward
+        return {success: true, message: "Better luck next time!"};
+      case "100 coins":
+        updateData = {coins: FieldValue.increment(100)};
+        break;
+      case "extra hint":
+        await hintsDocRef.update({extraTime: FieldValue.increment(1)});
+        return {success: true, message: "You won an extra hint!"};
+      case "100 gems":
+        updateData = {gems: FieldValue.increment(100)};
+        break;
+      case "joker":
+        await hintsDocRef.update({joker: FieldValue.increment(1)});
+        return {success: true, message: "You won a Joker!"};
+      default:
+        throw new Error("Invalid reward type");
+    }
 
-    console.log("Game ended:", gameId);
+    // Update the user's document with the reward
+    await userDocRef.update(updateData);
+
+    return {success: true, message: `You won ${reward}!`};
   } catch (error) {
-    console.error("Error:", error);
+    // Handle errors
+    console.error("Error processing spin result:", error);
+    throw new Error("An error occurred while processing the spin result.");
   }
 });

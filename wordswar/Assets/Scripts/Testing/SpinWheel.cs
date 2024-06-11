@@ -1,5 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+using Firebase;
+using Firebase.Auth;
+using Firebase.Functions;
+using System.Collections;
+using System.Collections.Generic;
 
 public class SpinWheel : MonoBehaviour
 {
@@ -13,8 +19,15 @@ public class SpinWheel : MonoBehaviour
     private float spinTime;
     private float timeElapsed;
 
+    private FirebaseAuth auth;
+    private FirebaseFunctions functions;
+
     void Start()
     {
+        // Initialize Firebase
+        auth = FirebaseAuth.DefaultInstance;
+        functions = FirebaseFunctions.DefaultInstance;
+
         // Assign the button onClick event
         spinButton.onClick.AddListener(StartSpin);
     }
@@ -23,6 +36,7 @@ public class SpinWheel : MonoBehaviour
     {
         if (isSpinning)
         {
+            spinButton.interactable = false;
             // Rotate the wheel
             float step = currentSpeed * Time.deltaTime;
             transform.Rotate(0, 0, -step); // Rotate counterclockwise
@@ -39,6 +53,7 @@ public class SpinWheel : MonoBehaviour
             {
                 isSpinning = false;
                 DetermineWinningSegment();
+                spinButton.interactable = true;
             }
         }
     }
@@ -68,35 +83,52 @@ public class SpinWheel : MonoBehaviour
         int selectedSegment = Mathf.FloorToInt(adjustedAngle / segmentAngle);
 
         // Translate segment index to readable format
-        string segmentName = "Unknown";
-        switch (selectedSegment)
-        {
-            case 0:
-                segmentName = "100xp";
-                break;
-            case 1:
-                segmentName = "10 coins";
-                break;
-            case 2:
-                segmentName = "10 gems";
-                break;
-            case 3:
-                segmentName = "bad luck";
-                break;
-            case 4:
-                segmentName = "100 coins";
-                break;
-            case 5:
-                segmentName = "extra time";
-                break;
-            case 6:
-                segmentName = "100 gems";
-                break;
-            case 7:
-                segmentName = "joker";
-                break;
-        }
+        string segmentName = GetSegmentName(selectedSegment);
 
+        // Log the result locally
         Debug.Log("Wheel stopped at: " + segmentName);
+
+        // Send the result to the server for validation and reward assignment
+        StartCoroutine(SendSpinResultToServer(segmentName));
+    }
+
+    string GetSegmentName(int segmentIndex)
+    {
+        switch (segmentIndex)
+        {
+            case 0: return "100xp";
+            case 1: return "10 coins";
+            case 2: return "10 gems";
+            case 3: return "bad luck";
+            case 4: return "100 coins";
+            case 5: return "extra hint";
+            case 6: return "100 gems";
+            case 7: return "joker";
+            default: return "Unknown";
+        }
+    }
+
+    IEnumerator SendSpinResultToServer(string reward)
+    {
+        var function = functions.GetHttpsCallable("processSpinResult");
+        var data = new Dictionary<string, object>
+        {
+            { "reward", reward }
+        };
+
+        var task = function.CallAsync(data);
+
+        yield return new WaitUntil(() => task.IsCompleted);
+
+        if (task.IsFaulted || task.IsCanceled)
+        {
+            Debug.LogError("Error sending spin result to server: " + task.Exception);
+        }
+        else
+        {
+            Debug.Log("Successfully sent spin result to server. Response: " + task.Result.Data);
+            // Optionally, you can handle the server's response here
+            // For example, update the player's UI or show a confirmation message
+        }
     }
 }
