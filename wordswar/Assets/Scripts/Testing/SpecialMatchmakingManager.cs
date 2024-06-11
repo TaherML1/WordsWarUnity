@@ -3,31 +3,52 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Firebase;
+
 
 public class SpecialMatchmakingManager : MonoBehaviour
 {
     FirebaseFunctions functions;
 
+
+    public TMP_Text roomIdText;
     public TMP_InputField roomIdInputField; // Input field for entering the room ID
     public Button joinRoomButton;       // Button to join the room
+    public Button copyButton;
+
+    private string currentRoomId; // Store the current Room ID
 
     void Start()
     {
-        functions = FirebaseFunctions.DefaultInstance;
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        {
+            if (task.Result == DependencyStatus.Available)
+            {
+                functions = FirebaseFunctions.DefaultInstance;
+                joinRoomButton.onClick.AddListener(OnJoinRoomButtonClicked);
+                Debug.Log("hellloo");
+            }
+            else
+            {
+                Debug.LogError("Failed to initialize Firebase");
+            }
+        });
 
-        // Assign the JoinSpecialRoom function to the button's onClick event
-        joinRoomButton.onClick.AddListener(OnJoinRoomButtonClicked);
+       
     }
 
     public void CreateSpecialRoom()
     {
-        functions.GetHttpsCallable("createSpecialRoom").CallAsync().ContinueWith(task => {
+        if (functions != null)
+
+        functions.GetHttpsCallable("createSpecialRoom").CallAsync().ContinueWith(task =>
+        {
             if (task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
             {
                 var result = task.Result.Data as Dictionary<string, object>;
-                string roomId = result["roomId"].ToString();
-                Debug.Log("Special room created with ID: " + roomId);
-                // Optionally display the room ID to the player
+                currentRoomId = result["roomId"].ToString();
+                Debug.Log("Special room created with ID: " + currentRoomId);
+                DisplayRoomId(currentRoomId);
             }
             else
             {
@@ -68,4 +89,33 @@ public class SpecialMatchmakingManager : MonoBehaviour
             }
         });
     }
+
+    private void DisplayRoomId(string roomId)
+    {
+        if (roomIdText != null)
+        {
+            roomIdText.text = "Room ID: " + roomId;
+            roomIdText.gameObject.SetActive(true); // Ensure the text is visible
+        }
+        else
+        {
+            Debug.LogWarning("Room ID text object is not assigned.");
+        }
+    }
+
+    // Method to copy the Room ID to the clipboard
+   public void CopyRoomIdToClipboard()
+    {
+        Debug.Log("bbutton clicked");
+        if (!string.IsNullOrEmpty(currentRoomId))
+        {
+            GUIUtility.systemCopyBuffer = currentRoomId; // Copy to clipboard
+            Debug.Log("Room ID copied to clipboard: " + currentRoomId);
+        }
+        else
+        {
+            Debug.LogWarning("No Room ID to copy.");
+        }
+    }
+
 }

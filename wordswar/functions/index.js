@@ -17,34 +17,6 @@ function generateRoomId() {
   return roomId;
 }
 
-// Create Special Room Cloud Function
-exports.createSpecialRoom = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "noauthenticated.");
-  }
-
-  const playerId = context.auth.uid;
-
-  // Generate a unique room ID
-  const roomId = generateRoomId();
-
-  // Initial room data
-  const roomData = {
-    roomId: roomId,
-    host: playerId,
-    players: [playerId], // Host is the first player
-    status: "waiting", // Room is waiting for players
-  };
-
-  try {
-    // Save the room data under the 'specialrooms' node in the database
-    await database.ref("specialrooms/" + roomId).set(roomData);
-
-    return {roomId: roomId, message: "Special room created successfully!"};
-  } catch (error) {
-    throw new functions.https.HttpsError("unknown", "Failed to  room.", error);
-  }
-});
 
 // Join Special Room Cloud Function
 exports.joinSpecialRoom = functions.https.onCall(async (data, context) => {
@@ -88,26 +60,41 @@ exports.joinSpecialRoom = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Initializes a game with the provided room ID and player list under
+ * Initializes a game with the provided room ID and player list
  * @param {string} roomId - The ID of the room.
  * @param {Array<string>} players - The list of player IDs.
  */
 async function initializeSpecialGame(roomId, players) {
-  const gameId = generateRoomId(); // Using the same ID generation function
+  const gameId = generateRoomId(); // Generate a unique game ID
 
+  // Ensure the players array has exactly 2 players
+  if (players.length !== 2) {
+    throw new Error("Game initialization requires exactly 2 players.");
+  }
+
+  // Construct the game data similar to your provided structure
   const gameData = {
     gameInfo: {
-      gameId: gameId,
-      playersIds: players,
-      scores: players.reduce((acc, playerId) => ({...acc, [playerId]: 0}), {}),
-      usedWords: players.reduce((acc, playerId) => ({
-        ...acc, [playerId]:
-                  [""],
-      }), {}),
-      timer: 15,
+      gameId: gameId, // Unique game ID
+      playersIds: players, // List of player IDs
+
+      // Initialize scores for each player to 0
+      scores: {
+        [players[0]]: 0,
+        [players[1]]: 0,
+      },
+
+      // Initialize used words lists for each player
+      usedwords: {
+        [players[0]]: [""],
+        [players[1]]: [""],
+      },
+
+      timer: 15, // Set the initial timer value to 15 seconds
     },
-    turn: players[0], // Starting the turn with the first player
+    turn: players[0], // Set the first player's turn
   };
 
+  // Save the game data to the 'games' node in the Firebase Realtime Database
   await database.ref("games/" + gameId).set(gameData);
 }
