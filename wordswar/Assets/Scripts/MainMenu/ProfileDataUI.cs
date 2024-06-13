@@ -13,8 +13,11 @@ public class ProfileDataUI : MonoBehaviour
     public GameObject PlayModeUI;
 
     public float transitionDuration = 0.2f; // Duration for the slide transitions
+    public float swipeThreshold = 50f; // Minimum swipe distance to recognize as a swipe
 
     private GameObject currentActiveScreen; // Track the current active screen
+    private Vector2 touchStartPos; // To store the start position of the touch
+    private Vector2 touchEndPos; // To store the end position of the touch
 
     private void Awake()
     {
@@ -30,17 +33,28 @@ public class ProfileDataUI : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        DetectSwipe();
+    }
+
     public void CleanScreen()
     {
         // Slide out the current active screen to the left if there is any
         if (currentActiveScreen != null) StartCoroutine(SlideOut(currentActiveScreen, "left"));
     }
 
+    private void DeleteScreen()
+    {
+        SpinWheelUI.SetActive(false);
+        PlayModeUI.SetActive(false);
+    }
+
     public void MainMenuScreen()
     {
         // Check if the current screen is already the main menu
         if (currentActiveScreen == mainMenuUi) return;
-
+        DeleteScreen();
         CleanScreen();
         StartCoroutine(SlideIn(mainMenuUi, "right"));
         currentActiveScreen = mainMenuUi; // Update the current active screen
@@ -50,27 +64,21 @@ public class ProfileDataUI : MonoBehaviour
     {
         // Check if the current screen is already the profile screen
         if (currentActiveScreen == ProfileDataUi) return;
-
+        DeleteScreen();
         CleanScreen();
         StartCoroutine(SlideIn(ProfileDataUi, "right"));
         currentActiveScreen = ProfileDataUi; // Update the current active screen
     }
 
-   
-
     public void StoreScreen()
     {
         // Check if the current screen is already the store screen
         if (currentActiveScreen == storeUI) return;
-
+        DeleteScreen();
         CleanScreen();
         StartCoroutine(SlideIn(storeUI, "right"));
         currentActiveScreen = storeUI; // Update the current active screen
     }
-
-   
-
-   
 
     private IEnumerator SlideIn(GameObject uiElement, string direction)
     {
@@ -142,6 +150,73 @@ public class ProfileDataUI : MonoBehaviour
         uiElement.SetActive(false);
     }
 
+    private void DetectSwipe()
+    {
+        // Handle touch input for mobile
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
 
-   
+            switch (touch.phase)
+            {
+                case TouchPhase.Began:
+                    touchStartPos = touch.position;
+                    break;
+
+                case TouchPhase.Ended:
+                    touchEndPos = touch.position;
+                    HandleSwipe();
+                    break;
+            }
+        }
+    }
+
+    private void HandleSwipe()
+    {
+        float horizontalSwipeDistance = touchEndPos.x - touchStartPos.x;
+        float verticalSwipeDistance = touchEndPos.y - touchStartPos.y;
+
+        // Check if the swipe distance meets the threshold
+        if (Mathf.Abs(horizontalSwipeDistance) > swipeThreshold && Mathf.Abs(horizontalSwipeDistance) > Mathf.Abs(verticalSwipeDistance))
+        {
+            if (horizontalSwipeDistance > 0)
+            {
+                // Right swipe
+                OnSwipeRight();
+            }
+            else
+            {
+                // Left swipe
+                OnSwipeLeft();
+            }
+        }
+    }
+
+    private void OnSwipeRight()
+    {
+        // Transition to the next screen on right swipe
+        if (currentActiveScreen == mainMenuUi)
+        {
+            ProfileScreen(); // Main menu to Profile screen
+        }
+        else if (currentActiveScreen == ProfileDataUi)
+        {
+            StoreScreen(); // Profile screen to Store screen
+        }
+        // Add more cases if you have more screens to navigate through
+    }
+
+    private void OnSwipeLeft()
+    {
+        // Transition to the previous screen on left swipe
+        if (currentActiveScreen == storeUI)
+        {
+            ProfileScreen(); // Store screen to Profile screen
+        }
+        else if (currentActiveScreen == ProfileDataUi)
+        {
+            MainMenuScreen(); // Profile screen to Main menu
+        }
+        // Add more cases if you have more screens to navigate through
+    }
 }

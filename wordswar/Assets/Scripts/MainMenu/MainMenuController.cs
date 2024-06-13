@@ -31,5 +31,9 @@ public class MainMenuController : MonoBehaviour
     {
         SceneManager.LoadScene("keyboard");
     }
+    public void SliderScene()
+    {
+        SceneManager.LoadScene("PageSlider");
+    }
 
 }

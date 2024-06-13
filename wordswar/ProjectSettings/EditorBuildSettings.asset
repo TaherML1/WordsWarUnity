@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GamePlay.unity
     guid: d692da492b29b7d4497a430c323bf37d
+  - enabled: 1
+    path: Assets/Scenes/PageSlider.unity
+    guid: 76e64dee62d0227409a320e78ebc7e1f
   m_configObjects: {}
