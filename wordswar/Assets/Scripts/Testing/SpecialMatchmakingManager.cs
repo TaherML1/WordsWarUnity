@@ -4,12 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Firebase;
-using Firebase.Extensions; // Make sure to use this namespace for ContinueWithOnMainThread
+using Firebase.Extensions; 
+using Firebase.Database;
 
 public class SpecialMatchmakingManager : MonoBehaviour
 {
     FirebaseFunctions functions;
-
+    DatabaseReference databaseReference;
     public TMP_Text roomIdText;
     public TMP_InputField roomIdInputField;
     public Button joinRoomButton;
@@ -26,6 +27,8 @@ public class SpecialMatchmakingManager : MonoBehaviour
             {
                 Debug.Log("Firebase dependencies are available.");
                 functions = FirebaseFunctions.DefaultInstance;
+                databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
+
                 joinRoomButton.onClick.AddListener(OnJoinRoomButtonClicked);
                 Debug.Log("Initialization complete.");
             }
@@ -60,6 +63,35 @@ public class SpecialMatchmakingManager : MonoBehaviour
         else
         {
             Debug.LogError("Firebase functions instance is null.");
+        }
+    }
+
+    public void deleteRoom()
+    {
+        if (databaseReference != null)
+        {
+            Debug.Log("the room id is to delete : " + RoomId);
+            DatabaseReference specialroomsRef = databaseReference.Child("specialrooms").Child(RoomId);
+            specialroomsRef.RemoveValueAsync().ContinueWith(task =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Failed to remove the specail room from database :  " + task.Exception);
+                }
+                else
+                {
+                    Debug.Log("room removed from database successfully");
+
+                    // Optionally re-enable the StartButton if you want to allow rejoining the queue
+
+                    
+                }
+            });
+
+        }
+        else
+        {
+            Debug.LogError("Database reference is not initialized");
         }
     }
 
@@ -101,7 +133,7 @@ public class SpecialMatchmakingManager : MonoBehaviour
         if (roomIdText != null)
         {
             Debug.Log("Displaying room ID: " + roomId);
-            roomIdText.text = "Room ID: " + roomId;
+            roomIdText.text =  roomId;
             roomIdText.gameObject.SetActive(true);
 
             // Force a layout rebuild to ensure the UI is updated immediately

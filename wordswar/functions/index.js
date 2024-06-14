@@ -12,7 +12,7 @@ function generateRoomId() {
   let roomId = "";
   for (let j = 0; j < 20; j++) {
     roomId += possibleChars.charAt(Math.floor(Math.random() *
-          possibleChars.length));
+            possibleChars.length));
   }
   return roomId;
 }

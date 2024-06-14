@@ -8,6 +8,7 @@ using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine.UI;
 #endif
 
 namespace TS.PageSlider
@@ -28,6 +29,9 @@ namespace TS.PageSlider
         /// </summary>
         [Tooltip("Optional reference to a PageDotsIndicator to display dots for each page")]
         [SerializeField] private PageDotsIndicator _dotsIndicator;
+
+        [Header("Navigation Buttons")]
+        [SerializeField] private List<Button> navigationButtons; // List of buttons in the navigation bar
 
         [Header("Children")]
 
@@ -74,6 +78,16 @@ namespace TS.PageSlider
 
             if (_startPageIndex == 0) yield break;
             _scroller.SetPage(_startPageIndex);
+
+            for (int i = 0; i < navigationButtons.Count; i++)
+            {
+                int index = i; // Capture the index in a local variable for the closure
+                navigationButtons[i].onClick.AddListener(() => _scroller.NavigateToPage(index));
+            }
+
+            // Ensure the correct button is highlighted at startup
+            UpdateNavigationButtonAppearance(_startPageIndex);
+
         }
 
 
@@ -168,6 +182,31 @@ namespace TS.PageSlider
             _pages[toIndex].ChangingToActiveState();
         }
 
+
+        /// <summary>
+        /// Updates the navigation buttons' appearance to reflect the current active page.
+        /// </summary>
+        /// <param name="activePageIndex">Index of the active page.</param>
+        private void UpdateNavigationButtonAppearance(int activePageIndex)
+        {
+            for (int i = 0; i < navigationButtons.Count; i++)
+            {
+                var button = navigationButtons[i];
+                if (i == activePageIndex)
+                {
+                    // Highlight the active button
+                    button.GetComponent<Image>().color = Color.green; // Change to your desired active color
+                }
+                else
+                {
+                    // Reset other buttons to the default appearance
+                    button.GetComponent<Image>().color = Color.white; // Change to your desired default color
+                }
+            }
+        }
+
+
+
         /// <summary>
         /// Called by the PageScroller component when a page change ends. Sets the page at the fromIndex to inactive and the page at the toIndex to active. Updates the PageDotsIndicator and invokes the OnPageChanged event.
         /// </summary>
@@ -182,7 +221,7 @@ namespace TS.PageSlider
             {
                 _dotsIndicator.ChangeActiveDot(fromIndex, toIndex);
             }
-
+            UpdateNavigationButtonAppearance(toIndex);
             OnPageChanged?.Invoke(_pages[toIndex]);
         }
 
