@@ -7,7 +7,7 @@ using Firebase.Auth;
 using TMPro;
 using UnityEngine.UI;
 
-public class newMatchmakingManager : MonoBehaviour
+public class MatchmakingManager : MonoBehaviour
 {
     DatabaseReference databaseReference;
     FirebaseAuth auth;
