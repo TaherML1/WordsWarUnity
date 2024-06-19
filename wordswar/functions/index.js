@@ -1,60 +1,68 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
-const database = admin.database();
 
-/**
- * Generates a random room ID.
- * @return {string} The randomly generated room ID.
- */
-function generateRoomId() {
-  const possibleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnxyz0123456789";
-  let roomId = "";
-  for (let j = 0; j < 20; j++) {
-    roomId += possibleChars.charAt(Math.floor(Math.random() *
-            possibleChars.length));
-  }
-  return roomId;
-}
-
-// Create Special Room Cloud Function
-exports.createSpecialRoom = functions.https.onCall(async (data, context) => {
-  console.log("createSpecialRoom function triggered.");
-
-  // Check if the user is authenticated
-  if (!context.auth) {
-    console.error("Unauthenticated request.");
-    throw new functions.https.HttpsError("unauthenticated", "noauthenticated.");
-  }
-
-  const playerId = context.auth.uid;
-  console.log(`Authenticated user: ${playerId}`);
-
-  // Generate a unique room ID
-  const roomId = generateRoomId();
-  console.log(`Generated room ID: ${roomId}`);
-
-  // Initial room data
-  const roomData = {
-    roomId: roomId,
-    host: playerId,
-    players: [playerId], // Host is the first player
-    status: "waiting", // Room is waiting for players
-  };
-  console.log("Initial room data:", roomData);
-
+exports.refreshTickets = functions.https.onCall(async (data, context) => {
   try {
-    // Save the room data under the 'specialrooms' node in the database
-    await database.ref("specialrooms/" + roomId).set(roomData);
-    console.log(`Room data saved to database under 'specialrooms/${roomId}'.`);
+    const userId = context.auth.uid;
+    if (!userId) {
+      throw new functions.https.HttpsError("unauthenticated", " thenticated.");
+    }
 
-    console.log("room id is : " + roomId);
-    // Return the room ID and a success message
-    const response = {roomId: roomId, message: " created successfully!"};
-    console.log("Function response:", response);
-    return roomId;
+    console.log("User ID:", userId);
+
+    const userRef = admin.firestore().collection("users").doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      console.log("User document not found for ID:", userId);
+      throw new functions.https.HttpsError("not-found", "User not found");
+    }
+
+    const userData = userDoc.data();
+    console.log("User data retrieved:", userData);
+
+    const currentTickets = userData.tickets || 0;
+    const lastRefresh = userData.lastRefresh ? userData.lastRefresh.toDate() :
+          new Date(0);
+    console.log("Current Tickets:", currentTickets
+        , "Last Refresh:", lastRefresh);
+
+    const maxTickets = 5;
+    const refreshInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+    const now = new Date();
+    const timeElapsed = now - lastRefresh;
+    console.log("Time Elapsed since last refresh (ms):", timeElapsed);
+
+    let updatedTickets = currentTickets;
+
+    if (timeElapsed >= refreshInterval) {
+      const ticketsToAdd = Math.floor(timeElapsed / refreshInterval);
+      updatedTickets = Math.min(maxTickets, currentTickets + ticketsToAdd);
+    }
+
+    // Decrease the ticket count by 1 if it's greater than 0
+    if (updatedTickets > 0) {
+      updatedTickets--;
+    } else {
+      console.log("No tickets left to decrement.");
+      throw new functions.https.HttpsError("failed-precondition"
+          , "No tickets available to use.");
+    }
+
+    console.log("Updated Tickets after decrement:", updatedTickets);
+
+    // Update the user's ticket count and the last refresh time
+    await userRef.update({
+      tickets: updatedTickets,
+      lastRefresh: admin.firestore.Timestamp.now(),
+    });
+
+    return {tickets: updatedTickets};
   } catch (error) {
-    console.error("Error saving room data to the database:", error);
-    throw new functions.https.HttpsError("unknown", "Failed to room.", error);
+    console.error("Error in refreshTickets function:", error);
+    throw new functions.https.HttpsError("unknown", error.message ||
+          "An unknown error occurred.");
   }
 });
