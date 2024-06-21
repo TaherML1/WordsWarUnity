@@ -3,33 +3,36 @@ using UnityEngine.UI;
 
 public class ButtonController : MonoBehaviour
 {
-    public Animator[] buttonAnimators; // Assign the Animator components of the buttons in the inspector
+    // Reference to the Animator component
+    private Animator animator;
 
-    // Initialize the buttons' states
-    private void Start()
+    void Start()
     {
-        // Assuming buttons are initially down, set IsUp to false for all
-        foreach (Animator animator in buttonAnimators)
+        // Get the Animator component attached to this GameObject
+        animator = GetComponent<Animator>();
+
+        // Check if the Animator component is attached
+        if (animator == null)
         {
-            animator.SetBool("IsUp", false); // Initially, all buttons are down
+            Debug.LogError("No Animator component found on this GameObject");
         }
     }
 
-    // Method called when a button is clicked
-    public void OnButtonClick(int clickedButtonIndex)
+    // Function to set the MoveUp trigger
+    public void MoveUp()
     {
-        for (int i = 0; i < buttonAnimators.Length; i++)
+        if (animator != null)
         {
-            if (i == clickedButtonIndex)
-            {
-                buttonAnimators[i].SetBool("IsUp", true);     // Set the clicked button's IsUp to true
-                buttonAnimators[i].SetTrigger("MoveUp");   // Trigger the up animation
-            }
-            else
-            {
-                buttonAnimators[i].SetBool("IsUp", false);    // Set the other buttons' IsUp to false
-                buttonAnimators[i].SetTrigger("MoveDown"); // Trigger the down animation for other buttons
-            }
+            animator.SetTrigger("MoveUp");
+        }
+    }
+
+    // Function to set the MoveDown trigger
+    public void MoveDown()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger("MoveDown");
         }
     }
 }
