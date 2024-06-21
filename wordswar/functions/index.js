@@ -2,67 +2,40 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
 
-exports.refreshTickets = functions.https.onCall(async (data, context) => {
+exports.ExtraTimeHint = functions.https.onCall(async (data, context) => {
+  const gameId = data.gameId;
+  const playerId = data.playerId;
+
+  const gameRef = admin.database().ref(`games/${gameId}`);
+  const playerRef = admin.database().ref(`players/${playerId}`);
+
   try {
-    const userId = context.auth.uid;
-    if (!userId) {
-      throw new functions.https.HttpsError("unauthenticated", " thenticated.");
+    const gameSnapshot = await gameRef.once("value");
+    const playerSnapshot = await playerRef.once("value");
+
+    if (!gameSnapshot.exists() || !playerSnapshot.exists()) {
+      throw new functions.https.HttpsError("not-found"
+          , "Game or Player not found");
     }
 
-    console.log("User ID:", userId);
+    const game = gameSnapshot.val();
+    const player = playerSnapshot.val();
 
-    const userRef = admin.firestore().collection("users").doc(userId);
-    const userDoc = await userRef.get();
+    if (player.extraTimeHints > 0) {
+      const newTime = game.gameInfo.timer + 10; // Add 10 seconds
+      await gameRef.child("gameInfo/timer").set(newTime);
+      await playerRef.child("extraTimeHints").set(player.extraTimeHints - 1);
 
-    if (!userDoc.exists) {
-      console.log("User document not found for ID:", userId);
-      throw new functions.https.HttpsError("not-found", "User not found");
-    }
-
-    const userData = userDoc.data();
-    console.log("User data retrieved:", userData);
-
-    const currentTickets = userData.tickets || 0;
-    const lastRefresh = userData.lastRefresh ? userData.lastRefresh.toDate() :
-          new Date(0);
-    console.log("Current Tickets:", currentTickets
-        , "Last Refresh:", lastRefresh);
-
-    const maxTickets = 5;
-    const refreshInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
-
-    const now = new Date();
-    const timeElapsed = now - lastRefresh;
-    console.log("Time Elapsed since last refresh (ms):", timeElapsed);
-
-    let updatedTickets = currentTickets;
-
-    if (timeElapsed >= refreshInterval) {
-      const ticketsToAdd = Math.floor(timeElapsed / refreshInterval);
-      updatedTickets = Math.min(maxTickets, currentTickets + ticketsToAdd);
-    }
-
-    // Decrease the ticket count by 1 if it's greater than 0
-    if (updatedTickets > 0) {
-      updatedTickets--;
+      return {
+        success: true, newTime: newTime, remainingHints:
+              player.extraTimeHints - 1,
+      };
     } else {
-      console.log("No tickets left to decrement.");
-      throw new functions.https.HttpsError("failed-precondition"
-          , "No tickets available to use.");
+      return {success: false, message: "No extra time hints available"};
     }
-
-    console.log("Updated Tickets after decrement:", updatedTickets);
-
-    // Update the user's ticket count and the last refresh time
-    await userRef.update({
-      tickets: updatedTickets,
-      lastRefresh: admin.firestore.Timestamp.now(),
-    });
-
-    return {tickets: updatedTickets};
   } catch (error) {
-    console.error("Error in refreshTickets function:", error);
-    throw new functions.https.HttpsError("unknown", error.message ||
-          "An unknown error occurred.");
+    console.error("Error using extra time hint: ", error);
+    throw new functions.https.HttpsError("internal",
+        "Error using extra time hint", error);
   }
 });
