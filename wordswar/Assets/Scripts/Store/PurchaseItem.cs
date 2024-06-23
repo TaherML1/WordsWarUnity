@@ -6,6 +6,7 @@ using Firebase;
 using Firebase.Auth;
 using Firebase.Firestore;
 using TMPro;
+using Firebase.Analytics;
 
 public class PurchaseItem : MonoBehaviour
 {
@@ -29,7 +30,7 @@ public class PurchaseItem : MonoBehaviour
                 Debug.LogError($"Firebase Initialization Error: {task.Exception}");
                 return;
             }
-
+            FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
             functions = FirebaseFunctions.DefaultInstance;
             userManager = UserManager.Instance;
 
@@ -81,11 +82,14 @@ public class PurchaseItem : MonoBehaviour
         if (playerCoins >= jokerPrice)
         {
             PurchaseHint("fMjt0FLcHYNp06mmHnFI", "joker");
+            FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "joker"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", jokerPrice));
         }
         else
         {
             feedbackManager.ShowFeedback("Not enough coins to purchase a joker.");
             Debug.Log("Not enough coins to purchase a joker.");
+            FirebaseAnalytics.LogEvent("insufficient_funds", new Parameter("hint_type", "joker"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", jokerPrice));
+
         }
     }
 
@@ -93,14 +97,17 @@ public class PurchaseItem : MonoBehaviour
     {
         if (playerCoins >= extraTimePrice)
         {
+            FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
             PurchaseHint("PtgEJZEUyS1zezDD4k0g", "extraTime");
         }
         else
         {
             feedbackManager.ShowFeedback("Not enough coins to purchase extra time.");
             Debug.Log("Not enough coins to purchase extra time.");
+            FirebaseAnalytics.LogEvent("insufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
         }
     }
+
 
     public void PurchaseHint(string hintId, string hintType)
     {

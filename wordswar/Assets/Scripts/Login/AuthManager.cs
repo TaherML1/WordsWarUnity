@@ -8,11 +8,12 @@ using UnityEngine.SceneManagement;
 using Firebase.Analytics;
 using Firebase.Firestore;
 using Firebase.Functions;
+using System;
 
 public class AuthManager : MonoBehaviour
 {
     public FeedbackManager feedbackManager;
-    
+
     FirebaseUser fuser;
     FirebaseFunctions functions;
     FirebaseFirestore db;
@@ -40,7 +41,6 @@ public class AuthManager : MonoBehaviour
     public TMP_InputField emailResetPasswordField;
     public TMP_Text warningResetPasswordText;
     public TMP_Text confirmResetPasswordText;
-
 
     void Awake()
     {
@@ -78,21 +78,28 @@ public class AuthManager : MonoBehaviour
     {
         LoginAsync(emailLoginField.text, passwordLoginField.text).Forget();
     }
+
     public void ResetPasswordButton()
     {
         ResetPasswordAsync(emailResetPasswordField.text).Forget();
     }
+
     private async Task LoginAsync(string _email, string _password)
     {
+      
         try
         {
             var loginTask = await auth.SignInWithEmailAndPasswordAsync(_email, _password);
             User = loginTask.User;
             Debug.LogFormat("User signed in successfully: {0} ({1})", User.DisplayName, User.Email);
-          
+
             feedbackManager.ShowFeedback("Logged In");
-           
+
+            FirebaseAnalytics.LogEvent("login_success", new Parameter("user_id", User.UserId)); // Log success
+
             SceneManager.LoadScene(SceneNames.MainMenu);
+            FirebaseAnalytics.LogEvent("scene_change", new Parameter("scene_name", SceneNames.MainMenu));
+
         }
         catch (FirebaseException ex)
         {
@@ -100,25 +107,30 @@ public class AuthManager : MonoBehaviour
             AuthError errorCode = (AuthError)ex.ErrorCode;
             string message = GetErrorMessage(errorCode);
             feedbackManager.ShowFeedback(message);
-           
+
+            FirebaseAnalytics.LogEvent("login_failure",
+                new Parameter("email", _email),
+                new Parameter("error_code", errorCode.ToString()), // Log failure details
+                new Parameter("error_message", ex.Message)); // Log error message
         }
     }
 
+
     private async Task RegisterAsync(string _email, string _password, string _username)
     {
+       
+
         if (string.IsNullOrEmpty(_username))
         {
-            
             feedbackManager.ShowFeedback("Missing Username");
-            
+         
             return;
         }
 
         if (passwordRegisterField.text != passwordRegisterVerifyField.text)
         {
-         
             feedbackManager.ShowFeedback("Password Does Not Match!");
-           
+       
             return;
         }
 
@@ -130,25 +142,35 @@ public class AuthManager : MonoBehaviour
             UserProfile profile = new UserProfile { DisplayName = _username };
             await User.UpdateUserProfileAsync(profile);
 
+            FirebaseAnalytics.LogEvent("register_success", new Parameter("user_id", User.UserId)); // Log success
+
             UIManager.instance.LoginScreen();
-          
         }
         catch (FirebaseException ex)
         {
             AuthError errorCode = (AuthError)ex.ErrorCode;
             string message = GetErrorMessage(errorCode);
             feedbackManager.ShowFeedback(message);
-           
+
+            FirebaseAnalytics.LogEvent("register_failure",
+                new Parameter("email", _email),
+                new Parameter("error_code", errorCode.ToString()), // Log failure details
+                new Parameter("error_message", ex.Message)); // Log error message
         }
     }
 
+
     private async Task ResetPasswordAsync(string email)
     {
+       
+
         try
         {
             await auth.SendPasswordResetEmailAsync(email);
             Debug.Log("Password reset email sent to: " + email);
             feedbackManager.ShowFeedback("Password reset email sent to: " + email);
+
+            FirebaseAnalytics.LogEvent("password_reset_success", new Parameter("email", email)); // Log success
         }
         catch (FirebaseException ex)
         {
@@ -156,6 +178,11 @@ public class AuthManager : MonoBehaviour
             AuthError errorCode = (AuthError)ex.ErrorCode;
             string message = GetErrorMessage(errorCode);
             feedbackManager.ShowFeedback(message);
+
+            FirebaseAnalytics.LogEvent("password_reset_failure",
+                new Parameter("email", email),
+                new Parameter("error_code", errorCode.ToString()), // Log failure details
+                new Parameter("error_message", ex.Message)); // Log error message
         }
     }
 
@@ -165,6 +192,7 @@ public class AuthManager : MonoBehaviour
         UIManager.instance.RegisterScreen();
         ClearFields(new TMP_InputField[] { emailLoginField, passwordLoginField });
     }
+
     public void mainScreen()
     {
         UIManager.instance.MainScreen();
@@ -175,6 +203,64 @@ public class AuthManager : MonoBehaviour
     {
         UIManager.instance.LoginScreen();
         ClearFields(new TMP_InputField[] { usernameRegisterField, emailRegisterField, passwordRegisterField, passwordRegisterVerifyField });
+    }
+
+    public void Logout()
+    {
+        LogoutAsync().Forget();
+    }
+
+    private async Task LogoutAsync()
+    {
+        try
+        {
+            if (auth == null)
+            {
+                Debug.LogError("FirebaseAuth instance is null.");
+                return;
+            }
+
+            if (feedbackManager == null)
+            {
+                Debug.LogError("FeedbackManager is not assigned.");
+                return;
+            }
+
+            // Sign out from Firebase Authentication
+            auth.SignOut();
+            User = null; // Clear the current user
+            Debug.Log("User logged out successfully.");
+
+            // Provide feedback to the user
+            feedbackManager.ShowFeedback("Logged Out");
+
+            // Check if the SceneNames.MainMenu is defined and valid
+            if (string.IsNullOrEmpty(SceneNames.UserProfile))
+            {
+                Debug.LogError("Scene name for MainMenu is not set.");
+                return;
+            }
+
+            // Redirect to login or main screen
+            SceneManager.LoadScene(SceneNames.UserProfile);
+
+            // Additional cleanup if necessary
+            ClearUserSpecificData();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("Error while logging out: " + ex.Message);
+            feedbackManager.ShowFeedback("Logout failed. Please try again.");
+        }
+    }
+
+
+    private void ClearUserSpecificData()
+    {
+        // Example: Clear user-related data or reset UI fields
+        // You can clear fields, reset settings, etc.
+        emailLoginField.text = "";
+        passwordLoginField.text = "";
     }
 
     private void ClearFields(TMP_InputField[] fields)
@@ -189,7 +275,6 @@ public class AuthManager : MonoBehaviour
     {
         switch (errorCode)
         {
-
             case AuthError.MissingEmail:
                 return "Missing Email";
             case AuthError.MissingPassword:
@@ -204,21 +289,16 @@ public class AuthManager : MonoBehaviour
                 return "Weak Password";
             case AuthError.EmailAlreadyInUse:
                 return "Email Already In Use";
-
             default:
                 return "Login Failed! Please try again.";
         }
     }
-
-   
-
- 
 }
 
 public static class SceneNames
 {
     public const string MainMenu = "MainMenu";
-    public const string UserProfile = "UserProfile";
+    public const string UserProfile = "UIManager";
 }
 
 public static class TaskExtensions
