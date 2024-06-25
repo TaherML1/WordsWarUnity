@@ -11,6 +11,9 @@ public class FetchUserProfile : MonoBehaviour
     public TextMeshProUGUI gemsText;
     public TextMeshProUGUI xpText;
     public TextMeshProUGUI levelText;
+    public TextMeshProUGUI matchesLostText;
+    public TextMeshProUGUI matchesWonText;
+    public TextMeshProUGUI ScoresText;
     public GameObject setUserPanel;
     public Image progressBarFill;
     private int coins;
@@ -18,6 +21,9 @@ public class FetchUserProfile : MonoBehaviour
     private int xp;
     private int level;
     private int requiredXPForNextLevel;
+    private int matcheslost;
+    private int matchesWon;
+    private int scores;
 
     public static event Action<int, int> OnBalanceChanged; // Event to notify balance changes
 
@@ -25,6 +31,8 @@ public class FetchUserProfile : MonoBehaviour
     {
         instance = this;
         UserManager.Instance.OnUserProfileUpdated += UpdateUserProfileUI;
+   
+        
         UserManager.Instance.OnInitialUserProfileFetched += OnInitialUserProfileFetched;
         // Optionally, initialize the UI if data is already available
         var initialProfile = UserManager.Instance.GetUserProfile();
@@ -40,6 +48,7 @@ public class FetchUserProfile : MonoBehaviour
         {
             UserManager.Instance.OnUserProfileUpdated -= UpdateUserProfileUI;
             UserManager.Instance.OnInitialUserProfileFetched -= OnInitialUserProfileFetched;
+          
         }
     }
 
@@ -88,10 +97,33 @@ public class FetchUserProfile : MonoBehaviour
             level = Convert.ToInt32(levelObj);
             levelText.text = level.ToString();
         }
+        if (userProfile.TryGetValue("matchesLost", out object MatchesLostObj))
+        {
+            matcheslost = Convert.ToInt32(MatchesLostObj);
+            matchesLostText.text = matcheslost.ToString();
+            Debug.Log($"Matches Lost: {matcheslost}");
+        }
+        if (userProfile.TryGetValue("matchesWon", out object MatchesWonObj))
+        {
+            matchesWon = Convert.ToInt32(MatchesWonObj);
+            matchesWonText.text = matchesWon.ToString();
+            Debug.Log($"Matches Won: {matchesWon}");
+        }
+        if(userProfile.TryGetValue("scores", out object ScoresObj))
+        {
+            scores = Convert.ToInt32(ScoresObj);
+            ScoresText.text = scores.ToString();
+        }
+
 
         UpdateProgressBar(xp, requiredXPForNextLevel);
         OnBalanceChanged?.Invoke(coins, gems); // Notify listeners about the balance change
     }
+   
+    
+
+
+
 
     public void UpdateProgressBar(int playerXP, int requiredXP)
     {
