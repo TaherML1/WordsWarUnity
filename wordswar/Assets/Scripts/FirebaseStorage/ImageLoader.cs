@@ -33,15 +33,16 @@ public class ImageLoader : MonoBehaviour
         // Get the current user ID dynamically
         currentUserID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
         FetchProfileImage();
-        // Load each image from Firebase Storage
+
+        // Load and display each image
         foreach (string imageName in imageNames)
         {
             LoadAndDisplayImage(imageName);
         }
 
-       
+        // Adjust the container size to fit all images
+        AdjustContainerSize();
     }
-
 
     void LoadAndDisplayImage(string imageName)
     {
@@ -158,5 +159,27 @@ public class ImageLoader : MonoBehaviour
                 Debug.LogWarning("User document does not exist");
             }
         });
+    }
+
+    void AdjustContainerSize()
+    {
+        // Get the RectTransform of the container
+        RectTransform containerRect = imageContainer.GetComponent<RectTransform>();
+
+        // Get the RectTransform of the prefab to determine its size
+        RectTransform prefabRect = imagePrefab.GetComponent<RectTransform>();
+
+        // Calculate the total width based on the number of prefabs
+        int numberOfImages = imageNames.Count;
+
+        // Assuming horizontal layout and uniform spacing
+        float spacing = 10f; // Adjust this based on your layout settings
+        float totalWidth = (prefabRect.rect.width + spacing) * numberOfImages - spacing; // Total width including spacing between prefabs
+
+        // Update the container's size
+        containerRect.sizeDelta = new Vector2(totalWidth, containerRect.sizeDelta.y);
+
+        // Optionally, you can set the position to start at the left-most point
+        containerRect.anchoredPosition = new Vector2(0, containerRect.anchoredPosition.y);
     }
 }
