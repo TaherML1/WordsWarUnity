@@ -34,7 +34,13 @@ public class ImageLoader : MonoBehaviour
         currentUserID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
         FetchProfileImage();
 
-        // Load and display each image
+   
+       
+    }
+
+
+    public void LoadAvatarContainer()
+    {     // Load and display each image
         foreach (string imageName in imageNames)
         {
             LoadAndDisplayImage(imageName);
@@ -43,6 +49,7 @@ public class ImageLoader : MonoBehaviour
         // Adjust the container size to fit all images
         AdjustContainerSize();
     }
+
 
     void LoadAndDisplayImage(string imageName)
     {

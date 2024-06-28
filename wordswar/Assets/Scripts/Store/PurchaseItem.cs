@@ -20,6 +20,7 @@ public class PurchaseItem : MonoBehaviour
     int playerGems;
     int jokerPrice;
     int extraTimePrice;
+    int ticketsPrice;
 
     private async void Start()
     {
@@ -107,6 +108,19 @@ public class PurchaseItem : MonoBehaviour
             FirebaseAnalytics.LogEvent("insufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
         }
     }
+    public void OnclickPurchaseTickets()
+    {
+        if(playerCoins >= extraTimePrice)
+        {
+            FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
+            PurchaseHint("tickets4141", "tickets");
+        }else
+        {
+            feedbackManager.ShowFeedback("Not enough coins to purchase tickets.");
+            Debug.Log("Not enough coins to purchase tickets.");
+            FirebaseAnalytics.LogEvent("insufficient_funds", new Parameter("hint_type", "tickets"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", ticketsPrice));
+        }
+    }
 
 
     public void PurchaseHint(string hintId, string hintType)
@@ -147,6 +161,7 @@ public class PurchaseItem : MonoBehaviour
     {
         jokerPrice = hintPricesManager.getJokerPrice();
         extraTimePrice = hintPricesManager.getExtraTimePrice();
+        ticketsPrice = hintPricesManager.getTicketsPrice();
 
         Debug.Log($"Joker price: {jokerPrice}, Extra time price: {extraTimePrice}");
     }
