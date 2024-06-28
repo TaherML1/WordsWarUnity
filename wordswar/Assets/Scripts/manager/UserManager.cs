@@ -169,4 +169,8 @@ public class UserManager : MonoBehaviour
     {
         return userHints != null && userHints.TryGetValue("extraTime",out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
     }
+    public int GetTickets()
+    {
+        return userHints != null && userHints.TryGetValue("tickets", out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
+    }
 }

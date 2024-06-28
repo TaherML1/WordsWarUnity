@@ -6,6 +6,7 @@ using Firebase.Database;
 using Firebase.Auth;
 using TMPro;
 using UnityEngine.UI;
+using System;
 
 public class MatchmakingManager : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class MatchmakingManager : MonoBehaviour
     public Button RemoveButton;
     string playerId;
 
+    int currentTickets;
     void Start()
     {
         // Initialize Firebase
@@ -31,6 +33,9 @@ public class MatchmakingManager : MonoBehaviour
 
                 // Set up listener after initializing Firebase
                 SetupPlayerValueListener();
+
+                UserManager.Instance.OnUserHintsUpdated += updateUserTickets;
+                UserManager.Instance.CheckUserProfileCompletion();
             }
             else
             {
@@ -38,7 +43,18 @@ public class MatchmakingManager : MonoBehaviour
             }
         });
 
-       
+       void updateUserTickets(Dictionary<string, object> userHints)
+        {
+            if (userHints.TryGetValue("tickets", out object TicketsObj))
+            {
+                currentTickets = Convert.ToInt32(TicketsObj);
+                Debug.Log("current tickets " + currentTickets);
+            }
+            else
+            {
+                Debug.LogError("tickets key is missing in hintsData");
+            }
+        }
 
         // Set up the remove button click listener
         if (RemoveButton != null)
@@ -98,39 +114,48 @@ public class MatchmakingManager : MonoBehaviour
     // Method to add the current player to the matchmaking queue
     public void AddPlayerToMatchmaking()
     {
-        if (auth.CurrentUser != null)
+        if(currentTickets > 0)
         {
-            // Check if the database reference is valid
-            if (databaseReference != null)
+            if (auth.CurrentUser != null)
             {
-                // Add the player to the matchmaking node in the Realtime Database
-                DatabaseReference matchmakingRef = databaseReference.Child("matchmaking").Child(playerId);
-                matchmakingRef.SetValueAsync("placeholder").ContinueWith(task =>
+
+                // Check if the database reference is valid
+                if (databaseReference != null)
                 {
-                    if (task.IsFaulted || task.IsCanceled)
+                    // Add the player to the matchmaking node in the Realtime Database
+                    DatabaseReference matchmakingRef = databaseReference.Child("matchmaking").Child(playerId);
+                    matchmakingRef.SetValueAsync("placeholder").ContinueWith(task =>
                     {
-                        Debug.LogError("Failed to add player to matchmaking: " + task.Exception);
-                    }
-                    else
-                    {
-                        Debug.Log("Player added to matchmaking successfully");
-                    }
-                });
+                        if (task.IsFaulted || task.IsCanceled)
+                        {
+                            Debug.LogError("Failed to add player to matchmaking: " + task.Exception);
+                        }
+                        else
+                        {
+                            Debug.Log("Player added to matchmaking successfully");
+                        }
+                    });
+                }
+                else
+                {
+                    Debug.LogError("Database reference is not initialized");
+                }
             }
             else
             {
-                Debug.LogError("Database reference is not initialized");
+                Debug.LogError("Current user is not authenticated");
             }
-        }
-        else
+        }else
         {
-            Debug.LogError("Current user is not authenticated");
+            Debug.LogError("there is no enough tickets");
         }
+        
     }
 
     // Method to remove the current player from the matchmaking queue
     public void RemovePlayerFromMatchmaking()
     {
+        
         if (auth.CurrentUser != null)
         {
             // Check if the database reference is valid

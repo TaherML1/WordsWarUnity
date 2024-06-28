@@ -12,6 +12,8 @@ public class FetchUserHints : MonoBehaviour
     private int jokerHints;
     private int extraTimeHints;
     private int tickets;
+
+    public static FetchUserHints Instance { get; private set; }
     void Start()
     {
         // Listen for changes in user hints data
@@ -51,5 +53,13 @@ public class FetchUserHints : MonoBehaviour
         Debug.Log("joker hints : " + jokerHints);
         Debug.Log("extra time hints : " + extraTimeHints);
         Debug.Log("tickets : " + tickets);
+    }
+    public int GetTickets()
+    {
+        return tickets;
+    }
+    public bool HasTickets()
+    {
+        return tickets > 0;
     }
 }

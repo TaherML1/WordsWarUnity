@@ -15,6 +15,8 @@ public class HintPricesManager : MonoBehaviour
     public TextMeshProUGUI jokerText;
     public TextMeshProUGUI extraTimeText;
     public TextMeshProUGUI ticketsText;
+    public TextMeshProUGUI TicketsTextPrice;
+
     private int joker;
     private int extraTime;
     private int tickets;
@@ -70,6 +72,7 @@ public class HintPricesManager : MonoBehaviour
                 extraTimeText.text = extraTime.ToString();
                 jokerText.text = joker.ToString();
                 ticketsText.text = tickets.ToString();
+                TicketsTextPrice.text = tickets.ToString();
                 PricesFetched?.Invoke();
                 Debug.Log("Joker price: " + joker);
                 Debug.Log("Extra time price: " + extraTime);

@@ -14,9 +14,7 @@ public class hints : MonoBehaviour
     public FeedbackManager feedbackManager;
 
     private FirebaseFunctions functions;
-    private FirebaseFirestore db;
     private FirebaseAuth auth;
-    private DocumentReference docRef;
     string localPlayerId;
     string roomId;
     int jokerHints;
