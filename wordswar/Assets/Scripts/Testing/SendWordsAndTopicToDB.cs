@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Firebase;
 using Firebase.Database;
@@ -7,7 +6,6 @@ using Firebase.Extensions;
 
 public class SendWordsAndTopicToDB : MonoBehaviour
 {
-
     void Start()
     {
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
@@ -16,7 +14,6 @@ public class SendWordsAndTopicToDB : MonoBehaviour
             {
                 // Firebase is ready to use
                 InitializeDatabase();
-               
             }
             else
             {
@@ -24,48 +21,68 @@ public class SendWordsAndTopicToDB : MonoBehaviour
             }
         });
     }
+
     private void InitializeDatabase()
     {
         DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
 
-        Dictionary<string, List<string>> topicsAndWords = new Dictionary<string, List<string>>
-    {
-        {"الحيوانات" , new List<string> {"كلب","قطة","فيل","اسد",}},
-        {"الفواكه", new List<string> { "تفاح" , "موز", "برتقال", "عنب" } },
-        {"البلدان", new List<string> { "سوريا", "الولايات المتحدة", "ألمانيا", "البرازيل", "تركيا" } },
-        {"الالوان" , new List<string> {"اسود","ابيض","اصفر","احمر","اخضر"}},
-        { "الرياضة", new List<string> {"كرة القدم", "بيسبول","كرة السلة","سباحة","تنس"}},
-        {"اسماء بنات تبدا بحرف الياء", new List<string> { "يمنى", "ياسمين", "يسرى", "يانا" } },
-        {"teams", new List<string> {"barca", "real", "city","inter"} },
-        {"بلدان عربية", new List<string>{"سوريا","لبنان","عمان","الاردن","فلسطين"}  }
-    };
+        Dictionary<string, Dictionary<string, object>> topicsAndWords = new Dictionary<string, Dictionary<string, object>>
+        {
+            {
+                "fruits", new Dictionary<string, object>
+                {
+                    {
+                        "apple", new Dictionary<string, object>
+                        {
+                            { "primary", "تفاح" },
+                            { "synonyms", new Dictionary<string, bool>
+                                {
+                                    { "تفاحة", true },
+                                    { "تفاحي", true },
+                                    { "تفاحات", true },
+                                    { "تفاحه", true }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "banana", new Dictionary<string, object>
+                        {
+                            { "primary", "موز" },
+                            { "synonyms", new Dictionary<string, bool>
+                                {
+                                    { "موزة", true },
+                                    { "موزات", true }
+                                }
+                            }
+                        }
+                    }
+                    // Add more fruits or topics as needed
+                }
+            }
+        };
 
         foreach (var topic in topicsAndWords)
         {
-            Dictionary<string, object> wordsWithBoolean = new Dictionary<string, object>();
-            foreach (var word in topic.Value)
+            foreach (var wordData in topic.Value)
             {
-                wordsWithBoolean[word] = true; // Assign true value to each word
+                string wordKey = wordData.Key;
+                Dictionary<string, object> wordInfo = (Dictionary<string, object>)wordData.Value;
+
+                // Set the value in Firebase under "topics/{topic.Key}/{wordKey}"
+                reference.Child("topics").Child(topic.Key).Child(wordKey).SetValueAsync(wordInfo)
+                    .ContinueWithOnMainThread(task =>
+                    {
+                        if (task.IsCompleted && !task.IsFaulted)
+                        {
+                            Debug.Log($"Word '{wordKey}' under topic '{topic.Key}' sent to the database.");
+                        }
+                        else
+                        {
+                            Debug.LogError($"Failed to send word '{wordKey}' under topic '{topic.Key}' to the database: {task.Exception}");
+                        }
+                    });
             }
-            reference.Child("topics").Child(topic.Key).SetValueAsync(wordsWithBoolean);
         }
-
-        Debug.Log("Topics and words sent to the database.");
-    }
-
-}
-public class User
-{
-    public string username;
-    public string email;
-
-    public User()
-    {
-    }
-
-    public User(string username, string email)
-    {
-        this.username = username;
-        this.email = email;
     }
 }

@@ -141,18 +141,20 @@ public class GameController : MonoBehaviour
             Debug.LogWarning("Empty input word.");
 
             feedbackManager.ShowFeedback("Empty input word.");
+            submitButton.interactable = true;
 
             return;
         }
 
 
 
-        wordIsUsed = await CheckIfWordIsUsed(roomId, currentInput);
+        wordIsUsed = await CheckIfWordIsUsed(roomId,selectedTopicManager.selectedTopic, currentInput);
         if (wordIsUsed)
         {
             // Handle the case where the word has already been used
             Debug.LogWarning("The word has already been used.");
             feedbackManager.ShowFeedback("تم استخدام هذه الكلمة");
+            submitButton.interactable = true;
             return; // Exit the function early
         }
         Debug.Log("Current Input: " + currentInput);
@@ -566,37 +568,42 @@ public class GameController : MonoBehaviour
             Debug.LogError("Failed to update used words in the database: " + ex.Message);
         }
     }
-    async Task<bool> CheckIfWordIsUsed(string roomId, string word)
+    public async Task<bool> CheckIfWordIsUsed(string roomId, string topicName, string word)
     {
+        var checkWordUsage = functions.GetHttpsCallable("checkWordUsage");
+
         try
         {
-            DatabaseReference usedWordsRef = databaseReference.Child("games").Child(roomId).Child("gameInfo").Child("usedwords");
-            DataSnapshot snapshot = await usedWordsRef.GetValueAsync();
-
-            if (snapshot != null && snapshot.Exists)
+            var data = new Dictionary<string, object>
             {
-                foreach (DataSnapshot playerSnapshot in snapshot.Children)
-                {
-                    foreach (DataSnapshot wordSnapshot in playerSnapshot.Children)
-                    {
-                        string usedWord = wordSnapshot.Value.ToString();
-                        if (usedWord.ToLower() == word.ToLower())
-                        {
-                            Debug.LogWarning("The word '" + word + "' has already been used.");
-                            submitButton.interactable = true;
-                            return true;
-                        }
-                    }
-                }
+                { "roomId", roomId },
+                { "topicName", topicName },
+                { "word", word }
+            };
+
+            var result = await checkWordUsage.CallAsync(data);
+
+            // Directly get the boolean result from the response
+            bool isUsed = Convert.ToBoolean(result.Data);
+
+            if (isUsed)
+            {
+                Debug.Log("word has been used");
             }
-            return false;
+            else
+            {
+                Debug.Log("word has not been used");
+            }
+
+            return isUsed;
         }
         catch (Exception ex)
         {
-            Debug.LogError("Failed to check if word is used: " + ex.Message);
+            Debug.LogError("Failed to check word usage: " + ex.Message);
             return false;
         }
     }
+
 
     void ListenForUsedWordsUpdates(string roomId)
     {

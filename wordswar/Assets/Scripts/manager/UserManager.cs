@@ -173,4 +173,22 @@ public class UserManager : MonoBehaviour
     {
         return userHints != null && userHints.TryGetValue("tickets", out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
     }
+
+    public void UpdateUserHints(Dictionary<string, object> userHints)
+    {
+        DocumentReference docRef = db.Collection("users").Document(playerId).Collection("hints").Document("hintsData");
+        docRef.SetAsync(userHints).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                Debug.Log("User hints updated in Firestore.");
+            }
+            else
+            {
+                Debug.LogError("Failed to update user hints in Firestore: " + task.Exception);
+            }
+        });
+    }
+
+
 }

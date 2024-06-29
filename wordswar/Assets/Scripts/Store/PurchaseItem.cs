@@ -110,7 +110,7 @@ public class PurchaseItem : MonoBehaviour
     }
     public void OnclickPurchaseTickets()
     {
-        if(playerCoins >= extraTimePrice)
+        if(playerCoins >= ticketsPrice)
         {
             FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
             PurchaseHint("tickets4141", "tickets");

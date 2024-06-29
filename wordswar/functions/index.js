@@ -1,105 +1,74 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable max-len */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+
 admin.initializeApp();
+
+// Reference to Firebase Realtime Database
 const database = admin.database();
 
-exports.checkGameEnd = functions.database.ref("/games/{gameId}/gameEnd").
-    onCreate(async (snapshot, context) => {
-      const gameId = context.params.gameId;
+exports.checkWordUsage = functions.https.onCall(async (data, context) => {
+  const roomId = data.roomId;
+  const topicName = data.topicName;
+  const word = data.word;
 
-      try {
-        // Retrieve game information
-        const gameSnapshot = await admin.database().
-            ref(`/games/${gameId}`).once("value");
-        const game = gameSnapshot.val();
+  console.log(`Room ID: ${roomId}, Topic: ${topicName}, Word: ${word}`);
 
-        // Extract player IDs and scores
-        const player1Id = game.gameInfo.playersIds[0];
-        const player2Id = game.gameInfo.playersIds[1];
-        const player1Score = game.gameInfo.scores[player1Id];
-        const player2Score = game.gameInfo.scores[player2Id];
+  try {
+    // Fetch the topic details to find primary and synonyms
+    const topicRef = database.ref(`/topics/${topicName}`);
+    const topicSnapshot = await topicRef.once("value");
 
-        // Determine winner and loser
-        let winner = "";
-        let loser = "";
-        if (player1Score > player2Score) {
-          winner = player1Id;
-          loser = player2Id;
-        } else if (player1Score < player2Score) {
-          winner = player2Id;
-          loser = player1Id;
-        } else {
-          // If both players have the same score, determine the loser base
-          const currentTurn = game.turn;
-          if (currentTurn === player1Id) {
-            // Player 1 is the loser if it's their turn
-            winner = player2Id;
-            loser = player1Id;
-          } else {
-            // Player 2 is the loser if it's their turn
-            winner = player1Id;
-            loser = player2Id;
-          }
-        }
+    if (!topicSnapshot.exists()) {
+      console.log(`Topic '${topicName}' does not exist.`);
+      throw new functions.https.HttpsError("not-found", `Topic '${topicName}' does not exist.`);
+    }
 
-        // Update game state
-        await admin.database().ref(`/games/${gameId}`).update({
-          winner: winner,
-          loser: loser,
-          status: "ended", // You can update other game status as needed
-        });
+    let primaryWord = "";
+    let synonyms = {};
 
-        // Update coins and other stats for the winner and loser in Firestore
-        const winnerRef = admin.firestore().collection("users").doc(winner);
-        const loserRef = admin.firestore().collection("users").doc(loser);
+    topicSnapshot.forEach((wordSnapshot) => {
+      const primary = wordSnapshot.child("primary").val();
+      const syns = wordSnapshot.child("synonyms").val();
 
-        await admin.firestore().runTransaction(async (transaction) => {
-          const winnerDoc = await transaction.get(winnerRef);
-          const loserDoc = await transaction.get(loserRef);
-
-          const winnerCoins = winnerDoc.data().coins + 20; // Add 20 coins
-          const winnerScores = winnerDoc.data().scores + 100;
-          const winnerXP = winnerDoc.data().xp + 25; // Add 25 XP for the winner
-          const winnerMatchesWon = winnerDoc.data().matchesWon + 1;
-          const loserCoins = loserDoc.data().coins + 10; // Add 10 coins
-          const loserXP = loserDoc.data().xp + 15; // Add 15 XP for the loser
-          const loserScores = loserDoc.data().scores + 50;
-          const loserMatchesLost = loserDoc.data().matchesLost + 1;
-
-          // Decrement tickets for both players
-          const winnerHintsRef = winnerRef.collection("hints").doc("hintsData");
-          const loserHintsRef = loserRef.collection("hints").doc("hintsData");
-
-          const winnerHintsDoc = await transaction.get(winnerHintsRef);
-          const loserHintsDoc = await transaction.get(loserHintsRef);
-          // Ensure tickets don't go below 0
-          const winnerTickets = Math.max(winnerHintsDoc.data().tickets - 1, 0);
-          const loserTickets = Math.max(loserHintsDoc.data().tickets - 1, 0);
-
-          // Update Firestore documents with new values
-          transaction.update(winnerRef, {
-            coins: winnerCoins,
-            xp: winnerXP,
-            scores: winnerScores,
-            matchesWon: winnerMatchesWon,
-          });
-
-          transaction.update(loserRef, {
-            coins: loserCoins,
-            xp: loserXP,
-            scores: loserScores,
-            matchesLost: loserMatchesLost,
-          });
-
-          transaction.update(winnerHintsRef, {tickets: winnerTickets});
-          transaction.update(loserHintsRef, {tickets: loserTickets});
-
-          console.log("Updated winner's and loser's stats ");
-        });
-
-        console.log("Game ended:", gameId);
-      } catch (error) {
-        console.error("Error:", error);
+      if (primary === word || (syns && Object.keys(syns).includes(word))) {
+        primaryWord = primary;
+        synonyms = syns;
       }
     });
+
+    if (!primaryWord) {
+      console.log(`Word '${word}' not found under topic '${topicName}'.`);
+      throw new functions.https.HttpsError("not-found", `Word '${word}' not found under topic '${topicName}'.`);
+    }
+
+    // Check if the primary word or any of its synonyms have been used
+    const usedWordsRef = database.ref(`/games/${roomId}/gameInfo/usedwords`);
+    const usedWordsSnapshot = await usedWordsRef.once("value");
+
+    if (usedWordsSnapshot.exists()) {
+      let wordUsed = false;
+
+      usedWordsSnapshot.forEach((playerSnapshot) => {
+        playerSnapshot.forEach((usedWordSnapshot) => {
+          const usedWord = usedWordSnapshot.val().toLowerCase();
+
+          if (usedWord === primaryWord.toLowerCase() || (synonyms && synonyms[usedWord])) {
+            wordUsed = true;
+          }
+        });
+      });
+
+      if (wordUsed) {
+        console.log(`The word or its synonyms have already been used.`);
+        return true;
+      }
+    }
+
+    console.log(`The word and its synonyms have not been used.`);
+    return false;
+  } catch (error) {
+    console.error("Error checking word usage:", error.message);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
