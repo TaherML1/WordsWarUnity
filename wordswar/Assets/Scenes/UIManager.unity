@@ -1957,7 +1957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1471dd72ef745af4b95a332bed1f5420, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  feedbackManager: {fileID: 0}
+  feedbackManager: {fileID: 230471156}
   errorMessageText: {fileID: 0}
 --- !u!114 &230471156
 MonoBehaviour:
@@ -6644,7 +6644,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1136425832
 Transform:
   m_ObjectHideFlags: 0

@@ -35,12 +35,15 @@ public class GoogleSignInManager : MonoBehaviour
 
     public void SignIn()
     {
+        Debug.Log("Sign-In button clicked, initializing Google Sign-In.");
+        feedbackManager.ShowFeedback("Sign-In button clicked");
         GoogleSignIn.Configuration = new GoogleSignInConfiguration
         {
             WebClientId = webClientId,
             RequestIdToken = true,
             RequestEmail = true
         };
+
         GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(FinishSignIn);
     }
 
@@ -49,9 +52,11 @@ public class GoogleSignInManager : MonoBehaviour
         if (task.IsFaulted || task.IsCanceled)
         {
             feedbackManager.ShowFeedback("An error occurred while signing in with Google");
-            Debug.LogError("An error occurred while signing in with Google.");
+            Debug.LogError("An error occurred while signing in with Google: " + task.Exception?.Message);
             return;
         }
+
+        Debug.Log("Google Sign-In successful, signing in with Firebase.");
 
         Credential credential = GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
         _ = auth.SignInWithCredentialAsync(credential).ContinueWithOnMainThread(signInTask =>
@@ -59,15 +64,14 @@ public class GoogleSignInManager : MonoBehaviour
             if (signInTask.IsCanceled || signInTask.IsFaulted)
             {
                 feedbackManager.ShowFeedback("An error occurred while signing in with Firebase");
-                Debug.LogError("An error occurred while signing in with Firebase.");
+                Debug.LogError("An error occurred while signing in with Firebase: " + signInTask.Exception?.Message);
                 return;
             }
 
             FirebaseUser firebaseUser = signInTask.Result;
             feedbackManager.ShowFeedback("Signed in successfully");
-            Debug.Log("Signed in successfully.");
+            Debug.Log("Signed in successfully as: " + firebaseUser.DisplayName);
 
-            // Ensure scene transition only if sign-in is successful
             SceneManager.LoadScene("MainMenu");
         });
     }

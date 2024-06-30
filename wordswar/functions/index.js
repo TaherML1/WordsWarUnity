@@ -1,97 +1,66 @@
 /* eslint-disable max-len */
-const {onCall, HttpsError} = require("firebase-functions/v2/https");
+/* eslint-disable require-jsdoc */
+const {onCall} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin
 admin.initializeApp();
+
+// Reference to Firebase Realtime Database
 const database = admin.database();
 
-// Define the Gen 2 Cloud Function for getting a joker hint
-exports.getJokerHint2 = onCall(
-    {
-      // Optional: Add runtime options like memory, timeout, etc.
-      // Example: memory: '256MiB', timeoutSeconds: 120
-    },
-    async (request) => {
-      try {
-        console.log("Fetching joker hint...");
+exports.checkTopicAndWordTestt = onCall(async (request) => {
+  const topicName = request.data.topicName;
+  const word = request.data.word;
 
-        // Ensure the user is authenticated
-        if (!request.auth) {
-          throw new HttpsError("unauthenticated", "You must be authenticated to use a joker hint.");
-        }
+  console.log(`Topic name: ${topicName}, Word: ${word}`);
 
-        const gameId = request.data.gameId; // ID of the current game
-        const selectedTopic = request.data.selectedTopic; // Selected topic for the game
+  try {
+    // Check if the topic exists
+    console.log(`Checking existence of topic '${topicName}'`);
+    const topicSnapshot = await database.ref(`/topics/${topicName}`).once("value");
 
-        console.log("Game ID:", gameId);
-        console.log("Selected Topic:", selectedTopic);
+    if (!topicSnapshot.exists()) {
+      console.log(`Topic '${topicName}' does not exist.`);
+      throw new Error(`Topic '${topicName}' does not exist.`);
+    }
 
-        // Fetch all used words for the current game from the database
-        const usedWordsSnapshot = await database.ref(`/games/${gameId}/gameInfo/usedwords`).once("value");
-        const usedWordsObject = usedWordsSnapshot.val() || {}; // If no used words, initialize as an empty object
+    // Check if the word exists as primary or synonym under the topic
+    console.log(`Checking existence of word '${word}' under topic '${topicName}'`);
+    const wordExists = await checkWordExists(topicName, word);
 
-        // Flatten used words from all players into a single array and convert to lowercase
-        const usedWords = Object.values(usedWordsObject).flatMap((playerWords) =>
-          Object.values(playerWords).map((word) => word.toLowerCase()),
-        );
+    if (!wordExists) {
+      console.log(`Word '${word}' does not exist under the topic '${topicName}'.`);
+      throw new Error(`Word '${word}' does not exist under the topic '${topicName}'.`);
+    }
 
-        console.log("Used Words:", usedWords);
+    console.log(`Word '${word}' exists under the topic '${topicName}'.`);
 
-        // Fetch all words under the selected topic from the database
-        const topicSnapshot = await database.ref(`/topics/${selectedTopic}`).once("value");
-        const topicWords = topicSnapshot.val();
+    // Return a success message indicating that both topic and word exist
+    return true;
+  } catch (error) {
+    console.error(`Error occurred: ${error.message}`);
+    throw new Error(`Function execution error: ${error.message}`);
+  }
+});
 
-        if (!topicWords) {
-          console.log(`Topic '${selectedTopic}' does not exist.`);
-          throw new HttpsError("not-found", `Topic '${selectedTopic}' does not exist.`);
-        }
+async function checkWordExists(topicName, word) {
+  const topicRef = database.ref(`/topics/${topicName}`);
+  const snapshot = await topicRef.once("value");
 
-        console.log("Topic Words:", topicWords);
+  if (!snapshot.exists()) {
+    return false;
+  }
 
-        // Extract only primary words (keys of the topicWords object)
-        const primaryWords = Object.keys(topicWords).map((word) => word.toLowerCase());
+  let wordExists = false;
+  snapshot.forEach((childSnapshot) => {
+    const primaryWord = childSnapshot.child("primary").val();
+    const synonyms = childSnapshot.child("synonyms").val();
 
-        console.log("Primary Words:", primaryWords);
+    if (primaryWord === word || (synonyms && synonyms[word])) {
+      wordExists = true;
+    }
+  });
 
-        // Filter out primary words that have been used
-        const availablePrimaryWords = primaryWords.filter((word) => !usedWords.includes(word));
-
-        console.log("Available Primary Words:", availablePrimaryWords);
-
-        // If no available primary words found after filtering, return an error
-        if (availablePrimaryWords.length === 0) {
-          console.log("No available primary words for joker hint.");
-          throw new HttpsError("failed-precondition", "No available primary words for joker hint.");
-        }
-
-        // Check if the user has enough hints available
-        const userId = request.auth.uid;
-        const userHintDocRef = admin.firestore().collection("users").doc(userId).collection("hints").doc("hintsData");
-        const userHintData = (await userHintDocRef.get()).data();
-        const userHintCount = userHintData ? userHintData["joker"] || 0 : 0;
-
-        if (userHintCount <= 0) {
-          console.log("User doesn't have enough hints.");
-          throw new HttpsError("failed-precondition", "You don't have enough hints.");
-        }
-
-        // Randomly select a primary word from the available primary words
-        const randomPrimaryWord = availablePrimaryWords[Math.floor(Math.random() * availablePrimaryWords.length)];
-
-        console.log("Selected Joker Hint Primary Word:", randomPrimaryWord);
-
-        // Decrease the hint count for the user
-        await userHintDocRef.update({
-          ["joker"]: admin.firestore.FieldValue.increment(-1),
-        });
-
-        console.log("Hint count decreased.");
-
-        return randomPrimaryWord; // Return just the joker hint primary word
-      } catch (error) {
-        console.error("Error fetching joker hint:", error);
-        throw new HttpsError("internal", "An error occurred while fetching joker hint.", error);
-      }
-    },
-);
+  return wordExists;
+}
