@@ -24,32 +24,10 @@ public class CustomKeyboard : MonoBehaviour
     }
     public void Space()
     {
-        if (!string.IsNullOrEmpty(inputField.text))
-        {
-            inputField.text = AddSpaceBetweenWords(inputField.text);
-        }
+        inputField.text += " ";
     }
 
-    private string AddSpaceBetweenWords(string input)
-    {
-        // Check if the input string is null or empty
-        if (string.IsNullOrEmpty(input))
-        {
-            Debug.LogWarning("Input string is null or empty.");
-            return input;
-        }
-
-        // Split the input string by spaces
-        string[] words = input.Split(' ');
-
-        // Join the words with a space between them
-        string result = string.Join(" ", words);
-
-        return result;
-    }
-
-
-
+    
 
 
     // Function to clear the whole input field

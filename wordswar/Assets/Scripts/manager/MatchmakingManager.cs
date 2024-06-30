@@ -114,7 +114,7 @@ public class MatchmakingManager : MonoBehaviour
     // Method to add the current player to the matchmaking queue
     public void AddPlayerToMatchmaking()
     {
-        if(currentTickets > 0)
+       // if(currentTickets > 0)
         {
             if (auth.CurrentUser != null)
             {
@@ -145,10 +145,11 @@ public class MatchmakingManager : MonoBehaviour
             {
                 Debug.LogError("Current user is not authenticated");
             }
-        }else
+        }
+        /*else
         {
             Debug.LogError("there is no enough tickets");
-        }
+        }*/
         
     }
 

@@ -202,12 +202,7 @@ public class GameController : MonoBehaviour
 
     string NormalizeWord(string word)
     {
-        // Check if the word starts with "ال"
-        if (word.StartsWith("ال"))
-        {
-            // Remove the definite article
-            word = word.Substring(2); // Remove the first two characters
-        }
+        
 
         // Normalize the word by removing diacritics (like hamza) and other variations
         // Replace "أ" (alef with hamza above) with "ا" (alef without hamza)
