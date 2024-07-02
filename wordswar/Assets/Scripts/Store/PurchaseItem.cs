@@ -10,11 +10,16 @@ using Firebase.Analytics;
 
 public class PurchaseItem : MonoBehaviour
 {
+
+
+
     private UserManager userManager;
     private HintPricesManager hintPricesManager;
     private FirebaseFunctions functions;
 
     public FeedbackManager feedbackManager;
+
+    public RadialProgressBar radialProgressBar;
 
     int playerCoins;
     int playerGems;
@@ -125,6 +130,8 @@ public class PurchaseItem : MonoBehaviour
 
     public void PurchaseHint(string hintId, string hintType)
     {
+        
+        radialProgressBar.StartSpinning();
         Debug.Log("You called the function.");
 
         // Create the data payload to send to the Cloud Function
@@ -142,10 +149,12 @@ public class PurchaseItem : MonoBehaviour
                 if (task.IsFaulted)
                 {
                     Debug.LogError("Purchase failed: you don't have enough coins.");
+                    radialProgressBar.StopSpinning();
                 }
                 else if (task.IsCompleted)
                 {
                     Debug.Log("The purchase was made successfully.");
+                    radialProgressBar.StopSpinning();
                 }
             });
     }
