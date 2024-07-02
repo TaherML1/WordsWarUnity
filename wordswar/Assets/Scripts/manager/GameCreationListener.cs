@@ -3,12 +3,18 @@ using Firebase;
 using Firebase.Database;
 using UnityEngine.SceneManagement;
 using Firebase.Auth;
+using UnityEngine.UI; // Add this if using regular Text
+using TMPro; // Add this if using TextMeshPro
 
 public class GameCreationListener : MonoBehaviour
 {
     DatabaseReference databaseReference;
     bool isListening = false; // Flag to track if the listener is active
     string currentPlayerId; // Store the current player ID
+    public TextMeshProUGUI countdownText; // For regular Text UI element
+    // public TMP_Text countdownText; // Use this instead if using TextMeshPro
+    public float countdownTime = 6f; // Countdown duration in seconds
+    float currentCountdownTime; // To keep track of the countdown
 
     void Start()
     {
@@ -94,9 +100,10 @@ public class GameCreationListener : MonoBehaviour
                     // Check if the room has a status (not ended)
                     if (playerIsInRoom && !childSnapshot.HasChild("status") || childSnapshot.Child("status").Value.ToString() != "ended")
                     {
-                        // Transition to gameplay scene
+                        // Transition to gameplay scene with countdown
                         PlayerPrefs.SetString("roomId", roomId);
-                        Invoke("StartGameplayScene", 6f);
+                        currentCountdownTime = countdownTime;
+                        InvokeRepeating("UpdateCountdown", 0f, 1f); // Start countdown
                         break; // Only join the first valid room
                     }
                 }
@@ -104,10 +111,28 @@ public class GameCreationListener : MonoBehaviour
         }
     }
 
+    private void UpdateCountdown()
+    {
+        if (countdownText != null)
+        {
+            countdownText.text = currentCountdownTime.ToString("F0") ;
+        }
+
+        if (currentCountdownTime > 0)
+        {
+            currentCountdownTime -= 1;
+        }
+        else
+        {
+            CancelInvoke("UpdateCountdown");
+            StartGameplayScene();
+        }
+    }
+
     private void StartGameplayScene()
     {
         StopListening();
-        SceneManager.LoadScene("GamePlay"); // Replace "GameplayScene" with your actual scene name
+        SceneManager.LoadScene("GamePlay"); // Replace "GamePlay" with your actual scene name
         Destroy(gameObject);
     }
 }

@@ -7,6 +7,7 @@ using Firebase.Functions;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Text.RegularExpressions; // Needed for regex validation
 
 public class SetUser : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class SetUser : MonoBehaviour
     public TMP_InputField usernameInputField;
     public TextMeshProUGUI responseText;
     public GameObject setUserPanel;
+    public GameObject Shadow;
 
     void Start()
     {
@@ -34,26 +36,40 @@ public class SetUser : MonoBehaviour
 
     public async void CallSetUserFunction()
     {
+        Shadow.SetActive(true);
+
         if (!firebaseInitialized)
         {
             Debug.LogError("Firebase not yet initialized. Please wait.");
+            responseText.text = "Firebase initialization in progress. Please wait.";
+            Shadow.SetActive(false);
             return;
         }
 
         if (functions == null)
         {
             Debug.LogError("Firebase Functions not initialized.");
+            responseText.text = "Firebase Functions not initialized.";
+            Shadow.SetActive(false);
             return;
         }
 
         // Get the username from the input field
         string username = usernameInputField.text;
 
+        // Sanitize and validate the username
+        if (!IsValidUsername(username))
+        {
+            Debug.LogError("Invalid username. Only letters and numbers are allowed.");
+            responseText.text = "Invalid username. Only letters and numbers are allowed.";
+            Shadow.SetActive(false);
+            return;
+        }
+
         // Prepare data to send to the Cloud Function
         var data = new Dictionary<string, object>
         {
-            { "username", username }, // Use the username from the input field
-            // Add other user data fields here if needed
+            { "username", username }
         };
 
         try
@@ -69,12 +85,24 @@ public class SetUser : MonoBehaviour
             // Call CheckUserProfileCompletion in FetchUserProfile after setting the username
             UserManager.Instance.ListenForUserDataChanges();
             setUserPanel.SetActive(false);
-            
+            Shadow.SetActive(false);
+
         }
         catch (System.Exception e)
         {
             // Handle any errors
             Debug.LogError($"Error calling function: {e.Message}");
+            responseText.text = "Error saving profile. Please try again.";
+            Shadow.SetActive(false);
         }
+    }
+
+    // Method to validate the username
+    private bool IsValidUsername(string username)
+    {
+        // Regular expression to match letters (both English and Arabic) and numbers
+        // Including more Arabic Unicode ranges if needed
+        string pattern = @"^[a-zA-Z0-9\u0600-\u06FF]+$";
+        return Regex.IsMatch(username, pattern);
     }
 }

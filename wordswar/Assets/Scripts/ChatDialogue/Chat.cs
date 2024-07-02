@@ -38,7 +38,7 @@ public class Chat : MonoBehaviour
         {
             GetMessage(messageText, true); // true indicates the local player
             playerInput.text = ""; // Clear the input field after sending the message
-            StartCoroutine(SmoothScrollToBottom()); // Scroll to the bottom after sending the message
+          
         }
     }
 
@@ -49,7 +49,7 @@ public class Chat : MonoBehaviour
         {
             GetMessage(messageText, false); // false indicates the enemy player
             playerInput.text = ""; // Clear the input field after sending the message
-            StartCoroutine(SmoothScrollToBottom()); // Scroll to the bottom after sending the message
+            
         }
     }
 
@@ -71,7 +71,7 @@ public class Chat : MonoBehaviour
             // Align to the right for local player
             rectTransform.anchorMin = new Vector2(1, 0.5f);
             rectTransform.anchorMax = new Vector2(1, 0.5f);
-            rectTransform.pivot = new Vector2(2.2f, 0.5f); // Changed pivot for local player
+            rectTransform.pivot = new Vector2(2.13f, 0.5f); // Changed pivot for local player
             messageText.alignment = TextAlignmentOptions.Right;
             messageText.margin = new Vector4(0, 0, 10, 0); // Add margin to the right
             background.color = localPlayerColor;
@@ -81,7 +81,7 @@ public class Chat : MonoBehaviour
             // Align to the left for non-local player
             rectTransform.anchorMin = new Vector2(0, 0.5f);
             rectTransform.anchorMax = new Vector2(0, 0.5f);
-            rectTransform.pivot = new Vector2(-1.27f, 0.5f); // Changed pivot for non-local player
+            rectTransform.pivot = new Vector2(-1.4f, 0.5f); // Changed pivot for non-local player
             messageText.alignment = TextAlignmentOptions.Left;
             messageText.margin = new Vector4(10, 0, 0, 0); // Add margin to the left
             background.color = nonLocalPlayerColor;
@@ -91,7 +91,7 @@ public class Chat : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(Content.GetComponent<RectTransform>());
 
         // Animate the message with new scale
-        Vector3 targetScale = new Vector3(0.8f, 0.7f, 1f); // New target scale
+        Vector3 targetScale = new Vector3(0.77f, 0.7f, 1f); // New target scale
         LeanTween.scale(messageObject, targetScale, messageScaleDuration).setEase(messageScaleEase);
         LeanTween.alpha(background.rectTransform, 1f, messageFadeDuration);
         LeanTween.value(messageObject, 0f, 1f, messageFadeDuration)
@@ -109,24 +109,4 @@ public class Chat : MonoBehaviour
             });
     }
 
-    public IEnumerator SmoothScrollToBottom()
-    {
-        float duration = 0.3f; // Duration of the scroll in seconds
-        float elapsedTime = 0f; // Time elapsed since the start of the scroll
-        float startPos = ScrollRect.verticalNormalizedPosition; // Current scroll position
-
-        // Ensure the content layout is updated before scrolling
-        Canvas.ForceUpdateCanvases();
-
-        while (elapsedTime < duration)
-        {
-            elapsedTime += Time.deltaTime; // Increment elapsed time
-            float newPos = Mathf.Lerp(startPos, 0f, elapsedTime / duration); // Interpolate between start and end positions
-            ScrollRect.verticalNormalizedPosition = newPos; // Set the new scroll position
-            yield return null; // Wait for the next frame
-        }
-
-        // Ensure the final position is exactly at the bottom
-        ScrollRect.verticalNormalizedPosition = 0f;
-    }
 }
