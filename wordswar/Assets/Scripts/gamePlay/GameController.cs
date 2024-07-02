@@ -654,7 +654,7 @@ public class GameController : MonoBehaviour
                                 // If not, display the message and add it to the set of displayed messages
                                 ChatInstance.GetMessage(usedWord, playerId == localPlayerId);
                                // messageAnimator.ShowMessage(usedWord, playerId == localPlayerId);
-                                StartCoroutine(ChatInstance.SmoothScrollToBottom());
+                                
                                 displayedMessages.Add(usedWord);
                             }
                         }

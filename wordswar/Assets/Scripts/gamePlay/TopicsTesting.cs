@@ -16,6 +16,7 @@ using Firebase.Extensions;
 
 public class TopicsTesting : MonoBehaviour
 {
+    public Chat ChatInstance;
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
 
@@ -28,8 +29,9 @@ public class TopicsTesting : MonoBehaviour
     public Button submitButton;
 
     bool wordExists;
+   public bool islocalplayer = true;
 
-    string selectedTopic = "اجهزة الكترونية تجدها في المنزل";
+   public string selectedTopic = "بلدان قارة اسيا";
     void Start()
     {
         Task<DependencyStatus> firebaseTask = FirebaseApp.CheckAndFixDependenciesAsync();
@@ -59,7 +61,7 @@ public class TopicsTesting : MonoBehaviour
         currentInput = NormalizeWord(currentInput);
         Debug.Log("your current input is : " + currentInput);
         wordExists = await CallCloudFunction(selectedTopic, currentInput);
-
+        ChatInstance.GetMessage(currentInput, islocalplayer);
         if (wordExists)
         {
             submitButton.interactable = true;

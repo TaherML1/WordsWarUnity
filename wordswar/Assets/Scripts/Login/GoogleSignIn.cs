@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 using Firebase.Database;
 using System.Threading.Tasks;
 using Firebase;
+using System.Collections.Generic;
+using System;
 public class GoogleSignInManager : MonoBehaviour
 {
     public FeedbackManager feedbackManager; // Renamed for consistency
@@ -35,8 +37,6 @@ public class GoogleSignInManager : MonoBehaviour
 
     public void SignIn()
     {
-        Debug.Log("Sign-In button clicked, initializing Google Sign-In.");
-        feedbackManager.ShowFeedback("Sign-In button clicked");
         GoogleSignIn.Configuration = new GoogleSignInConfiguration
         {
             WebClientId = webClientId,
@@ -44,7 +44,30 @@ public class GoogleSignInManager : MonoBehaviour
             RequestEmail = true
         };
 
-        GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(FinishSignIn);
+        GoogleSignIn.DefaultInstance.SignOut(); // Sign out before attempting to sign in
+
+        GoogleSignIn.DefaultInstance.SignIn().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                using (IEnumerator<Exception> enumerator = task.Exception.InnerExceptions.GetEnumerator())
+                {
+                    if (enumerator.MoveNext())
+                    {
+                        GoogleSignIn.SignInException error = (GoogleSignIn.SignInException)enumerator.Current;
+                        feedbackManager.ShowFeedback($"Got Error: {error.Status} {error.Message}");
+                    }
+                    else
+                    {
+                        feedbackManager.ShowFeedback("Got Unexpected Exception. Please check your Google Play Services installation.");
+                    }
+                }
+            }
+            else
+            {
+                FinishSignIn(task);
+            }
+        });
     }
 
     private void FinishSignIn(Task<GoogleSignInUser> task)
