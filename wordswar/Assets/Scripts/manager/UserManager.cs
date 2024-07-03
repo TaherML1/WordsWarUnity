@@ -8,6 +8,9 @@ using System;
 
 public class UserManager : MonoBehaviour
 {
+    public ShadowPanel shadowPanel;
+
+
     public static UserManager Instance { get; private set; }
 
     private FirebaseFirestore db;
@@ -91,6 +94,7 @@ public class UserManager : MonoBehaviour
                     if (FetchUserProfile.instance != null)
                     {
                         FetchUserProfile.instance.setUserPanel.SetActive(true);
+                        shadowPanel.showShadowPanel();
                     }
                 }
             }
@@ -101,6 +105,7 @@ public class UserManager : MonoBehaviour
                 if (FetchUserProfile.instance != null)
                 {
                     FetchUserProfile.instance.setUserPanel.SetActive(true);
+                    shadowPanel.showShadowPanel();
                 }
             }
         }

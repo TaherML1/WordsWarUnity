@@ -12,6 +12,9 @@ using System.Text.RegularExpressions; // Needed for regex validation
 public class SetUser : MonoBehaviour
 {
     private FirebaseFunctions functions;
+
+    public RadialProgressBar radialProgressBar;
+    
     private bool firebaseInitialized = false; // Flag to track Firebase initialization
     public TMP_InputField usernameInputField;
     public TextMeshProUGUI responseText;
@@ -37,12 +40,13 @@ public class SetUser : MonoBehaviour
     public async void CallSetUserFunction()
     {
         Shadow.SetActive(true);
-
+        radialProgressBar.StartSpinning();
         if (!firebaseInitialized)
         {
             Debug.LogError("Firebase not yet initialized. Please wait.");
             responseText.text = "Firebase initialization in progress. Please wait.";
             Shadow.SetActive(false);
+            radialProgressBar.StopSpinning();
             return;
         }
 
@@ -51,6 +55,7 @@ public class SetUser : MonoBehaviour
             Debug.LogError("Firebase Functions not initialized.");
             responseText.text = "Firebase Functions not initialized.";
             Shadow.SetActive(false);
+            radialProgressBar.StopSpinning();
             return;
         }
 
@@ -63,6 +68,7 @@ public class SetUser : MonoBehaviour
             Debug.LogError("Invalid username. Only letters and numbers are allowed.");
             responseText.text = "Invalid username. Only letters and numbers are allowed.";
             Shadow.SetActive(false);
+            radialProgressBar.StopSpinning();
             return;
         }
 
@@ -86,6 +92,7 @@ public class SetUser : MonoBehaviour
             UserManager.Instance.ListenForUserDataChanges();
             setUserPanel.SetActive(false);
             Shadow.SetActive(false);
+             radialProgressBar.StopSpinning();
 
         }
         catch (System.Exception e)
@@ -94,6 +101,7 @@ public class SetUser : MonoBehaviour
             Debug.LogError($"Error calling function: {e.Message}");
             responseText.text = "Error saving profile. Please try again.";
             Shadow.SetActive(false);
+            radialProgressBar.StopSpinning();
         }
     }
 
