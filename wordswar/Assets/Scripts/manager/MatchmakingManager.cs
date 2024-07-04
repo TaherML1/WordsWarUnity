@@ -12,7 +12,7 @@ public class MatchmakingManager : MonoBehaviour
 {
     DatabaseReference databaseReference;
     FirebaseAuth auth;
-   
+
     public Button RemoveButton;
     string playerId;
 
@@ -43,7 +43,7 @@ public class MatchmakingManager : MonoBehaviour
             }
         });
 
-       void updateUserTickets(Dictionary<string, object> userHints)
+        void updateUserTickets(Dictionary<string, object> userHints)
         {
             if (userHints.TryGetValue("tickets", out object TicketsObj))
             {
@@ -96,7 +96,7 @@ public class MatchmakingManager : MonoBehaviour
             {
                 // Value has changed from "placeholder" to something else (likely a room ID)
                 RemoveButton.gameObject.SetActive(false); // Hide the RemoveButton
-          
+
                 Debug.Log("Player matched. Room ID: " + currentValue);
             }
             else
@@ -114,7 +114,7 @@ public class MatchmakingManager : MonoBehaviour
     // Method to add the current player to the matchmaking queue
     public void AddPlayerToMatchmaking()
     {
-       // if(currentTickets > 0)
+        // if(currentTickets > 0)
         {
             if (auth.CurrentUser != null)
             {
@@ -150,13 +150,13 @@ public class MatchmakingManager : MonoBehaviour
         {
             Debug.LogError("there is no enough tickets");
         }*/
-        
+
     }
 
     // Method to remove the current player from the matchmaking queue
     public void RemovePlayerFromMatchmaking()
     {
-        
+
         if (auth.CurrentUser != null)
         {
             // Check if the database reference is valid
@@ -175,7 +175,7 @@ public class MatchmakingManager : MonoBehaviour
                         Debug.Log("Player removed from matchmaking successfully");
 
                         // Optionally re-enable the StartButton if you want to allow rejoining the queue
-                   
+
                         RemoveButton.gameObject.SetActive(true);
                     }
                 });

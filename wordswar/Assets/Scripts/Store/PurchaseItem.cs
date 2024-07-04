@@ -115,11 +115,12 @@ public class PurchaseItem : MonoBehaviour
     }
     public void OnclickPurchaseTickets()
     {
-        if(playerCoins >= ticketsPrice)
+        if (playerCoins >= ticketsPrice)
         {
             FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
             PurchaseHint("tickets4141", "tickets");
-        }else
+        }
+        else
         {
             feedbackManager.ShowFeedback("Not enough coins to purchase tickets.");
             Debug.Log("Not enough coins to purchase tickets.");
@@ -130,7 +131,7 @@ public class PurchaseItem : MonoBehaviour
 
     public void PurchaseHint(string hintId, string hintType)
     {
-        
+
         radialProgressBar.StartSpinning();
         Debug.Log("You called the function.");
 

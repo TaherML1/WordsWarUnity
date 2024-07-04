@@ -13,6 +13,7 @@ using System;
 public class AuthManager : MonoBehaviour
 {
     public FeedbackManager feedbackManager;
+    public RadialProgressBar radialProgressBar;
 
     FirebaseUser fuser;
     FirebaseFunctions functions;
@@ -86,7 +87,8 @@ public class AuthManager : MonoBehaviour
 
     private async Task LoginAsync(string _email, string _password)
     {
-      
+        radialProgressBar.StartSpinning();
+
         try
         {
             var loginTask = await auth.SignInWithEmailAndPasswordAsync(_email, _password);
@@ -94,12 +96,16 @@ public class AuthManager : MonoBehaviour
             Debug.LogFormat("User signed in successfully: {0} ({1})", User.DisplayName, User.Email);
 
             feedbackManager.ShowFeedback("Logged In");
+            radialProgressBar.StopSpinning();
 
-            FirebaseAnalytics.LogEvent("login_success", new Parameter("user_id", User.UserId)); // Log success
+            // Log success event
+            FirebaseAnalytics.LogEvent("login_success",
+                new Parameter("user_id", User.UserId),
+                new Parameter("email", _email),
+                new Parameter("timestamp", DateTime.UtcNow.ToString("o"))); // ISO 8601 format
 
             SceneManager.LoadScene(SceneNames.MainMenu);
             FirebaseAnalytics.LogEvent("scene_change", new Parameter("scene_name", SceneNames.MainMenu));
-
         }
         catch (FirebaseException ex)
         {
@@ -107,33 +113,28 @@ public class AuthManager : MonoBehaviour
             AuthError errorCode = (AuthError)ex.ErrorCode;
             string message = GetErrorMessage(errorCode);
             feedbackManager.ShowFeedback(message);
+            radialProgressBar.StopSpinning();
 
-            FirebaseAnalytics.LogEvent("login_failure",
-                new Parameter("email", _email),
-                new Parameter("error_code", errorCode.ToString()), // Log failure details
-                new Parameter("error_message", ex.Message)); // Log error message
+            // Log failure event
+
         }
     }
 
-
     private async Task RegisterAsync(string _email, string _password, string _username)
     {
-       
-
         if (string.IsNullOrEmpty(_username))
         {
             feedbackManager.ShowFeedback("Missing Username");
-         
             return;
         }
 
         if (passwordRegisterField.text != passwordRegisterVerifyField.text)
         {
             feedbackManager.ShowFeedback("Password Does Not Match!");
-       
             return;
         }
 
+        radialProgressBar.StartSpinning();
         try
         {
             var userCredential = await auth.CreateUserWithEmailAndPasswordAsync(_email, _password);
@@ -142,8 +143,14 @@ public class AuthManager : MonoBehaviour
             UserProfile profile = new UserProfile { DisplayName = _username };
             await User.UpdateUserProfileAsync(profile);
 
-            FirebaseAnalytics.LogEvent("register_success", new Parameter("user_id", User.UserId)); // Log success
+            // Log success event
+            FirebaseAnalytics.LogEvent("register_success",
+                new Parameter("user_id", User.UserId),
+                new Parameter("email", _email),
+                new Parameter("username", _username),
+                new Parameter("timestamp", DateTime.UtcNow.ToString("o")));
 
+            radialProgressBar.StopSpinning();
             UIManager.instance.LoginScreen();
         }
         catch (FirebaseException ex)
@@ -151,26 +158,25 @@ public class AuthManager : MonoBehaviour
             AuthError errorCode = (AuthError)ex.ErrorCode;
             string message = GetErrorMessage(errorCode);
             feedbackManager.ShowFeedback(message);
+            radialProgressBar.StopSpinning();
 
-            FirebaseAnalytics.LogEvent("register_failure",
-                new Parameter("email", _email),
-                new Parameter("error_code", errorCode.ToString()), // Log failure details
-                new Parameter("error_message", ex.Message)); // Log error message
+            // Log failure event
+
         }
     }
 
-
     private async Task ResetPasswordAsync(string email)
     {
-       
-
         try
         {
             await auth.SendPasswordResetEmailAsync(email);
             Debug.Log("Password reset email sent to: " + email);
             feedbackManager.ShowFeedback("Password reset email sent to: " + email);
 
-            FirebaseAnalytics.LogEvent("password_reset_success", new Parameter("email", email)); // Log success
+            // Log success event
+            FirebaseAnalytics.LogEvent("password_reset_success",
+                new Parameter("email", email),
+                new Parameter("timestamp", DateTime.UtcNow.ToString("o")));
         }
         catch (FirebaseException ex)
         {
@@ -179,13 +185,10 @@ public class AuthManager : MonoBehaviour
             string message = GetErrorMessage(errorCode);
             feedbackManager.ShowFeedback(message);
 
-            FirebaseAnalytics.LogEvent("password_reset_failure",
-                new Parameter("email", email),
-                new Parameter("error_code", errorCode.ToString()), // Log failure details
-                new Parameter("error_message", ex.Message)); // Log error message
+            // Log failure event
+
         }
     }
-
 
     public void registerScreen()
     {
@@ -246,19 +249,24 @@ public class AuthManager : MonoBehaviour
 
             // Additional cleanup if necessary
             ClearUserSpecificData();
+
+            // Log logout event
+            FirebaseAnalytics.LogEvent("logout_success", new Parameter("timestamp", DateTime.UtcNow.ToString("o")));
         }
         catch (Exception ex)
         {
             Debug.LogError("Error while logging out: " + ex.Message);
             feedbackManager.ShowFeedback("Logout failed. Please try again.");
+
+            // Log logout failure event
+
+
         }
     }
-
 
     private void ClearUserSpecificData()
     {
         // Example: Clear user-related data or reset UI fields
-        // You can clear fields, reset settings, etc.
         emailLoginField.text = "";
         passwordLoginField.text = "";
     }
@@ -298,7 +306,7 @@ public class AuthManager : MonoBehaviour
 public static class SceneNames
 {
     public const string MainMenu = "MainMenu";
-    public const string UserProfile = "UIManager";
+    public const string UserProfile = "UserProfile"; // Adjusted to be consistent
 }
 
 public static class TaskExtensions

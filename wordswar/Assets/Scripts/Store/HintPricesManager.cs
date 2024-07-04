@@ -76,7 +76,7 @@ public class HintPricesManager : MonoBehaviour
                 PricesFetched?.Invoke();
                 Debug.Log("Joker price: " + joker);
                 Debug.Log("Extra time price: " + extraTime);
-                Debug.Log("Tickets price : " +  tickets);
+                Debug.Log("Tickets price : " + tickets);
             }
             else
             {
@@ -100,7 +100,7 @@ public class HintPricesManager : MonoBehaviour
     }
 
     public int getTicketsPrice()
-    {  
-        return tickets; 
+    {
+        return tickets;
     }
 }
