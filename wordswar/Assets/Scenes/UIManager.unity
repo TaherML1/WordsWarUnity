@@ -555,7 +555,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c639b42283f61744e9ce4e3d1da7e9d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BGimageProgressBar: {fileID: 137346241}
+  BGimage: {fileID: 137346241}
   progressBar: {fileID: 143000628}
   rotationSpeed: 200
 --- !u!1 &31459269
@@ -1182,7 +1182,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c639b42283f61744e9ce4e3d1da7e9d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BGimageProgressBar: {fileID: 0}
+  BGimage: {fileID: 0}
   progressBar: {fileID: 0}
   rotationSpeed: 200
 --- !u!114 &137346244
@@ -1273,7 +1273,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c639b42283f61744e9ce4e3d1da7e9d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BGimageProgressBar: {fileID: 0}
+  BGimage: {fileID: 0}
   progressBar: {fileID: 0}
   rotationSpeed: 200
 --- !u!114 &143000628

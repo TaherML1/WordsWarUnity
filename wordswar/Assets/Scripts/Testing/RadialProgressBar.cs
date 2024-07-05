@@ -4,7 +4,7 @@ using System.Collections;
 
 public class RadialProgressBar : MonoBehaviour
 {
-    public GameObject BGimageProgressBar;
+    public GameObject BGimage;
     public Image progressBar; // Reference to the radial progress bar Image
     public float rotationSpeed = 200f; // Speed of the continuous rotation
 
@@ -20,7 +20,7 @@ public class RadialProgressBar : MonoBehaviour
     public void StartSpinning()
     {
         isRotating = true;
-       BGimageProgressBar.SetActive(true);
+       BGimage.SetActive(true);
         StartCoroutine(ContinuousRotation());
     }
 
@@ -28,7 +28,7 @@ public class RadialProgressBar : MonoBehaviour
     public void StopSpinning()
     {
         isRotating = false;
-        BGimageProgressBar.SetActive(false);
+        BGimage.SetActive(false);
        
     }
 
