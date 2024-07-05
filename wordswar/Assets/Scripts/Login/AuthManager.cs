@@ -45,19 +45,19 @@ public class AuthManager : MonoBehaviour
 
     void Awake()
     {
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
-            dependencyStatus = task.Result;
-            if (dependencyStatus == DependencyStatus.Available)
-            {
-                InitializeFirebase();
-            }
-            else
-            {
-                Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);
-            }
-        });
+           InitializeFirebase() ;
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            StartCoroutine(WaitForFirebaseInitialization());
+        }
     }
+
+
 
     private void InitializeFirebase()
     {
@@ -69,7 +69,17 @@ public class AuthManager : MonoBehaviour
         functions = FirebaseFunctions.DefaultInstance;
         db = FirebaseFirestore.DefaultInstance;
     }
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (FirebaseManager.Instance == null || !FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
 
+        // Firebase is now initialized, initialize HintPricesManager
+        InitializeFirebase();
+    }
     public void RegisterButton()
     {
         RegisterAsync(emailRegisterField.text, passwordRegisterField.text, usernameRegisterField.text).Forget();

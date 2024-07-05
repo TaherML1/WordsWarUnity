@@ -160,8 +160,9 @@ public class PurchaseItem : MonoBehaviour
             });
     }
 
-    private void getBalance()
+    private async void getBalance()
     {
+
         playerCoins = userManager.GetCoins();
         playerGems = userManager.GetGems();
         Debug.Log($"Initial Player coins: {playerCoins}, Player gems: {playerGems}");

@@ -12,7 +12,16 @@ public class FCMHandler : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject);
-            InitializeFCM();
+            // Check if Firebase is initialized
+            if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
+            {
+                InitializeFCM();
+            }
+            else
+            {
+                // Wait until Firebase is initialized
+                FirebaseManager.Instance.StartCoroutine(WaitForFirebaseInitialization());
+            }
         }
         else
         {
@@ -24,6 +33,17 @@ public class FCMHandler : MonoBehaviour
     {
         FirebaseMessaging.TokenReceived += OnTokenReceived;
         FirebaseMessaging.MessageReceived += OnMessageReceived;
+        Debug.Log("FCM Initialized.");
+    }
+
+    private System.Collections.IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (!FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+        InitializeFCM();
     }
 
     public void OnTokenReceived(object sender, TokenReceivedEventArgs token)

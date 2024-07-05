@@ -4,9 +4,23 @@ using Firebase.Auth;
 
 public class LoginManager : MonoBehaviour
 {
-    FirebaseAuth auth;
+    private FirebaseAuth auth;
 
     void Start()
+    {
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            InitializeAuth();
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            FirebaseManager.Instance.StartCoroutine(WaitForFirebaseInitialization());
+        }
+    }
+
+    private void InitializeAuth()
     {
         // Initialize Firebase Auth
         auth = FirebaseAuth.DefaultInstance;
@@ -21,6 +35,16 @@ public class LoginManager : MonoBehaviour
         {
             SceneManager.LoadScene("UIManager");
         }
+    }
+
+    private System.Collections.IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (!FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+        InitializeAuth();
     }
 
     // Function to load the main menu scene
@@ -54,7 +78,6 @@ public class LoginManager : MonoBehaviour
         FirebaseAuth.DefaultInstance.SignOut();
 
         // Load the login scene
-        SceneManager.LoadScene("UIManager"); // Replace "LoginScene" with the name of your login scene
-
-    }
+        SceneManager.LoadScene("UIManager"); // Replace "LoginScene" with the name of your login scene
+    }
 }

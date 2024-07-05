@@ -5,11 +5,11 @@ using Firebase.Firestore;
 using Firebase.Extensions;
 using Firebase.Auth;
 using System;
+using System.Collections;
 
 public class UserManager : MonoBehaviour
 {
     public ShadowPanel shadowPanel;
-
 
     public static UserManager Instance { get; private set; }
 
@@ -24,12 +24,9 @@ public class UserManager : MonoBehaviour
     private Dictionary<string, object> hintsPrices;
 
     public event Action<Dictionary<string, object>> OnUserProfileUpdated; // Event to notify profile updates
-
     public event Action<Dictionary<string, object>> OnUserHintsUpdated;
-
-   
     public event Action OnInitialUserProfileFetched; // Event to notify initial profile fetch
-   
+
     private void Awake()
     {
         if (Instance == null)
@@ -45,27 +42,44 @@ public class UserManager : MonoBehaviour
 
     private void Start()
     {
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
-            if (task.Exception != null)
-            {
-                Debug.LogError($"Failed to initialize Firebase with {task.Exception}");
-                return;
-            }
+            InitializeFirebaseComponents();
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            StartCoroutine(WaitForFirebaseInitialization());
+        }
+    }
 
-            db = FirebaseFirestore.DefaultInstance;
-            auth = FirebaseAuth.DefaultInstance;
+    private void InitializeFirebaseComponents()
+    {
+        db = FirebaseFirestore.DefaultInstance;
+        auth = FirebaseAuth.DefaultInstance;
 
-            if (auth.CurrentUser != null)
-            {
-                playerId = auth.CurrentUser.UserId;
-                CheckUserProfileCompletion();
-            }
-            else
-            {
-                Debug.LogError("No user is currently logged in.");
-            }
-        });
+        if (auth.CurrentUser != null)
+        {
+            playerId = auth.CurrentUser.UserId;
+            CheckUserProfileCompletion();
+        }
+        else
+        {
+            Debug.LogError("No user is currently logged in.");
+        }
+    }
+
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (!FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+
+        // Firebase is now initialized, initialize Firebase components
+        InitializeFirebaseComponents();
     }
 
     public async void CheckUserProfileCompletion()
@@ -131,6 +145,7 @@ public class UserManager : MonoBehaviour
             }
         });
     }
+
     public void ListenForUserHintsChanges()
     {
         DocumentReference docRef = db.Collection("users").Document(playerId).Collection("hints").Document("hintsData");
@@ -144,14 +159,12 @@ public class UserManager : MonoBehaviour
         });
     }
 
-    
-
     public Dictionary<string, object> GetUserProfile()
     {
         return userProfile;
     }
 
-    public Dictionary<string,object> GetUserHints()
+    public Dictionary<string, object> GetUserHints()
     {
         return userHints;
     }
@@ -168,12 +181,14 @@ public class UserManager : MonoBehaviour
 
     public int GetJoker()
     {
-        return userHints != null && userHints.TryGetValue("joker",out object gameObj) ? Convert.ToInt32(gameObj) : 0;
+        return userHints != null && userHints.TryGetValue("joker", out object gameObj) ? Convert.ToInt32(gameObj) : 0;
     }
+
     public int GetExtraTime()
     {
-        return userHints != null && userHints.TryGetValue("extraTime",out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
+        return userHints != null && userHints.TryGetValue("extraTime", out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
     }
+
     public int GetTickets()
     {
         return userHints != null && userHints.TryGetValue("tickets", out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
@@ -194,6 +209,4 @@ public class UserManager : MonoBehaviour
             }
         });
     }
-
-
 }

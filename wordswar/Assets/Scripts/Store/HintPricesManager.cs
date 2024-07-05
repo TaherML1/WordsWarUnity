@@ -11,7 +11,7 @@ public class HintPricesManager : MonoBehaviour
 {
     public static HintPricesManager Instance { get; private set; }
     private FirebaseFirestore db;
-    private string id = "UT2nYZ0MYCzc99PkX8BR";
+    private string id = "UT2nYZ0MYCzc99PkX8BR"; // Document ID in Firestore
     public TextMeshProUGUI jokerText;
     public TextMeshProUGUI extraTimeText;
     public TextMeshProUGUI ticketsText;
@@ -39,19 +39,34 @@ public class HintPricesManager : MonoBehaviour
             DontDestroyOnLoad(parentObject);
         }
 
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
-            var dependencyStatus = task.Result;
-            if (dependencyStatus == Firebase.DependencyStatus.Available)
-            {
-                db = FirebaseFirestore.DefaultInstance;
-                RetrieveHintPrices();
-            }
-            else
-            {
-                Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);
-            }
-        });
+            InitializeHintPricesManager();
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            StartCoroutine(WaitForFirebaseInitialization());
+        }
+    }
+
+    private void InitializeHintPricesManager()
+    {
+        db = FirebaseFirestore.DefaultInstance;
+        RetrieveHintPrices();
+    }
+
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (FirebaseManager.Instance == null || !FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+
+        // Firebase is now initialized, initialize HintPricesManager
+        InitializeHintPricesManager();
     }
 
     private async void RetrieveHintPrices()
@@ -68,12 +83,15 @@ public class HintPricesManager : MonoBehaviour
                 joker = int.Parse(hintData["joker"].ToString());
                 extraTime = int.Parse(hintData["extraTime"].ToString());
                 tickets = int.Parse(hintData["tickets"].ToString());
+
                 // Perform UI updates on the main thread
                 extraTimeText.text = extraTime.ToString();
                 jokerText.text = joker.ToString();
                 ticketsText.text = tickets.ToString();
                 TicketsTextPrice.text = tickets.ToString();
+
                 PricesFetched?.Invoke();
+
                 Debug.Log("Joker price: " + joker);
                 Debug.Log("Extra time price: " + extraTime);
                 Debug.Log("Tickets price : " + tickets);
