@@ -1,4 +1,4 @@
-using Firebase.Functions;
+﻿using Firebase.Functions;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +9,13 @@ using Firebase.Database;
 
 public class SpecialMatchmakingManager : MonoBehaviour
 {
+
+    [SerializeField] FeedbackManager feedbackManager;
+    [SerializeField] GameObject RoomCreatedPanel;
+    [SerializeField] RadialProgressBar radialProgressBar;
+    
+
+
     FirebaseFunctions functions;
     DatabaseReference databaseReference;
     public TMP_Text roomIdText;
@@ -41,21 +48,25 @@ public class SpecialMatchmakingManager : MonoBehaviour
 
     public void CreateSpecialRoom()
     {
-        Debug.Log("Creating a special room...");
+        radialProgressBar.StartSpinning();
         if (functions != null)
         {
             functions.GetHttpsCallable("createSpecialRoom").CallAsync().ContinueWithOnMainThread(task =>
             {
+                
                 if (task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
                 {
+                    radialProgressBar.StopSpinning();
                     var result = (string)task.Result.Data;
                     RoomId = result;
 
                     Debug.Log("Special room created with ID: " + RoomId);
+                    RoomCreatedPanel.SetActive(true);
                     DisplayRoomId(RoomId);
                 }
                 else
                 {
+                    radialProgressBar.StopSpinning();
                     Debug.LogError("Error creating special room: " + task.Exception);
                 }
             });
@@ -97,11 +108,12 @@ public class SpecialMatchmakingManager : MonoBehaviour
 
     void OnJoinRoomButtonClicked()
     {
-        Debug.Log("Join room button clicked.");
+    
         string roomId = roomIdInputField.text;
         if (string.IsNullOrEmpty(roomId))
         {
             Debug.LogError("Room ID cannot be empty.");
+            feedbackManager.ShowFeedback("لا يمكن ان يكون رقم الغرفة فارغا");
             return;
         }
 
@@ -111,6 +123,7 @@ public class SpecialMatchmakingManager : MonoBehaviour
 
     public void JoinSpecialRoom(string roomId)
     {
+        radialProgressBar.StartSpinning();
         var data = new Dictionary<string, object> { { "roomId", roomId } };
 
         functions.GetHttpsCallable("joinSpecialRoom").CallAsync(data).ContinueWithOnMainThread(task =>
@@ -119,11 +132,14 @@ public class SpecialMatchmakingManager : MonoBehaviour
             {
                 var result = task.Result.Data as Dictionary<string, object>;
                 Debug.Log("Joined special room with ID: " + roomId);
+                radialProgressBar.StopSpinning();
                 // Handle post-join actions here
             }
             else
             {
                 Debug.LogError("Error joining special room: " + task.Exception);
+                feedbackManager.ShowFeedback("رقم الغرفة خاطئ او غير موجود");
+                radialProgressBar.StopSpinning();
             }
         });
     }
@@ -153,10 +169,13 @@ public class SpecialMatchmakingManager : MonoBehaviour
         {
             GUIUtility.systemCopyBuffer = RoomId;
             Debug.Log("Room ID copied to clipboard: " + RoomId);
+            feedbackManager.ShowFeedback("لقد تم نسخ رقم الغرفة");
+          
         }
         else
         {
             Debug.LogWarning("No Room ID to copy.");
+            feedbackManager.ShowFeedback("لا يوجد رقم غرفة للنسخ");
         }
     }
 }
