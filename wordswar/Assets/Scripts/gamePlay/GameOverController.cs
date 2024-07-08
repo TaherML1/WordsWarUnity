@@ -35,7 +35,14 @@ public class GameOverController : MonoBehaviour
     public void ReturnToMainMenu()
     {
         // Load the main menu scene
-        SceneManager.LoadScene("MainMenu");
+        if (SceneController.Instance != null)
+        {
+            SceneController.Instance.LoadMainMenu();
+        }
+        else
+        {
+            Debug.LogError("SceneController instance not found. Cannot load MainMenu.");
+        }
     }
 
     IEnumerator DelayedGameOver(bool isLocalPlayerWinner)

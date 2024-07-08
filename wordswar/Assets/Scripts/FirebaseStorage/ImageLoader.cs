@@ -23,6 +23,8 @@ public class ImageLoader : MonoBehaviour
 
     string currentUserID = "userID"; // Replace with actual user ID or dynamically get it
 
+    private bool firebaseInitialized = false;
+
     void Start()
     {
         // Check if Firebase is initialized
@@ -33,12 +35,19 @@ public class ImageLoader : MonoBehaviour
         else
         {
             // Wait until Firebase is initialized
-            StartCoroutine(WaitForFirebaseInitialization());
+            FirebaseManager.Instance.OnFirebaseInitialized += HandleFirebaseInitialized;
         }
     }
-
+    private void HandleFirebaseInitialized()
+    {
+        InitializeFirebaseComponents();
+    }
     private void InitializeFirebaseComponents()
     {
+        if (firebaseInitialized)
+            return;
+
+        firebaseInitialized = true;
         // Initialize Firebase components
         storage = FirebaseStorage.DefaultInstance;
         storageReference = storage.GetReferenceFromUrl("gs://words-war-8d86e.appspot.com/avatars");
@@ -51,18 +60,7 @@ public class ImageLoader : MonoBehaviour
         FetchProfileImage();
     }
 
-    private IEnumerator WaitForFirebaseInitialization()
-    {
-        // Wait until Firebase is initialized
-        while (!FirebaseManager.Instance.IsFirebaseInitialized)
-        {
-            yield return null;
-        }
-
-        // Firebase is now initialized, initialize Firebase components
-        InitializeFirebaseComponents();
-    }
-
+    
     public void LoadAvatarContainer()
     {
         // Load and display each image

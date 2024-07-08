@@ -39,8 +39,20 @@ public class HintPricesManager : MonoBehaviour
             DontDestroyOnLoad(parentObject);
         }
 
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.Result == DependencyStatus.Available)
+            {
+                db = FirebaseFirestore.DefaultInstance;
+                RetrieveHintPrices();
+            }else
+            {
+                Debug.LogError("Failed to initialize Firebase");
+            }
+        });
+
         // Check if Firebase is initialized
-        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
+        /*if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
             InitializeHintPricesManager();
         }
@@ -48,7 +60,7 @@ public class HintPricesManager : MonoBehaviour
         {
             // Wait until Firebase is initialized
             StartCoroutine(WaitForFirebaseInitialization());
-        }
+        }*/
     }
 
     private void InitializeHintPricesManager()

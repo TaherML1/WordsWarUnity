@@ -51,7 +51,7 @@ public class SpecialMatchmakingManager : MonoBehaviour
         radialProgressBar.StartSpinning();
         if (functions != null)
         {
-            functions.GetHttpsCallable("createSpecialRoom").CallAsync().ContinueWithOnMainThread(task =>
+            functions.GetHttpsCallable("createSpecialRoom2").CallAsync().ContinueWithOnMainThread(task =>
             {
                 
                 if (task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
@@ -116,7 +116,7 @@ public class SpecialMatchmakingManager : MonoBehaviour
             feedbackManager.ShowFeedback("لا يمكن ان يكون رقم الغرفة فارغا");
             return;
         }
-
+        
         Debug.Log("Joining room with ID: " + roomId);
         JoinSpecialRoom(roomId);
     }
@@ -133,6 +133,7 @@ public class SpecialMatchmakingManager : MonoBehaviour
                 var result = task.Result.Data as Dictionary<string, object>;
                 Debug.Log("Joined special room with ID: " + roomId);
                 radialProgressBar.StopSpinning();
+                feedbackManager.ShowFeedback("لقد انضممت الى الغرفة بنجاح");
                 // Handle post-join actions here
             }
             else

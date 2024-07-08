@@ -2,11 +2,14 @@ using UnityEngine;
 using Firebase;
 using Firebase.Extensions;
 using Firebase.Analytics;
+using System;
 
 public class FirebaseManager : MonoBehaviour
 {
     public static FirebaseManager Instance { get; private set; }
     public bool IsFirebaseInitialized { get; private set; }
+
+    public event Action OnFirebaseInitialized; // Event to notify when Firebase is initialized
 
     private void Awake()
     {
@@ -31,7 +34,7 @@ public class FirebaseManager : MonoBehaviour
                 FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
                 IsFirebaseInitialized = true;
                 Debug.Log("Firebase is initialized successfully.");
-                // You can call any further initialization methods here if needed
+                OnFirebaseInitialized?.Invoke(); // Trigger the event
             }
             else
             {

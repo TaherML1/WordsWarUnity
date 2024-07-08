@@ -114,8 +114,18 @@ public class AuthManager : MonoBehaviour
                 new Parameter("email", _email),
                 new Parameter("timestamp", DateTime.UtcNow.ToString("o"))); // ISO 8601 format
 
-            SceneManager.LoadScene(SceneNames.MainMenu);
-            FirebaseAnalytics.LogEvent("scene_change", new Parameter("scene_name", SceneNames.MainMenu));
+            // Log scene change event
+            FirebaseAnalytics.LogEvent("scene_change", new Parameter("scene_name", "MainMenu"));
+
+            // Proceed to the MainMenu scene
+            if (SceneController.Instance != null)
+            {
+                SceneController.Instance.LoadMainMenu();
+            }
+            else
+            {
+                Debug.LogError("SceneController instance not found. Cannot load MainMenu.");
+            }
         }
         catch (FirebaseException ex)
         {
@@ -126,9 +136,12 @@ public class AuthManager : MonoBehaviour
             radialProgressBar.StopSpinning();
 
             // Log failure event
-
+            FirebaseAnalytics.LogEvent("login_failure",
+                new Parameter("error_code", errorCode.ToString()),
+                new Parameter("error_message", ex.Message));
         }
     }
+
 
     private async Task RegisterAsync(string _email, string _password, string _username)
     {
@@ -248,14 +261,17 @@ public class AuthManager : MonoBehaviour
             feedbackManager.ShowFeedback("Logged Out");
 
             // Check if the SceneNames.MainMenu is defined and valid
-            if (string.IsNullOrEmpty(SceneNames.UserProfile))
-            {
-                Debug.LogError("Scene name for MainMenu is not set.");
-                return;
-            }
+
 
             // Redirect to login or main screen
-            SceneManager.LoadScene(SceneNames.UserProfile);
+            if (SceneController.Instance != null)
+            {
+                SceneController.Instance.LoadUiManager();
+            }
+            else
+            {
+                Debug.LogError("SceneController instance not found. Cannot load MainMenu.");
+            }
 
             // Additional cleanup if necessary
             ClearUserSpecificData();
@@ -313,11 +329,7 @@ public class AuthManager : MonoBehaviour
     }
 }
 
-public static class SceneNames
-{
-    public const string MainMenu = "MainMenu";
-    public const string UserProfile = "UserProfile"; // Adjusted to be consistent
-}
+
 
 public static class TaskExtensions
 {

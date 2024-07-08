@@ -1,66 +1,63 @@
+/* eslint-disable no-undef */
 /* eslint-disable max-len */
-/* eslint-disable require-jsdoc */
 const {onCall} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
-
-// Initialize Firebase Admin
 admin.initializeApp();
-
-// Reference to Firebase Realtime Database
 const database = admin.database();
 
-exports.checkTopicAndWordTestt = onCall(async (request) => {
-  const topicName = request.data.topicName;
-  const word = request.data.word;
+/**
+ * Generates a random room ID.
+ * @return {string} The randomly generated room ID.
+ */
+function generateRoomId() {
+  const possibleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnxyz0123456789";
+  let roomId = "";
+  for (let j = 0; j < 6; j++) {
+    roomId += possibleChars.charAt(Math.floor(Math.random() *
+            possibleChars.length));
+  }
+  return roomId;
+}
 
-  console.log(`Topic name: ${topicName}, Word: ${word}`);
+// Create Special Room Cloud Function
+exports.createSpecialRoom2 = onCall(async (request) => {
+  console.log("createSpecialRoom function triggered.");
+
+  const {auth} = request;
+  // Check if the user is authenticated
+  if (!auth) {
+    console.error("Unauthenticated request.");
+    throw new functions.https.HttpsError("unauthenticated", "Request not authenticated.");
+  }
+
+  const playerId = auth.uid;
+  console.log(`Authenticated user: ${playerId}`);
+
+  // Generate a unique room ID
+  const roomId = generateRoomId();
+  console.log(`Generated room ID: ${roomId}`);
+
+  // Initial room data
+  const roomData = {
+    roomId: roomId,
+    host: playerId,
+    players: [playerId], // Host is the first player
+    status: "waiting", // Room is waiting for players
+  };
+  console.log("Initial room data:", roomData);
 
   try {
-    // Check if the topic exists
-    console.log(`Checking existence of topic '${topicName}'`);
-    const topicSnapshot = await database.ref(`/topics/${topicName}`).once("value");
+    // Save the room data under the 'specialrooms' node in the database
+    await database.ref("specialrooms/" + roomId).set(roomData);
+    console.log(`Room data saved to database under 'specialrooms/${roomId}'.`);
 
-    if (!topicSnapshot.exists()) {
-      console.log(`Topic '${topicName}' does not exist.`);
-      throw new Error(`Topic '${topicName}' does not exist.`);
-    }
-
-    // Check if the word exists as primary or synonym under the topic
-    console.log(`Checking existence of word '${word}' under topic '${topicName}'`);
-    const wordExists = await checkWordExists(topicName, word);
-
-    if (!wordExists) {
-      console.log(`Word '${word}' does not exist under the topic '${topicName}'.`);
-      throw new Error(`Word '${word}' does not exist under the topic '${topicName}'.`);
-    }
-
-    console.log(`Word '${word}' exists under the topic '${topicName}'.`);
-
-    // Return a success message indicating that both topic and word exist
-    return true;
+    console.log("room id is : " + roomId);
+    // Return the room ID and a success message
+    const response = {roomId: roomId, message: "Room created successfully!"};
+    console.log("Function response:", response);
+    return response;
   } catch (error) {
-    console.error(`Error occurred: ${error.message}`);
-    throw new Error(`Function execution error: ${error.message}`);
+    console.error("Error saving room data to the database:", error);
+    throw new functions.https.HttpsError("unknown", "Failed to create room.", error);
   }
 });
-
-async function checkWordExists(topicName, word) {
-  const topicRef = database.ref(`/topics/${topicName}`);
-  const snapshot = await topicRef.once("value");
-
-  if (!snapshot.exists()) {
-    return false;
-  }
-
-  let wordExists = false;
-  snapshot.forEach((childSnapshot) => {
-    const primaryWord = childSnapshot.child("primary").val();
-    const synonyms = childSnapshot.child("synonyms").val();
-
-    if (primaryWord === word || (synonyms && synonyms[word])) {
-      wordExists = true;
-    }
-  });
-
-  return wordExists;
-}

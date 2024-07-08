@@ -1,10 +1,9 @@
 using UnityEngine;
 using Firebase;
 using Firebase.Database;
-using UnityEngine.SceneManagement;
 using Firebase.Auth;
-using UnityEngine.UI; // Add this if using regular Text
-using TMPro; // Add this if using TextMeshPro
+using TMPro;
+
 
 public class GameCreationListener : MonoBehaviour
 {
@@ -12,6 +11,8 @@ public class GameCreationListener : MonoBehaviour
     bool isListening = false; // Flag to track if the listener is active
     string currentPlayerId; // Store the current player ID
     public TextMeshProUGUI countdownText; // For regular Text UI element
+
+    [SerializeField] GameObject MatchStartPanel;
     // public TMP_Text countdownText; // Use this instead if using TextMeshPro
     public float countdownTime = 6f; // Countdown duration in seconds
     float currentCountdownTime; // To keep track of the countdown
@@ -100,6 +101,7 @@ public class GameCreationListener : MonoBehaviour
                     // Check if the room has a status (not ended)
                     if (playerIsInRoom && !childSnapshot.HasChild("status") || childSnapshot.Child("status").Value.ToString() != "ended")
                     {
+                        MatchStartPanel.SetActive(true);
                         // Transition to gameplay scene with countdown
                         PlayerPrefs.SetString("roomId", roomId);
                         currentCountdownTime = countdownTime;
@@ -132,7 +134,14 @@ public class GameCreationListener : MonoBehaviour
     private void StartGameplayScene()
     {
         StopListening();
-        SceneManager.LoadScene("GamePlay"); // Replace "GamePlay" with your actual scene name
+        if (SceneController.Instance != null)
+        {
+            SceneController.Instance.LoadGameplay();
+        }
+        else
+        {
+            Debug.LogError("SceneController instance not found. Cannot load GamePlay.");
+        }
         Destroy(gameObject);
     }
 }
