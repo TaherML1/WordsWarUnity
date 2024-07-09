@@ -3,9 +3,14 @@ using Firebase;
 using Firebase.Extensions;
 using Firebase.Analytics;
 using System;
+using Firebase.Auth;
 
 public class FirebaseManager : MonoBehaviour
+
+    
 {
+    FirebaseAuth auth;
+
     public static FirebaseManager Instance { get; private set; }
     public bool IsFirebaseInitialized { get; private set; }
 
@@ -35,6 +40,8 @@ public class FirebaseManager : MonoBehaviour
                 IsFirebaseInitialized = true;
                 Debug.Log("Firebase is initialized successfully.");
                 OnFirebaseInitialized?.Invoke(); // Trigger the event
+                 auth = FirebaseAuth.DefaultInstance;
+                Debug.Log("current user id is  : " + auth.CurrentUser.UserId);
             }
             else
             {

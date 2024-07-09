@@ -530,6 +530,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DefaultNextSceneName: MainMenu
+  sceneLoadDelay: 1
 --- !u!1 &1152846539
 GameObject:
   m_ObjectHideFlags: 0

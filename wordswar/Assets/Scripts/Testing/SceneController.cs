@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Firebase.Auth;
+using System.Collections;
 
 public class SceneController : MonoBehaviour
 {
     public static SceneController Instance { get; private set; }
     public string DefaultNextSceneName = "MainMenu"; // Default next scene if no specific scene is specified
+    public float sceneLoadDelay = 2f; // Delay in seconds before loading scenes
 
     private void Awake()
     {
@@ -46,23 +48,29 @@ public class SceneController : MonoBehaviour
     {
         // Check if the user is authenticated
         FirebaseAuth auth = FirebaseAuth.DefaultInstance;
-        if (auth.CurrentUser != null)
+
+        // Fetch the current user
+        FirebaseUser user = auth.CurrentUser;
+
+        if (user != null)
         {
-            // User is authenticated, load the MainMenu scene
-            Debug.Log("You are authenticated");
-            LoadNextScene("MainMenu");
+            // User is authenticated, load the MainMenu scene after delay
+            Debug.Log("User is authenticated: " + user.UserId);
+            StartCoroutine(LoadSceneAfterDelay("MainMenu"));
         }
         else
         {
-            // User is not authenticated, load the UIManager scene
-            Debug.Log("You are not authenticated");
-            LoadNextScene("UIManager");
+            // User is not authenticated, load the UIManager scene after delay
+            Debug.Log("User is not authenticated.");
+            StartCoroutine(LoadSceneAfterDelay("UIManager"));
         }
     }
 
-    // Method to load a specific scene, ensuring Firebase is initialized
-    public void LoadNextScene(string sceneName)
+    // Coroutine to load a specific scene after a delay
+    private IEnumerator LoadSceneAfterDelay(string sceneName)
     {
+        yield return new WaitForSeconds(sceneLoadDelay);
+
         if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
             // Load the specified scene if Firebase is initialized
@@ -78,18 +86,18 @@ public class SceneController : MonoBehaviour
     // Example method to load MainMenu scene
     public void LoadMainMenu()
     {
-        LoadNextScene("MainMenu");
+        StartCoroutine(LoadSceneAfterDelay("MainMenu"));
     }
 
     // Example method to load Gameplay scene
     public void LoadGameplay()
     {
-        LoadNextScene("GamePlay");
+        StartCoroutine(LoadSceneAfterDelay("GamePlay"));
     }
 
     // Example method to load UIManager scene
     public void LoadUiManager()
     {
-        LoadNextScene("UIManager");
+        StartCoroutine(LoadSceneAfterDelay("UIManager"));
     }
 }
