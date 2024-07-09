@@ -21,7 +21,6 @@ public class UserManager : MonoBehaviour
     private string playerId;
     private Dictionary<string, object> userProfile;
     private Dictionary<string, object> userHints;
-    private Dictionary<string, object> hintsPrices;
 
     public event Action<Dictionary<string, object>> OnUserProfileUpdated; // Event to notify profile updates
     public event Action<Dictionary<string, object>> OnUserHintsUpdated;
@@ -93,8 +92,7 @@ public class UserManager : MonoBehaviour
             DocumentSnapshot snapshot = await userRef.GetSnapshotAsync();
             if (snapshot.Exists)
             {
-                bool profileComplete = snapshot.ContainsField("profileComplete") && snapshot.GetValue<bool>("profileComplete");
-                if (profileComplete)
+                if (snapshot.TryGetValue("profileComplete", out bool profileComplete) && profileComplete)
                 {
                     ListenForUserDataChanges();
                     ListenForUserHintsChanges();
@@ -104,28 +102,27 @@ public class UserManager : MonoBehaviour
                 else
                 {
                     Debug.Log("User profile is incomplete.");
-                    // Handle incomplete profile scenario
-                    if (FetchUserProfile.instance != null)
-                    {
-                        FetchUserProfile.instance.setUserPanel.SetActive(true);
-                        shadowPanel.showShadowPanel();
-                    }
+                    ShowSetUserPanel();
                 }
             }
             else
             {
                 Debug.Log("User document does not exist.");
-                // Handle new user scenario
-                if (FetchUserProfile.instance != null)
-                {
-                    FetchUserProfile.instance.setUserPanel.SetActive(true);
-                    shadowPanel.showShadowPanel();
-                }
+                ShowSetUserPanel();
             }
         }
         else
         {
             Debug.LogError("No user is currently logged in.");
+        }
+    }
+
+    private void ShowSetUserPanel()
+    {
+        if (FetchUserProfile.instance != null)
+        {
+            FetchUserProfile.instance.setUserPanel.SetActive(true);
+            shadowPanel.showShadowPanel();
         }
     }
 
@@ -151,7 +148,7 @@ public class UserManager : MonoBehaviour
         DocumentReference docRef = db.Collection("users").Document(playerId).Collection("hints").Document("hintsData");
         docRef.Listen(snapshot =>
         {
-            if (snapshot.Exists) // Changed condition to check if the document exists
+            if (snapshot.Exists)
             {
                 userHints = snapshot.ToDictionary();
                 OnUserHintsUpdated?.Invoke(userHints);

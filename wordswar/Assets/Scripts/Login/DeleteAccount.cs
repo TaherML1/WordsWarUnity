@@ -1,16 +1,16 @@
 using Firebase;
 using Firebase.Auth;
 using Firebase.Functions;
+using Firebase.Analytics;
 using UnityEngine;
 using UnityEngine.UI;
-using Firebase.Analytics;
 using System.Collections;
 using UnityEngine.SceneManagement;
 
 public class DeleteAccount : MonoBehaviour
 {
     [SerializeField] Button deleteAccountButton;
-
+    [SerializeField] RadialProgressBar radialProgressBar;
     private FirebaseAuth auth;
     private FirebaseFunctions functions;
 
@@ -55,14 +55,15 @@ public class DeleteAccount : MonoBehaviour
         // Firebase is now initialized, initialize Firebase components
         InitializeFirebaseComponents();
     }
+
     public void ClearFirebaseAuthState()
     {
         FirebaseAuth.DefaultInstance.SignOut();
     }
 
-
     private void OnDeleteAccountButtonClick()
     {
+        radialProgressBar.StartSpinning();
         // Prompt user to confirm account deletion
         // Re-authenticate the user if necessary
 
@@ -72,14 +73,24 @@ public class DeleteAccount : MonoBehaviour
                 if (task.IsCanceled || task.IsFaulted)
                 {
                     Debug.LogError("Account deletion failed: " + task.Exception);
+                    radialProgressBar.StopSpinning();
                 }
                 else
                 {
+                    radialProgressBar.StopSpinning();
                     Debug.Log("Account deleted successfully.");
                     ClearFirebaseAuthState();
-                    SceneController.Instance.LoadUiManager();
 
+                    // Log the analytics event
+                    LogAccountDeletionEvent();
+
+                    SceneController.Instance.LoadUiManager();
                 }
             });
+    }
+
+    private void LogAccountDeletionEvent()
+    {
+        FirebaseAnalytics.LogEvent("account_deleted");
     }
 }

@@ -21,9 +21,9 @@ public class GameController : MonoBehaviour
 {
 
     public static GameController instance;
-    public FeedbackManager feedbackManager;
-    public Chat ChatInstance;
-    public MessageAnimator messageAnimator;
+     [SerializeField] FeedbackManager feedbackManager;
+    [SerializeField] Chat ChatInstance;
+    [SerializeField] MessageAnimator messageAnimator;
 
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
@@ -34,30 +34,32 @@ public class GameController : MonoBehaviour
 
 
     [Header("Stats")]
-    public TextMeshProUGUI timerText;
-    public TextMeshProUGUI topicText;
-    public TextMeshProUGUI resultText;
-    public TextMeshProUGUI invalidWordText;
-    public TextMeshProUGUI winnerText;
-    public TextMeshProUGUI TurnLabel;
+    [SerializeField] TextMeshProUGUI timerText;
+    [SerializeField] TextMeshProUGUI topicText;
+    [SerializeField] TextMeshProUGUI resultText;
+    [SerializeField] TextMeshProUGUI invalidWordText;
+    [SerializeField] TextMeshProUGUI winnerText;
+    [SerializeField] TextMeshProUGUI TurnLabel;
     [Header("EnemyPlayer")]
-    public TextMeshProUGUI enemyScoreText;
-    public TextMeshProUGUI enemyNameText;
+    [SerializeField] TextMeshProUGUI enemyScoreText;
+    [SerializeField] TextMeshProUGUI enemyNameText;
 
     [Header("lcoalPlayer")]
-    public TextMeshProUGUI localPlayScoreText;
-    public TextMeshProUGUI localPlayerNameText;
+    [SerializeField] TextMeshProUGUI localPlayScoreText;
+    [SerializeField] TextMeshProUGUI localPlayerNameText;
 
 
     [Header("Ui Elements")]
-    public TMP_InputField playerInput;
-    public ScrollRect scrollView;
-    public Button submitButton;
-    public Button jokerHintButton;
-    public AudioSource correctSound;
-    public AudioSource incorrectSound;
-    public GameObject gameOverPanel;
-    public GameOverController gameOverController;
+    [SerializeField] TMP_InputField playerInput;
+    [SerializeField] ScrollRect scrollView;
+    [SerializeField] Button submitButton;
+    [SerializeField] Button jokerHintButton;
+    [SerializeField] AudioSource correctSound;
+    [SerializeField] AudioSource incorrectSound;
+    [SerializeField] GameObject gameOverPanel;
+    [SerializeField] GameObject panelToHideKeyboard;
+
+    [SerializeField] GameOverController gameOverController;
 
     private string selectedTopic;
 
@@ -432,7 +434,7 @@ public class GameController : MonoBehaviour
             playerInput.interactable = true;
             submitButton.interactable = true;
             jokerHintButton.interactable = true;
-
+            panelToHideKeyboard.SetActive(false);
             timer = originalTimer;
 
 
@@ -447,7 +449,7 @@ public class GameController : MonoBehaviour
             playerInput.interactable = false;
             submitButton.interactable = false;
             jokerHintButton.interactable = false;
-
+            panelToHideKeyboard.SetActive(true);
             timer = originalTimer;
         }
     }
@@ -779,12 +781,12 @@ public class GameController : MonoBehaviour
             if (winnerId == localPlayerId)
             {
                 Debug.Log("you are the winner");
-                winnerText.text = "you are the winner";
+                winnerText.text = "أنت الفائز";
             }
             else
             {
                 Debug.Log("you lost");
-                winnerText.text = "you are the loser";
+                winnerText.text = "أنت الخاسر";
             }
 
             // Call the method to show the game over panel
