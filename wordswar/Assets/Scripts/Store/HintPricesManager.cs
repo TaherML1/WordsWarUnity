@@ -16,10 +16,12 @@ public class HintPricesManager : MonoBehaviour
     public TextMeshProUGUI extraTimeText;
     public TextMeshProUGUI ticketsText;
     public TextMeshProUGUI TicketsTextPrice;
+    public TextMeshProUGUI threeOfTicketsText;
 
     private int joker;
     private int extraTime;
     private int tickets;
+    private int threeOfTickets;
     public static event Action PricesFetched;
 
     private void Start()
@@ -95,18 +97,21 @@ public class HintPricesManager : MonoBehaviour
                 joker = int.Parse(hintData["joker"].ToString());
                 extraTime = int.Parse(hintData["extraTime"].ToString());
                 tickets = int.Parse(hintData["tickets"].ToString());
+                threeOfTickets = int.Parse(hintData["3tickets"].ToString());
 
                 // Perform UI updates on the main thread
                 extraTimeText.text = extraTime.ToString();
                 jokerText.text = joker.ToString();
                 ticketsText.text = tickets.ToString();
                 TicketsTextPrice.text = tickets.ToString();
+                threeOfTicketsText.text = threeOfTickets.ToString();
 
                 PricesFetched?.Invoke();
 
                 Debug.Log("Joker price: " + joker);
                 Debug.Log("Extra time price: " + extraTime);
                 Debug.Log("Tickets price : " + tickets);
+                Debug.Log("3 tickets price is : " +  threeOfTickets);
             }
             else
             {

@@ -24,7 +24,6 @@ public class SpinWheel : MonoBehaviour
     [SerializeField] private Image WonPrizeImage; // Image element to show the won prize image
     [SerializeField] private GameObject PrizePanel;
 
-
     [Header("Prize sprites")]
     [SerializeField] private Sprite xpSprite;
     [SerializeField] private Sprite coins10Sprite;
@@ -35,6 +34,9 @@ public class SpinWheel : MonoBehaviour
     [SerializeField] private Sprite gems100Sprite;
     [SerializeField] private Sprite jokerSprite;
 
+    [Header("Sound")]
+    [SerializeField] private AudioSource spinSound; // Reference to the AudioSource for spin sound
+
     private Dictionary<string, Sprite> prizeSprites;
 
     private bool isSpinning = false;
@@ -44,7 +46,6 @@ public class SpinWheel : MonoBehaviour
 
     private FirebaseAuth auth;
     private FirebaseFunctions functions;
-
 
     string segmentName;
 
@@ -93,6 +94,7 @@ public class SpinWheel : MonoBehaviour
                 isSpinning = false;
                 DetermineWinningSegment();
                 spinButton.interactable = true;
+                spinSound.Stop(); // Stop the spin sound
             }
         }
     }
@@ -109,6 +111,8 @@ public class SpinWheel : MonoBehaviour
             // Randomize the spin speed and duration
             currentSpeed = Random.Range(minSpinSpeed, maxSpinSpeed);
             spinTime = Random.Range(minSpinDuration, maxSpinDuration);
+
+            spinSound.Play(); // Play the spin sound
         }
         else
         {
@@ -129,14 +133,13 @@ public class SpinWheel : MonoBehaviour
         int selectedSegment = Mathf.FloorToInt(adjustedAngle / segmentAngle);
 
         // Translate segment index to readable format
-         segmentName = GetSegmentName(selectedSegment);
+        segmentName = GetSegmentName(selectedSegment);
 
         // Log the result locally
         Debug.Log("Wheel stopped at: " + segmentName);
 
         // Update the UI to show the prize
 
-      
         // Send the result to the server for validation and reward assignment
         StartCoroutine(SendSpinResultToServer(segmentName));
     }
@@ -167,7 +170,6 @@ public class SpinWheel : MonoBehaviour
         if (prizeSprites.ContainsKey(prizeName))
         {
             WonPrizeImage.sprite = prizeSprites[prizeName];
-        
         }
         else
         {
