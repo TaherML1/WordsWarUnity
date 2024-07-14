@@ -1,4 +1,4 @@
-using Firebase.Functions;
+﻿using Firebase.Functions;
 using System.Collections.Generic;
 using UnityEngine;
 using Firebase.Extensions;
@@ -7,6 +7,7 @@ using Firebase.Auth;
 using Firebase.Firestore;
 using TMPro;
 using Firebase.Analytics;
+using System.Collections;
 
 public class PurchaseItem : MonoBehaviour
 {
@@ -17,49 +18,74 @@ public class PurchaseItem : MonoBehaviour
     private HintPricesManager hintPricesManager;
     private FirebaseFunctions functions;
 
-    public FeedbackManager feedbackManager;
+    [SerializeField] FeedbackManager feedbackManager;
 
-    public RadialProgressBar radialProgressBar;
+    [SerializeField] RadialProgressBar radialProgressBar;
+
+    [SerializeField] GameObject PurchasePanel;
 
     int playerCoins;
     int playerGems;
     int jokerPrice;
     int extraTimePrice;
     int ticketsPrice;
+    int threeOfTicketsPrice;
 
-    private async void Start()
+
+       void Start()
     {
-        await FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
-            if (task.Exception != null)
-            {
-                Debug.LogError($"Firebase Initialization Error: {task.Exception}");
-                return;
-            }
-            FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
-            functions = FirebaseFunctions.DefaultInstance;
-            userManager = UserManager.Instance;
+            InitializeFirebaseComponents();
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            StartCoroutine(WaitForFirebaseInitialization());
+        }
 
-            if (userManager == null)
-            {
-                Debug.LogError("UserManager is not initialized.");
-                return;
-            }
+    }
 
-            // Subscribe to the balance change event
-            userManager.OnUserProfileUpdated += OnUserProfileUpdated;
-            getBalance();
 
-            hintPricesManager = HintPricesManager.Instance;
-            if (hintPricesManager == null)
-            {
-                Debug.LogError("HintPricesManager is not initialized.");
-                return;
-            }
 
-            // Subscribe to the PricesFetched event
-            HintPricesManager.PricesFetched += OnPricesFetched;
-        });
+    private void InitializeFirebaseComponents()
+    {
+        FirebaseAnalytics.SetAnalyticsCollectionEnabled(true);
+        functions = FirebaseFunctions.DefaultInstance;
+        userManager = UserManager.Instance;
+
+        if (userManager == null)
+        {
+            Debug.LogError("UserManager is not initialized.");
+            return;
+        }
+
+        // Subscribe to the balance change event
+        userManager.OnUserProfileUpdated += OnUserProfileUpdated;
+        getBalance();
+
+        hintPricesManager = HintPricesManager.Instance;
+        if (hintPricesManager == null)
+        {
+           
+            return;
+        }
+
+        // Subscribe to the PricesFetched event
+        HintPricesManager.PricesFetched += OnPricesFetched;
+    }
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (!FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+
+        // Firebase is now initialized, initialize Firebase components
+        InitializeFirebaseComponents();
     }
 
     private void OnUserProfileUpdated(Dictionary<string, object> userProfile)
@@ -89,6 +115,8 @@ public class PurchaseItem : MonoBehaviour
         {
             PurchaseHint("fMjt0FLcHYNp06mmHnFI", "joker");
             FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "joker"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", jokerPrice));
+                       
+        
         }
         else
         {
@@ -105,6 +133,8 @@ public class PurchaseItem : MonoBehaviour
         {
             FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
             PurchaseHint("PtgEJZEUyS1zezDD4k0g", "extraTime");
+         
+          
         }
         else
         {
@@ -119,6 +149,8 @@ public class PurchaseItem : MonoBehaviour
         {
             FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "extraTime"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", extraTimePrice));
             PurchaseHint("tickets4141", "tickets");
+          
+          
         }
         else
         {
@@ -128,6 +160,22 @@ public class PurchaseItem : MonoBehaviour
         }
     }
 
+    public void OnclickPurchaseGroupOfTickets()
+    {
+        if (playerCoins >= threeOfTicketsPrice)
+        {
+            FirebaseAnalytics.LogEvent("sufficient_funds", new Parameter("hint_type", "Three Tickets"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", threeOfTicketsPrice));
+            Purchase3Tickets("3Tickets", "tickets");
+          
+          
+        }
+        else
+        {
+            feedbackManager.ShowFeedback("Not enough coins to purchase tickets.");
+            Debug.Log("Not enough coins to purchase tickets.");
+            FirebaseAnalytics.LogEvent("insufficient_funds", new Parameter("hint_type", "Three Tickets"), new Parameter("player_coins", playerCoins), new Parameter("required_coins", threeOfTicketsPrice));
+        }
+    }
 
     public void PurchaseHint(string hintId, string hintType)
     {
@@ -151,6 +199,39 @@ public class PurchaseItem : MonoBehaviour
                 {
                     Debug.LogError("Purchase failed: you don't have enough coins.");
                     radialProgressBar.StopSpinning();
+
+                }
+                else if (task.IsCompleted)
+                {
+                    Debug.Log("The purchase was made successfully.");
+                    radialProgressBar.StopSpinning();
+                    feedbackManager.ShowFeedback("تمت عملية الشراء بنجاح");
+                }
+            });
+    }
+
+    public void Purchase3Tickets(string hintId, string hintType)
+    {
+
+        radialProgressBar.StartSpinning();
+        Debug.Log("You called the function.");
+
+        // Create the data payload to send to the Cloud Function
+        Dictionary<string, object> data = new Dictionary<string, object>
+        {
+            { "hintId", hintId },
+            { "hintType", hintType }
+        };
+
+        // Call the Cloud Function
+        functions.GetHttpsCallable("purchase3tickets")
+            .CallAsync(data)
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Purchase failed: you don't have enough coins.");
+                    radialProgressBar.StopSpinning();
                 }
                 else if (task.IsCompleted)
                 {
@@ -159,6 +240,7 @@ public class PurchaseItem : MonoBehaviour
                 }
             });
     }
+
 
     private async void getBalance()
     {
@@ -173,6 +255,7 @@ public class PurchaseItem : MonoBehaviour
         jokerPrice = hintPricesManager.getJokerPrice();
         extraTimePrice = hintPricesManager.getExtraTimePrice();
         ticketsPrice = hintPricesManager.getTicketsPrice();
+        threeOfTicketsPrice = hintPricesManager.getGroupOfTickets();
 
         Debug.Log($"Joker price: {jokerPrice}, Extra time price: {extraTimePrice}");
     }

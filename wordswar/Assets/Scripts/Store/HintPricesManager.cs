@@ -138,4 +138,8 @@ public class HintPricesManager : MonoBehaviour
     {
         return tickets;
     }
+    public  int getGroupOfTickets()
+    {
+        return threeOfTickets;
+    }
 }
