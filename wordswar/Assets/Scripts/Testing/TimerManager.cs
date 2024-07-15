@@ -1,145 +1,123 @@
-using System;
-using System.Collections;
-using UnityEngine;
-using UnityEngine.UI;
+using Firebase;
+using Firebase.Auth;
 using Firebase.Firestore;
 using Firebase.Extensions;
-using Firebase.Functions;
-using Firebase.Auth;
+using UnityEngine;
+using UnityEngine.UI;
+using System;
 
 public class TimerManager : MonoBehaviour
 {
-    public Text timerText;
-    private FirebaseFirestore db;
-    private FirebaseFunctions functions;
-    private FirebaseAuth auth;
-    private DateTime endTime;
+    FirebaseFirestore db;
+    FirebaseAuth auth;
+    [SerializeField] Text timerText;
+    [SerializeField] GameObject Panel;
+
 
     void Start()
     {
-        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
-            Debug.Log("Firebase is initialized.");
-            InitializeFirebaseComponents();
-        }
-        else
-        {
-            Debug.Log("Waiting for Firebase initialization...");
-            // Wait until Firebase is initialized
-            StartCoroutine(WaitForFirebaseInitialization());
-        }
-    }
-
-    private void InitializeFirebaseComponents()
-    {
-        db = FirebaseFirestore.DefaultInstance;
-        functions = FirebaseFunctions.DefaultInstance;
-        auth = FirebaseAuth.DefaultInstance;
-        Debug.Log("Firebase components initialized.");
-
-        // Uncomment if you want to call the function first
-         callFunction();
-
-        //FetchEndTime();
-    }
-
-    private IEnumerator WaitForFirebaseInitialization()
-    {
-        // Wait until Firebase is initialized
-        while (!FirebaseManager.Instance.IsFirebaseInitialized)
-        {
-            yield return null;
-        }
-
-        Debug.Log("Firebase is now initialized.");
-        // Firebase is now initialized, initialize Firebase components
-        InitializeFirebaseComponents();
-    }
-
-    public void callFunction()
-    {
-        if (functions != null)
-        {
-            functions.GetHttpsCallable("setTimer").CallAsync().ContinueWithOnMainThread(task =>
+            if (task.Result == DependencyStatus.Available)
             {
-                if (task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
+                auth = FirebaseAuth.DefaultInstance;
+                db = FirebaseFirestore.DefaultInstance;
+
+                FirebaseUser user = auth.CurrentUser;
+                if (user != null)
                 {
-                    var result = task.Result.Data.ToString();
-                    Debug.Log("Function call success: " + result);
+                    RetrieveTimer(user.UserId);
                 }
                 else
                 {
-                    Debug.LogError("Function call failed: " + task.Exception);
+                    Debug.LogError("User is not authenticated.");
                 }
-            });
-        }
-        else
-        {
-            Debug.LogError("Firebase functions instance is null.");
-        }
+            }
+            else
+            {
+                Debug.LogError("Could not resolve all Firebase dependencies: " + task.Result);
+            }
+        });
     }
 
-    void FetchEndTime()
+    void RetrieveTimer(string userId)
     {
-        Debug.Log("Fetching end time from Firestore...");
-
-        db.Collection("users").Document(auth.CurrentUser.UserId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        DocumentReference docRef = db.Collection("users").Document(userId);
+        docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompleted)
             {
                 DocumentSnapshot snapshot = task.Result;
                 if (snapshot.Exists)
                 {
-                    Debug.Log("Document snapshot exists.");
-                    if (snapshot.TryGetValue("endTime", out Timestamp endTimeTimestamp))
-                    {
-                        endTime = endTimeTimestamp.ToDateTime();
-                        Debug.Log("End time fetched successfully: " + endTime);
-                        StartCoroutine(UpdateTimer());
-                    }
-                    else
-                    {
-                        Debug.LogError("endTime field not found in the document.");
-                    }
+                    Timestamp timerTimestamp = snapshot.GetValue<Timestamp>("refreshTime");
+                    DateTime timerDateTimeUtc = timerTimestamp.ToDateTime();
+                    DateTime timerDateTimeLocal = timerDateTimeUtc.ToLocalTime();
+                    Debug.Log($"Timer set for (local time): {timerDateTimeLocal}");
+                    StartCoroutine(StartCountdown(timerDateTimeLocal));
                 }
                 else
                 {
-                    Debug.LogError("Document does not exist.");
+                    Debug.Log("No such document.");
                 }
-            }
-            else if (task.IsFaulted)
-            {
-                Debug.LogError("Failed to fetch document snapshot: " + task.Exception);
-            }
-            else if (task.IsCanceled)
-            {
-                Debug.LogError("Fetch document snapshot task was canceled.");
             }
             else
             {
-                Debug.LogError("Unexpected error in fetching document snapshot.");
+                Debug.LogError("Error getting document: " + task.Exception);
             }
         });
     }
 
-
-    IEnumerator UpdateTimer()
+    System.Collections.IEnumerator StartCountdown(DateTime targetTime)
     {
         while (true)
         {
-            TimeSpan remainingTime = endTime - DateTime.Now;
-            if (remainingTime.TotalSeconds > 0)
+            TimeSpan remainingTime = targetTime - DateTime.Now;
+            Debug.Log($"Current time: {DateTime.Now}, Target time: {targetTime}, Remaining time: {remainingTime}");
+
+            if (remainingTime.TotalSeconds <= 0)
             {
-                timerText.text = string.Format("{0:D2}:{1:D2}:{2:D2}", remainingTime.Hours, remainingTime.Minutes, remainingTime.Seconds);
-                Debug.Log("Remaining time: " + timerText.text);
+                Debug.Log("Timer ended.");
+                IncreaseTickets(); // Call function to increase tickets
+                if (timerText != null)
+                {
+                    Panel.SetActive(false);
+                    timerText.text = "Timer ended.";
+                }
+                yield break;
             }
-            else
+
+            if (timerText != null)
             {
-                timerText.text = "Time's up!";
-                Debug.Log("Time's up!");
-                break;
+                timerText.text = remainingTime.ToString(@"hh\:mm\:ss");
             }
+
+            Debug.Log("Time remaining: " + remainingTime.ToString(@"hh\:mm\:ss"));
             yield return new WaitForSeconds(1);
+        }
+    }
+
+    void IncreaseTickets()
+    {
+        FirebaseUser user = auth.CurrentUser;
+        if (user != null)
+        {
+            DocumentReference docRef = db.Collection("users").Document(user.UserId).Collection("hints").Document("hintsData");
+            docRef.UpdateAsync("tickets", FieldValue.Increment(1)).ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCompleted)
+                {
+                    Debug.Log("Tickets increased successfully.");
+                }
+                else if (task.IsFaulted)
+                {
+                    Debug.LogError("Failed to increase tickets: " + task.Exception);
+                }
+            });
+        }
+        else
+        {
+            Debug.LogError("User is not authenticated.");
         }
     }
 }

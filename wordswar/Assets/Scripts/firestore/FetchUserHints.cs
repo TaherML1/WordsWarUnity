@@ -49,7 +49,7 @@ public class FetchUserHints : MonoBehaviour
     {
         jokerHintsText.text = jokerHints.ToString();
         extraTimeText.text = extraTimeHints.ToString();
-        ticketsText.text = tickets.ToString();
+        ticketsText.text = "3/"+ tickets.ToString();
         Debug.Log("joker hints : " + jokerHints);
         Debug.Log("extra time hints : " + extraTimeHints);
         Debug.Log("tickets : " + tickets);
