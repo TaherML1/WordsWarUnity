@@ -25,487 +25,244 @@ public class SendWordsAndTopicToDB : MonoBehaviour
     public void InitializeDatabase()
     {
         DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
-
         Dictionary<string, Dictionary<string, object>> topicsAndWords = new Dictionary<string, Dictionary<string, object>>
 {
-   
-        {
-    "بلدان قارة اسيا", new Dictionary<string, object>
     {
+        "اسماء أفراد العائلة", new Dictionary<string, object>
+        {
+            {
+                "الأب", new Dictionary<string, object>
+                {
+                    { "primary", "الأب" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "أب", true },
+                            { "الاب", true },
+                            { "بابا", true },
+                        }
+                    }
+                }
+            },
+            {
+                "الأم", new Dictionary<string, object>
+                {
+                    { "primary", "الأم" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "ام", true },
+                            { "الام", true },
+                            { "ماما", true },
+                        }
+                    }
+                }
+            },
+            {
+                "الأخ", new Dictionary<string, object>
+                {
+                    { "primary", "الأخ" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "الاخ", true },
+                            { "اخ", true },
+                        }
+                    }
+                }
+            },
+            {
+                "الأخت", new Dictionary<string, object>
+                {
+                    { "primary", "الأخت" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "الاخت", true },
+                            { "اخت", true },
+                            { "أخت", true },
+                        }
+                    }
+                }
+            },
+            {
+                "الجد", new Dictionary<string, object>
+                {
+                    { "primary", "الجد" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "جد", true },
+                            { "الجد", true },
 
-        {
-            "السعودية", new Dictionary<string, object>
-            {
-                { "primary", "السعودية" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "المملكة العربية السعودية", true },
-                        { "سعودية", true }
+                        }
                     }
                 }
-            }
-        },
-        {
-            "الامارات", new Dictionary<string, object>
+            },
             {
-                { "primary", "الامارات" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الامارات العربية المتحدة", true },
-                        { "دولة الامارات", true }
+                "الجدة", new Dictionary<string, object>
+                {
+                    { "primary", "الجدة" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "جدتي", true },
+                            { "الجدة", true },
+                              { "جدة", true },
+                        }
                     }
                 }
-            }
-        },
-        {
-            "قطر", new Dictionary<string, object>
+            },
             {
-                { "primary", "قطر" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "دولة قطر", true }
+                "العم", new Dictionary<string, object>
+                {
+                    { "primary", "العم" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "عمي", true },
+                            { "العم", true },
+                        }
                     }
                 }
-            }
-        },
-        {
-            "البحرين", new Dictionary<string, object>
+            },
             {
-                { "primary", "البحرين" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "مملكة البحرين", true }
+                "العمة", new Dictionary<string, object>
+                {
+                    { "primary", "العمة" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "عمتي", true },
+                            { "العمة", true },
+                        }
                     }
                 }
-            }
-        },
-        {
-            "عمان", new Dictionary<string, object>
+            },
             {
-                { "primary", "عمان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "سلطنة عمان", true }
-                    }
-                }
-            }
-        },
-        {
-            "الكويت", new Dictionary<string, object>
-            {
-                { "primary", "الكويت" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "دولة الكويت", true }
-                    }
-                }
-            }
-        },
-        {
-            "العراق", new Dictionary<string, object>
-            {
-                { "primary", "العراق" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية العراق", true }
-                    }
-                }
-            }
-        },
-        {
-            "اليمن", new Dictionary<string, object>
-            {
-                { "primary", "اليمن" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية اليمنية", true }
-                    }
-                }
-            }
-        },
-        {
-            "سوريا", new Dictionary<string, object>
-            {
-                { "primary", "سوريا" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية العربية السورية", true }
-                    }
-                }
-            }
-        },
-        {
-            "لبنان", new Dictionary<string, object>
-            {
-                { "primary", "لبنان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية اللبنانية", true }
-                    }
-                }
-            }
-        },
-        {
-            "فلسطين", new Dictionary<string, object>
-            {
-                { "primary", "فلسطين" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "دولة فلسطين", true }
-                    }
-                }
-            }
-        },
-        {
-            "الاردن", new Dictionary<string, object>
-            {
-                { "primary", "الاردن" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "المملكة الاردنية الهاشمية", true }
-                    }
-                }
-            }
-        },
-        {
-            "تركيا", new Dictionary<string, object>
-            {
-                { "primary", "تركيا" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية التركية", true }
-                    }
-                }
-            }
-        },
-        {
-            "ايران", new Dictionary<string, object>
-            {
-                { "primary", "ايران" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية الاسلامية الايرانية", true }
-                    }
-                }
-            }
-        },
+                "الابن", new Dictionary<string, object>
+                {
+                    { "primary", "الابن" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "ابني", true },
+                            { "الابن", true },
 
-        {
-            "الهند", new Dictionary<string, object>
-            {
-                { "primary", "الهند" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية الهند", true }
+                        }
                     }
                 }
-            }
-        },
-        {
-            "باكستان", new Dictionary<string, object>
+            },
             {
-                { "primary", "باكستان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية باكستان الاسلامية", true }
+                "الابنة", new Dictionary<string, object>
+                {
+                    { "primary", "الابنة" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "ابنة", true },
+                            { "الابنة", true },
+
+                        }
                     }
                 }
-            }
-        },
+            },
+            {
+                "الخال", new Dictionary<string, object>
+                {
+                    { "primary", "الخال" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                            { "خال", true },
 
 
-         {
-            "اوزباكستان", new Dictionary<string, object>
+                        }
+                    }
+                }
+            },
             {
-                { "primary", "اوزباكستان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "اوزبكستان", true }
+                "حفيد", new Dictionary<string, object>
+                {
+                    { "primary", "حفيد" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                       
+                            { "الحفيد", true },
 
+                        }
                     }
                 }
-            }
-        },
-         {
-            "طاجيكسان", new Dictionary<string, object>
+           },
             {
-                { "primary", "طاجيكسان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
+                "حفيدة", new Dictionary<string, object>
+                {
+                    { "primary", "حفيدة" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
+                          
+                            { "الحفيدة", true },
 
+                        }
+                    }
+                }
+           },
+            {
+                "الصهر", new Dictionary<string, object>
+                {
+                    { "primary", "الصهر" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
 
-                    }
-                }
-            }
-        },
-         {
-            "افغانستان", new Dictionary<string, object>
-            {
-                { "primary", "افغانستان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
+                            { "صهر", true },
 
+                        }
+                    }
+                }
+           },
+            {
+                "السلف", new Dictionary<string, object>
+                {
+                    { "primary", "السلف" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
 
-                    }
-                }
-            }
-        },
+                            { "سلف", true },
 
-        {
-            "بنغلاديش", new Dictionary<string, object>
-            {
-                { "primary", "بنغلاديش" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية بنغلاديش الشعبية", true }
+                        }
                     }
                 }
-            }
-        },
-        {
-            "سريلانكا", new Dictionary<string, object>
+           },
             {
-                { "primary", "سريلانكا" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية سريلانكا الديمقراطية الاشتراكية", true },
-                      { "سيرلانكا", true }
-                    }
-                }
-            }
-        },
+                "الحم", new Dictionary<string, object>
+                {
+                    { "primary", "الحم" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
 
-        {
-            "نيبال", new Dictionary<string, object>
-            {
-                { "primary", "نيبال" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية نيبال الديمقراطية الاتحادية", true }
-                    }
-                }
-            }
-        },
-        {
-            "بوتان", new Dictionary<string, object>
-            {
-                { "primary", "بوتان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "مملكة بوتان", true }
-                    }
-                }
-            }
-        },
-        {
-            "مالديف", new Dictionary<string, object>
-            {
-                { "primary", "مالديف" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جزر المالديف", true }
-                    }
-                }
-            }
-        },
-        {
-            "سنغافورة", new Dictionary<string, object>
-            {
-                { "primary", "سنغافورة" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية السنغافورية", true }
-                    }
-                }
-            }
-        },
+                            { "الحم", true },
 
-        {
-            "اندونيسيا", new Dictionary<string, object>
-            {
-                { "primary", "اندونيسيا" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية اندونيسيا", true }
+                        }
                     }
                 }
-            }
-        },
-        {
-            "ماليزيا", new Dictionary<string, object>
+           },
             {
-                { "primary", "ماليزيا" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "اتحاد ماليزيا", true }
-                    }
-                }
-            }
-        },
-        {
-            "فيتنام", new Dictionary<string, object>
-            {
-                { "primary", "فيتنام" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الجمهورية الاشتراكية الفيتنامية", true }
-                    }
-                }
-            }
-        },
-        {
-            "تايلاند", new Dictionary<string, object>
-            {
-                { "primary", "تايلاند" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "مملكة تايلاند", true },
-                        { " تايلاندا", true }
-                    }
-                }
-            }
-        },
-        
-      
-        {
-            "الفلبين", new Dictionary<string, object>
-            {
-                { "primary", "الفلبين" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية الفلبين", true }
-                    }
-                }
-            }
-        },
-        {
-            "بروناي", new Dictionary<string, object>
-            {
-                { "primary", "بروناي" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
+                "الكنة", new Dictionary<string, object>
+                {
+                    { "primary", "الكنة" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
 
-                    }
-                }
-            }
-        },
-        {
-            "لاوس", new Dictionary<string, object>
-            {
-                { "primary", "لاوس" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
+                            { "كنة", true },
 
+                        }
                     }
                 }
-            }
-        },
-        {
-            "تيمور الشرقية", new Dictionary<string, object>
+           },
             {
-                { "primary", "تيمور الشرقية" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "جمهورية تيمور الشرقية", true },
-                        { " تيمور ", true }
-                    }
-                }
-            }
-        },
+                "الحماة", new Dictionary<string, object>
+                {
+                    { "primary", "الحماة" },
+                    { "synonyms", new Dictionary<string, bool>
+                        {
 
-        {
-            "الصين", new Dictionary<string, object>
-            {
-                { "primary", "الصين" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الصين الشعبية", true },
-                        { "جمهورية الصين الشعبية", true }
+                            { "حماة", true },
 
+                        }
                     }
                 }
-            }
-        },
-        {
-            "اليابان", new Dictionary<string, object>
-            {
-                { "primary", "اليابان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-                        { "الامبراطورية اليابانية", true },
-                        { "يابان", true },
-                    }
-                }
-            }
-        },
-        {
-            "كوريا الجنوبية", new Dictionary<string, object>
-            {
-                { "primary", "كوريا الجنوبية" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-
-                    }
-                }
-            }
-        },
-        {
-            "كوريا الشمالية", new Dictionary<string, object>
-            {
-                { "primary", "كوريا الشمالية" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-
-                    }
-                }
-            }
-        },
-        {
-            "منغوليا", new Dictionary<string, object>
-            {
-                { "primary", "منغوليا" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-
-                    }
-                }
-            }
-        },
-        {
-            "تايوان", new Dictionary<string, object>
-            {
-                { "primary", "تايوان" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-
-                    }
-                }
-            }
-        },
-        {
-            "هونغ كونغ", new Dictionary<string, object>
-            {
-                { "primary", "هونغ كونغ" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-
-                    }
-                }
-            }
-        },
-        {
-            "ماكاو", new Dictionary<string, object>
-            {
-                { "primary", "ماكاو" },
-                { "synonyms", new Dictionary<string, bool>
-                    {
-
-                    }
-                }
-            }
+           },
         }
     }
-}
 };
 
 
