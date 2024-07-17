@@ -2,9 +2,9 @@ using Firebase;
 using Firebase.Auth;
 using Firebase.Firestore;
 using Firebase.Extensions;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
 
 public class TimerManager : MonoBehaviour
 {
@@ -13,20 +13,25 @@ public class TimerManager : MonoBehaviour
     [SerializeField] Text timerText;
     [SerializeField] GameObject Panel;
 
+    private Timestamp serverStartTime;
+    private Timestamp targetTime;
 
     void Start()
     {
+        Debug.Log("Starting Firebase dependency check.");
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
         {
             if (task.Result == DependencyStatus.Available)
             {
                 auth = FirebaseAuth.DefaultInstance;
                 db = FirebaseFirestore.DefaultInstance;
+                Debug.Log("Firebase dependencies are available.");
 
                 FirebaseUser user = auth.CurrentUser;
                 if (user != null)
                 {
-                    RetrieveTimer(user.UserId);
+                    Debug.Log($"User is authenticated: {user.UserId}");
+                    RetrieveServerTime(user.UserId);
                 }
                 else
                 {
@@ -40,8 +45,35 @@ public class TimerManager : MonoBehaviour
         });
     }
 
+    void RetrieveServerTime(string userId)
+    {
+        Debug.Log("Retrieving server time.");
+        db.Collection("serverTime").Document("currentTime").GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                DocumentSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
+                {
+                    serverStartTime = snapshot.GetValue<Timestamp>("time");
+                    Debug.Log("server time : " + serverStartTime);
+                    RetrieveTimer(userId);
+                }
+                else
+                {
+                    Debug.LogError("No such document in serverTime/currentTime.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Error getting server time document: " + task.Exception);
+            }
+        });
+    }
+
     void RetrieveTimer(string userId)
     {
+        Debug.Log("Retrieving user timer.");
         DocumentReference docRef = db.Collection("users").Document(userId);
         docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
@@ -50,30 +82,29 @@ public class TimerManager : MonoBehaviour
                 DocumentSnapshot snapshot = task.Result;
                 if (snapshot.Exists)
                 {
-                    Timestamp timerTimestamp = snapshot.GetValue<Timestamp>("refreshTime");
-                    DateTime timerDateTimeUtc = timerTimestamp.ToDateTime();
-                    DateTime timerDateTimeLocal = timerDateTimeUtc.ToLocalTime();
-                    Debug.Log($"Timer set for (local time): {timerDateTimeLocal}");
-                    StartCoroutine(StartCountdown(timerDateTimeLocal));
+                    targetTime = snapshot.GetValue<Timestamp>("refreshTime");
+                    Debug.Log($"Timer set for: {targetTime.ToDateTime()}");
+                    StartCoroutine(StartCountdown());
                 }
                 else
                 {
-                    Debug.Log("No such document.");
+                    Debug.LogError("No such document in users/userId.");
                 }
             }
             else
             {
-                Debug.LogError("Error getting document: " + task.Exception);
+                Debug.LogError("Error getting user timer document: " + task.Exception);
             }
         });
     }
 
-    System.Collections.IEnumerator StartCountdown(DateTime targetTime)
+    System.Collections.IEnumerator StartCountdown()
     {
         while (true)
         {
-            TimeSpan remainingTime = targetTime - DateTime.Now;
-            Debug.Log($"Current time: {DateTime.Now}, Target time: {targetTime}, Remaining time: {remainingTime}");
+            TimeSpan remainingTime = targetTime.ToDateTime() - serverStartTime.ToDateTime();
+
+            Debug.Log($"Remaining time: {remainingTime}");
 
             if (remainingTime.TotalSeconds <= 0)
             {
@@ -87,12 +118,26 @@ public class TimerManager : MonoBehaviour
                 yield break;
             }
 
-            if (timerText != null)
+            string remainingTimeString;
+            if (remainingTime.TotalHours >= 1)
             {
-                timerText.text = remainingTime.ToString(@"hh\:mm\:ss");
+                remainingTimeString = $"{(int)remainingTime.TotalHours:D2}:{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}";
+            }
+            else
+            {
+                remainingTimeString = $"{remainingTime.Minutes:D2}:{remainingTime.Seconds:D2}";
             }
 
-            Debug.Log("Time remaining: " + remainingTime.ToString(@"hh\:mm\:ss"));
+            if (timerText != null)
+            {
+                timerText.text = remainingTimeString;
+            }
+
+            Debug.Log("Time remaining: " + remainingTimeString);
+
+            // Update serverStartTime
+            serverStartTime = Timestamp.FromDateTime(serverStartTime.ToDateTime().AddSeconds(1));
+
             yield return new WaitForSeconds(1);
         }
     }
