@@ -11043,7 +11043,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   feedbackManager: {fileID: 857806514}
   radialProgressBar: {fileID: 857806517}
-  PurchasePanel: {fileID: 0}
 --- !u!114 &857806516
 MonoBehaviour:
   m_ObjectHideFlags: 0
