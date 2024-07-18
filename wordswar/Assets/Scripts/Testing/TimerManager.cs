@@ -1,10 +1,10 @@
-using Firebase;
 using Firebase.Auth;
 using Firebase.Firestore;
 using Firebase.Extensions;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Firebase;
 
 public class TimerManager : MonoBehaviour
 {
@@ -148,15 +148,42 @@ public class TimerManager : MonoBehaviour
         if (user != null)
         {
             DocumentReference docRef = db.Collection("users").Document(user.UserId).Collection("hints").Document("hintsData");
-            docRef.UpdateAsync("tickets", FieldValue.Increment(1)).ContinueWithOnMainThread(task =>
+            docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
             {
                 if (task.IsCompleted)
                 {
-                    Debug.Log("Tickets increased successfully.");
+                    DocumentSnapshot snapshot = task.Result;
+                    if (snapshot.Exists)
+                    {
+                        int currentTickets = snapshot.GetValue<int>("tickets");
+
+                        if (currentTickets < 3)
+                        {
+                            docRef.UpdateAsync("tickets", FieldValue.Increment(1)).ContinueWithOnMainThread(updateTask =>
+                            {
+                                if (updateTask.IsCompleted)
+                                {
+                                    Debug.Log("Tickets increased successfully.");
+                                }
+                                else if (updateTask.IsFaulted)
+                                {
+                                    Debug.LogError("Failed to increase tickets: " + updateTask.Exception);
+                                }
+                            });
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Ticket limit reached. Cannot increase tickets.");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("Document does not exist.");
+                    }
                 }
-                else if (task.IsFaulted)
+                else
                 {
-                    Debug.LogError("Failed to increase tickets: " + task.Exception);
+                    Debug.LogError("Failed to retrieve document: " + task.Exception);
                 }
             });
         }

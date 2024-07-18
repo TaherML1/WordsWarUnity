@@ -10,6 +10,9 @@ using System;
 
 public class MatchmakingManager : MonoBehaviour
 {
+    [SerializeField] GameObject purchaseTicketPanel;
+    [SerializeField] GameObject matchmakingPanel;
+
     DatabaseReference databaseReference;
     FirebaseAuth auth;
 
@@ -114,7 +117,7 @@ public class MatchmakingManager : MonoBehaviour
     // Method to add the current player to the matchmaking queue
     public void AddPlayerToMatchmaking()
     {
-        // if(currentTickets > 0)
+         if(currentTickets > 0)
         {
             if (auth.CurrentUser != null)
             {
@@ -122,6 +125,7 @@ public class MatchmakingManager : MonoBehaviour
                 // Check if the database reference is valid
                 if (databaseReference != null)
                 {
+                    matchmakingPanel.SetActive(true);
                     // Add the player to the matchmaking node in the Realtime Database
                     DatabaseReference matchmakingRef = databaseReference.Child("matchmaking").Child(playerId);
                     matchmakingRef.SetValueAsync("placeholder").ContinueWith(task =>
@@ -132,6 +136,7 @@ public class MatchmakingManager : MonoBehaviour
                         }
                         else
                         {
+                        
                             Debug.Log("Player added to matchmaking successfully");
                         }
                     });
@@ -146,10 +151,11 @@ public class MatchmakingManager : MonoBehaviour
                 Debug.LogError("Current user is not authenticated");
             }
         }
-        /*else
-        {
+        
+       else {
+            purchaseTicketPanel.SetActive(true);
             Debug.LogError("there is no enough tickets");
-        }*/
+        }
 
     }
 
