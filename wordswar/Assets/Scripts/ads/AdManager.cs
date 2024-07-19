@@ -8,13 +8,15 @@ using System;
 
 public class AdManager : MonoBehaviour
 {
+
     private BannerView _bannerView;
     private InterstitialAd interstitial;
     public string adUnitId;
-
+   public TimerManager timerManager;
     // Start is called before the first frame update
     void Start()
     {
+
         // Initialize the Google Mobile Ads SDK.
         MobileAds.Initialize((InitializationStatus initStatus) =>
         {
@@ -280,16 +282,20 @@ public class AdManager : MonoBehaviour
 
     public void ShowRewardedAd()
     {
-        const string rewardMsg =
-            "Rewarded ad rewarded the user. Type: {0}, amount: {1}.";
-
         if (_rewardedAd != null && _rewardedAd.CanShowAd())
         {
-            _rewardedAd.Show((Reward reward) =>
+            _rewardedAd.Show(reward =>
             {
-                // TODO: Reward the user.
-                Debug.Log(String.Format(rewardMsg, reward.Type, reward.Amount));
+                Debug.Log($"Rewarded ad rewarded the user. Type: {reward.Type}, amount: {reward.Amount}");
+
+                timerManager.IncreaseTicketsLocally();
+               
             });
         }
+        else
+        {
+            Debug.LogError("Rewarded ad is not ready yet.");
+        }
     }
+
 }

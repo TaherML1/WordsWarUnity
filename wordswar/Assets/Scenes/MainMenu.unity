@@ -6401,6 +6401,7 @@ GameObject:
   - component: {fileID: 554094268}
   - component: {fileID: 554094270}
   - component: {fileID: 554094271}
+  - component: {fileID: 554094272}
   m_Layer: 0
   m_Name: FetchUserProfile
   m_TagString: Untagged
@@ -6474,6 +6475,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timerText: {fileID: 97116709}
   Panel: {fileID: 290040470}
+--- !u!114 &554094272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 554094267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d244b392782192448596afe25148236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  adUnitId: 
+  timerManager: {fileID: 554094271}
 --- !u!1 &565715177
 GameObject:
   m_ObjectHideFlags: 0
@@ -20132,7 +20147,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1646829975}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 554094272}
+        m_TargetAssemblyTypeName: AdManager, Assembly-CSharp
+        m_MethodName: ShowRewardedAd
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1646829975
 MonoBehaviour:
   m_ObjectHideFlags: 0

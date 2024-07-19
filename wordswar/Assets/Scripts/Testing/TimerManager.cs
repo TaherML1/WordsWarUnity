@@ -1,6 +1,7 @@
 using Firebase.Auth;
 using Firebase.Firestore;
 using Firebase.Extensions;
+using Firebase.Functions;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,8 +9,10 @@ using Firebase;
 
 public class TimerManager : MonoBehaviour
 {
+   public static TimerManager instance;
     FirebaseFirestore db;
     FirebaseAuth auth;
+    FirebaseFunctions functions;
     [SerializeField] Text timerText;
     [SerializeField] GameObject Panel;
 
@@ -25,6 +28,7 @@ public class TimerManager : MonoBehaviour
             {
                 auth = FirebaseAuth.DefaultInstance;
                 db = FirebaseFirestore.DefaultInstance;
+                functions = FirebaseFunctions.DefaultInstance;
                 Debug.Log("Firebase dependencies are available.");
 
                 FirebaseUser user = auth.CurrentUser;
@@ -109,7 +113,7 @@ public class TimerManager : MonoBehaviour
             if (remainingTime.TotalSeconds <= 0)
             {
                 Debug.Log("Timer ended.");
-                IncreaseTickets(); // Call function to increase tickets
+                IncreaseTicketsLocally(); // Call function to increase tickets locally
                 if (timerText != null)
                 {
                     Panel.SetActive(false);
@@ -142,7 +146,7 @@ public class TimerManager : MonoBehaviour
         }
     }
 
-    void IncreaseTickets()
+   public void IncreaseTicketsLocally()
     {
         FirebaseUser user = auth.CurrentUser;
         if (user != null)
@@ -159,17 +163,12 @@ public class TimerManager : MonoBehaviour
 
                         if (currentTickets < 3)
                         {
-                            docRef.UpdateAsync("tickets", FieldValue.Increment(1)).ContinueWithOnMainThread(updateTask =>
-                            {
-                                if (updateTask.IsCompleted)
-                                {
-                                    Debug.Log("Tickets increased successfully.");
-                                }
-                                else if (updateTask.IsFaulted)
-                                {
-                                    Debug.LogError("Failed to increase tickets: " + updateTask.Exception);
-                                }
-                            });
+                            // Update the tickets locally
+                            currentTickets += 1;
+                            // Reflect the updated tickets in UI or local state
+                            Debug.Log("Tickets increased locally.");
+                            // Call Cloud Function to validate and finalize the update
+                            CallCloudFunctionToUpdateTickets();
                         }
                         else
                         {
@@ -191,5 +190,21 @@ public class TimerManager : MonoBehaviour
         {
             Debug.LogError("User is not authenticated.");
         }
+    }
+
+    void CallCloudFunctionToUpdateTickets()
+    {
+         functions.GetHttpsCallable("increaseTickets").
+       CallAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                Debug.Log("Cloud Function called successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to call Cloud Function: " + task.Exception);
+            }
+        });
     }
 }
