@@ -204,7 +204,7 @@ public class AdManager : MonoBehaviour
     private void RequestRewarded()
     {
 #if UNITY_ANDROID
-        string adUnitId = "ca-app-pub-3940256099942544/5224354917";
+        string adUnitId = "ca-app-pub-8174773242665808/5141384415";
 #elif UNITY_IPHONE
             string adUnitId = "";
 #else

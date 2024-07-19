@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/UIManager.unity
     guid: eef33850f2b89394297e0e3497c6dc9b
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/OldMainMenu.unity
     guid: 2bf5b71e70576e64b9a416e9f4a520cd
   - enabled: 1
