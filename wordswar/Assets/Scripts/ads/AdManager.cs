@@ -13,6 +13,7 @@ public class AdManager : MonoBehaviour
     private InterstitialAd interstitial;
     public string adUnitId;
    public TimerManager timerManager;
+    public SpinWheel spinWheel;
     // Start is called before the first frame update
     void Start()
     {
@@ -290,6 +291,23 @@ public class AdManager : MonoBehaviour
 
                 timerManager.IncreaseTicketsLocally();
                
+            });
+        }
+        else
+        {
+            Debug.LogError("Rewarded ad is not ready yet.");
+        }
+    }
+    public void ShowRewardedAdSpin()
+    {
+        if (_rewardedAd != null && _rewardedAd.CanShowAd())
+        {
+            _rewardedAd.Show(reward =>
+            {
+                Debug.Log($"Rewarded ad rewarded the user. Type: {reward.Type}, amount: {reward.Amount}");
+
+                spinWheel.IncreaseSpinTicket();
+
             });
         }
         else

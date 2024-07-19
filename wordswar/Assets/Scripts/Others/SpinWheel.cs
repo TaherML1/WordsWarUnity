@@ -10,32 +10,33 @@ using TMPro;
 public class SpinWheel : MonoBehaviour
 {
     [Header("Radial Bar")]
-    [SerializeField] private RadialProgressBar radialProgressBar;
+    [SerializeField]  RadialProgressBar radialProgressBar;
 
     [Header("Spin Settings")]
-    [SerializeField] private Button spinButton; // Reference to the spin button
-    [SerializeField] private float minSpinSpeed = 500f; // Minimum speed of the wheel in degrees per second
-    [SerializeField] private float maxSpinSpeed = 2000f; // Maximum speed of the wheel in degrees per second
-    [SerializeField] private float minSpinDuration = 10f; // Minimum duration for the wheel to spin
-    [SerializeField] private float maxSpinDuration = 12f; // Maximum duration for the wheel to spin
+    [SerializeField]  Button spinButton; // Reference to the spin button
+    [SerializeField] float minSpinSpeed = 500f; // Minimum speed of the wheel in degrees per second
+    [SerializeField] float maxSpinSpeed = 2000f; // Maximum speed of the wheel in degrees per second
+    [SerializeField]  float minSpinDuration = 10f; // Minimum duration for the wheel to spin
+    [SerializeField]  float maxSpinDuration = 12f; // Maximum duration for the wheel to spin
 
     [Header("UI Elements")]
-    [SerializeField] private TextMeshProUGUI WonPrizeText; // Text element to show the won prize
-    [SerializeField] private Image WonPrizeImage; // Image element to show the won prize image
-    [SerializeField] private GameObject PrizePanel;
+    [SerializeField]  TextMeshProUGUI WonPrizeText; // Text element to show the won prize
+    [SerializeField]  Image WonPrizeImage; // Image element to show the won prize image
+    [SerializeField] GameObject PrizePanel;
+    [SerializeField] GameObject WatchVideoPanel;
 
     [Header("Prize sprites")]
-    [SerializeField] private Sprite xpSprite;
-    [SerializeField] private Sprite coins10Sprite;
-    [SerializeField] private Sprite gems10Sprite;
-    [SerializeField] private Sprite badLuckSprite;
-    [SerializeField] private Sprite coins100Sprite;
-    [SerializeField] private Sprite hintSprite;
-    [SerializeField] private Sprite gems100Sprite;
-    [SerializeField] private Sprite jokerSprite;
+    [SerializeField]  Sprite xpSprite;
+    [SerializeField] Sprite coins10Sprite;
+    [SerializeField] Sprite gems10Sprite;
+    [SerializeField] Sprite badLuckSprite;
+    [SerializeField] Sprite coins100Sprite;
+    [SerializeField] Sprite hintSprite;
+    [SerializeField] Sprite gems100Sprite;
+    [SerializeField] Sprite jokerSprite;
 
     [Header("Sound")]
-    [SerializeField] private AudioSource spinSound; // Reference to the AudioSource for spin sound
+    [SerializeField]  AudioSource spinSound; // Reference to the AudioSource for spin sound
 
     private Dictionary<string, Sprite> prizeSprites;
 
@@ -103,22 +104,37 @@ public class SpinWheel : MonoBehaviour
     {
         if (auth.CurrentUser != null)
         {
-            if (isSpinning) return; // Prevent multiple spins at once
-
-            isSpinning = true;
-            timeElapsed = 0;
-
-            // Randomize the spin speed and duration
-            currentSpeed = Random.Range(minSpinSpeed, maxSpinSpeed);
-            spinTime = Random.Range(minSpinDuration, maxSpinDuration);
-
-            spinSound.Play(); // Play the spin sound
+            int spinTickets = UserManager.Instance.GetSpinTickets();
+            if (spinTickets > 0)
+            {
+              
+                StartSpinWheel();
+            }
+            else
+            {
+                WatchVideoPanel.SetActive(true);
+                Debug.Log("No spin tickets available. Please wait until the next day.");
+            }
         }
         else
         {
             Debug.Log("You have to be authenticated");
         }
     }
+    private void StartSpinWheel()
+    {
+        if (isSpinning) return; // Prevent multiple spins at once
+
+        isSpinning = true;
+        timeElapsed = 0;
+
+        // Randomize the spin speed and duration
+        currentSpeed = Random.Range(minSpinSpeed, maxSpinSpeed);
+        spinTime = Random.Range(minSpinDuration, maxSpinDuration);
+
+        spinSound.Play(); // Play the spin sound
+    }
+
 
     void DetermineWinningSegment()
     {
@@ -205,4 +221,22 @@ public class SpinWheel : MonoBehaviour
             DisplayWonPrize(segmentName);
         }
     }
+
+  public void IncreaseSpinTicket()
+    {
+        FirebaseFunctions functions = FirebaseFunctions.DefaultInstance;
+        functions.GetHttpsCallable("addSpinTicket").CallAsync().ContinueWith(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
+            {
+                Debug.Log("Spin ticket added successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to add spin ticket: " + task.Exception);
+            }
+        });
+    }
+
+
 }

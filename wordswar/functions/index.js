@@ -1,30 +1,36 @@
-/* eslint-disable max-len */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+
 admin.initializeApp();
+const firestore = admin.firestore();
 
-exports.increaseTickets = functions.https.onCall(async (data, context) => {
-  const userId = context.auth.uid;
+exports.addSpinTicket = functions.https.onCall(async (data, context) => {
+  try {
+    // Check if the request is authenticated
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+          "unauthenticated",
+          "You must be authenticated to call this function.",
+      );
+    }
 
-  if (!userId) {
-    throw new functions.https.HttpsError("unauthenticated", "User is not authenticated.");
-  }
+    // Get the user ID from the authenticated user
+    const userId = context.auth.uid;
 
-  const userRef = admin.firestore().collection("users").doc(userId).collection("hints").doc("hintsData");
-  const userDoc = await userRef.get();
+    // Reference to the user's document in Firestore
+    const userDocRef = firestore.collection("users").doc(userId);
 
-  if (!userDoc.exists) {
-    throw new functions.https.HttpsError("not-found", "User data not found.");
-  }
-
-  const currentTickets = userDoc.data().tickets;
-
-  if (currentTickets < 3) {
-    await userRef.update({
-      tickets: admin.firestore.FieldValue.increment(1),
+    // Increment the spin ticket count by 1
+    await userDocRef.update({
+      spinTicket: admin.firestore.FieldValue.increment(1),
     });
-    return {message: "Tickets increased successfully."};
-  } else {
-    throw new functions.https.HttpsError("failed-precondition", "Ticket limit reached.");
+
+    return {success: true, message: "Spin ticket added successfully."};
+  } catch (error) {
+    console.error("Error adding spin ticket:", error);
+    throw new functions.https.HttpsError(
+        "unknown",
+        "An error occurred while adding the spin ticket.",
+    );
   }
 });

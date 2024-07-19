@@ -190,6 +190,10 @@ public class UserManager : MonoBehaviour
     {
         return userHints != null && userHints.TryGetValue("tickets", out object gameObj) ? Convert.ToInt32((string)gameObj) : 0;
     }
+    public int GetSpinTickets()
+    {
+        return userProfile != null && userProfile.TryGetValue("spinTicket", out object spinTicketObj) ? Convert.ToInt32(spinTicketObj) : 0;
+    }
 
     public void UpdateUserHints(Dictionary<string, object> userHints)
     {
@@ -206,4 +210,6 @@ public class UserManager : MonoBehaviour
             }
         });
     }
+
+   
 }
