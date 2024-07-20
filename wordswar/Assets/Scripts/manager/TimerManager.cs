@@ -108,7 +108,7 @@ public class TimerManager : MonoBehaviour
         {
             TimeSpan remainingTime = targetTime.ToDateTime() - serverStartTime.ToDateTime();
 
-            Debug.Log($"Remaining time: {remainingTime}");
+           // Debug.Log($"Remaining time: {remainingTime}");
 
             if (remainingTime.TotalSeconds <= 0)
             {
@@ -137,7 +137,7 @@ public class TimerManager : MonoBehaviour
                 timerText.text = remainingTimeString;
             }
 
-            Debug.Log("Time remaining: " + remainingTimeString);
+         //   Debug.Log("Time remaining: " + remainingTimeString);
 
             // Update serverStartTime
             serverStartTime = Timestamp.FromDateTime(serverStartTime.ToDateTime().AddSeconds(1));

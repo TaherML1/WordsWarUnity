@@ -90,6 +90,7 @@ public class SetUser : MonoBehaviour
 
             // Call CheckUserProfileCompletion in FetchUserProfile after setting the username
             UserManager.Instance.ListenForUserDataChanges();
+            UserManager.Instance.ListenForUserHintsChanges();
             setUserPanel.SetActive(false);
             Shadow.SetActive(false);
              radialProgressBar.StopSpinning();

@@ -21,6 +21,13 @@ public class FetchUserHints : MonoBehaviour
 
         // Fetch initial user hints data
         UserManager.Instance.CheckUserProfileCompletion();
+
+        // Fetch initial user hints data
+        var initialHints = UserManager.Instance.GetUserHints();
+        if (initialHints != null)
+        {
+            UpdateUserHints(initialHints);
+        }
     }
 
     private void OnDestroy()

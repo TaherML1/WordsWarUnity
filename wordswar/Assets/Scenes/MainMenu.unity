@@ -1155,7 +1155,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 554094272}
         m_TargetAssemblyTypeName: AdManager, Assembly-CSharp
-        m_MethodName: ShowRewardedAd
+        m_MethodName: ShowRewardedAdTicket
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6893,7 +6893,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d244b392782192448596afe25148236, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  adUnitId: 
+  adUnitIdBanner: 
+  adUnitIdInterstitial: 
+  adUnitIdRewardedTicket: 
+  adUnitIdRewardedSpin: 
   timerManager: {fileID: 554094271}
   spinWheel: {fileID: 565715179}
 --- !u!1 &565715177
@@ -6954,8 +6957,8 @@ MonoBehaviour:
   spinButton: {fileID: 335536093}
   minSpinSpeed: 1000
   maxSpinSpeed: 1500
-  minSpinDuration: 20
-  maxSpinDuration: 20
+  minSpinDuration: 15
+  maxSpinDuration: 15
   WonPrizeText: {fileID: 1287181891}
   WonPrizeImage: {fileID: 1328676822}
   PrizePanel: {fileID: 1626578547}

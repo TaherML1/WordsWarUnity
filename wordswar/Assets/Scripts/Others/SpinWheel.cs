@@ -224,12 +224,14 @@ public class SpinWheel : MonoBehaviour
 
   public void IncreaseSpinTicket()
     {
+        WatchVideoPanel.SetActive(false);
         FirebaseFunctions functions = FirebaseFunctions.DefaultInstance;
         functions.GetHttpsCallable("addSpinTicket").CallAsync().ContinueWith(task =>
         {
             if (task.IsCompleted && !task.IsFaulted && !task.IsCanceled)
             {
                 Debug.Log("Spin ticket added successfully.");
+               
             }
             else
             {

@@ -1,36 +1,70 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+/* eslint-disable no-unused-vars */
+/* eslint-disable max-len */
 
-admin.initializeApp();
-const firestore = admin.firestore();
+/**
+ * Import function triggers from their respective submodules:
+ *
+ * const {onCall} = require("firebase-functions/v2/https");
+ * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+ *
+ * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ */
 
-exports.addSpinTicket = functions.https.onCall(async (data, context) => {
+// index.js
+
+const {onCall} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
+
+initializeApp();
+const firestore = getFirestore();
+
+exports.setUser2 = onCall(async (request) => {
+  const {data, auth} = request;
+
   try {
     // Check if the request is authenticated
-    if (!context.auth) {
-      throw new functions.https.HttpsError(
-          "unauthenticated",
-          "You must be authenticated to call this function.",
-      );
+    if (!auth) {
+      throw new Error("You must be authenticated to call this function.");
     }
 
     // Get the user ID from the authenticated user
-    const userId = context.auth.uid;
+    const userId = auth.uid;
 
-    // Reference to the user's document in Firestore
-    const userDocRef = firestore.collection("users").doc(userId);
+    // Get the user data from the request
+    const {username, ...additionalUserData} = data;
 
-    // Increment the spin ticket count by 1
-    await userDocRef.update({
-      spinTicket: admin.firestore.FieldValue.increment(1),
+    // Set default values for user data including tickets and lastRefresh
+    const userData = {
+      username: username,
+      gems: 0,
+      coins: 0,
+      level: 1,
+      scores: 0,
+      xp: 0,
+      matchesWon: 0,
+      matchesLost: 0,
+      spinTicket: 0,
+      email: auth.token.email || null,
+      lastRefresh: FieldValue.serverTimestamp(), // Set the current server timestamp
+      profileComplete: true,
+      ...additionalUserData,
+    };
+
+    // Set the user data in Firestore
+    await firestore.collection("users").doc(userId).set(userData);
+
+    // Add hints document for the user
+    await firestore.collection("users").doc(userId).collection("hints").doc("hintsData").set({
+      joker: 0, // Default value for joker
+      extraTime: 0, // Default value for extraTime
+      tickets: 3,
+      // Add more hint fields as needed
     });
 
-    return {success: true, message: "Spin ticket added successfully."};
+    return {success: true, message: "User data and hints set successfully."};
   } catch (error) {
-    console.error("Error adding spin ticket:", error);
-    throw new functions.https.HttpsError(
-        "unknown",
-        "An error occurred while adding the spin ticket.",
-    );
+    // Handle errors
+    throw new Error("An error occurred while setting user data and hints: " + error.message);
   }
 });
