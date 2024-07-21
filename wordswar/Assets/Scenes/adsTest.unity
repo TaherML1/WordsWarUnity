@@ -291,6 +291,7 @@ GameObject:
   m_Component:
   - component: {fileID: 519810169}
   - component: {fileID: 519810168}
+  - component: {fileID: 519810170}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -310,7 +311,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d244b392782192448596afe25148236, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  adUnitId: 
+  adUnitIdBanner: 
+  adUnitIdInterstitial: 
+  adUnitIdRewardedTicket: 
+  adUnitIdRewardedSpin: 
+  timerManager: {fileID: 0}
+  spinWheel: {fileID: 0}
 --- !u!4 &519810169
 Transform:
   m_ObjectHideFlags: 0
@@ -326,6 +332,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519810170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519810167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 733fb0263e4869f419c8d8d1cb33f7aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _androidGameId: 5661529
+  _iOSGameId: 5661528
+  _testMode: 1
 --- !u!1 &625015962
 GameObject:
   m_ObjectHideFlags: 0
