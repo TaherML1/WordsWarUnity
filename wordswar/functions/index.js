@@ -1,70 +1,64 @@
-/* eslint-disable no-unused-vars */
+/* eslint-disable no-constant-condition */
+/* eslint-disable linebreak-style */
+/* eslint-disable no-undef */
+/* eslint-disable linebreak-style */
 /* eslint-disable max-len */
+// Import the required modules
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+// Initialize the Firebase Admin SDK
+admin.initializeApp();
 
-// index.js
+// Define the scheduled function
+const PAGE_SIZE = 500; // Number of documents per batch
 
-const {onCall} = require("firebase-functions/v2/https");
-const {initializeApp} = require("firebase-admin/app");
-const {getFirestore, FieldValue} = require("firebase-admin/firestore");
-
-initializeApp();
-const firestore = getFirestore();
-
-exports.setUser2 = onCall(async (request) => {
-  const {data, auth} = request;
+exports.grantDailySpinTicket = functions.pubsub.schedule("every 24 hours").onRun(async (context) => {
+  const usersRef = admin.firestore().collection("users");
+  let lastDoc = null;
 
   try {
-    // Check if the request is authenticated
-    if (!auth) {
-      throw new Error("You must be authenticated to call this function.");
+    while (true) {
+      const query = lastDoc ? usersRef.orderBy(admin.firestore.FieldPath.documentId()).startAfter(lastDoc).limit(PAGE_SIZE) : usersRef.limit(PAGE_SIZE);
+      const usersSnapshot = await query.get();
+
+      if (usersSnapshot.empty) {
+        break; // Exit loop when no more documents
+      }
+
+      const batch = admin.firestore().batch();
+
+      usersSnapshot.forEach((doc) => {
+        const userRef = doc.ref;
+        batch.get(userRef).then((userDoc) => {
+          if (!userDoc.exists) {
+            console.log(`User document not found: ${userRef.id}`);
+            return;
+          }
+
+          const userData = userDoc.data();
+          if (userData.spinTicket === undefined || userData.spinTicket === 0) {
+            batch.update(userRef, {
+              spinTicket: admin.firestore.FieldValue.increment(1),
+            });
+          } else {
+            console.log(`User ${userRef.id} already has a spin ticket.`);
+          }
+        }).catch((error) => {
+          console.error(`Error getting user document ${userRef.id}: `, error);
+        });
+      });
+
+      await batch.commit();
+      console.log("Batch committed.");
+
+      // Update lastDoc to the last document in the batch
+      lastDoc = usersSnapshot.docs[usersSnapshot.docs.length - 1];
     }
 
-    // Get the user ID from the authenticated user
-    const userId = auth.uid;
-
-    // Get the user data from the request
-    const {username, ...additionalUserData} = data;
-
-    // Set default values for user data including tickets and lastRefresh
-    const userData = {
-      username: username,
-      gems: 0,
-      coins: 0,
-      level: 1,
-      scores: 0,
-      xp: 0,
-      matchesWon: 0,
-      matchesLost: 0,
-      spinTicket: 0,
-      email: auth.token.email || null,
-      lastRefresh: FieldValue.serverTimestamp(), // Set the current server timestamp
-      profileComplete: true,
-      ...additionalUserData,
-    };
-
-    // Set the user data in Firestore
-    await firestore.collection("users").doc(userId).set(userData);
-
-    // Add hints document for the user
-    await firestore.collection("users").doc(userId).collection("hints").doc("hintsData").set({
-      joker: 0, // Default value for joker
-      extraTime: 0, // Default value for extraTime
-      tickets: 3,
-      // Add more hint fields as needed
-    });
-
-    return {success: true, message: "User data and hints set successfully."};
+    console.log("Successfully checked and granted spin tickets to all users.");
   } catch (error) {
-    // Handle errors
-    throw new Error("An error occurred while setting user data and hints: " + error.message);
+    console.error("Error granting spin tickets: ", error);
   }
 });
+
