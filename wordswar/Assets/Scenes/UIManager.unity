@@ -663,7 +663,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &28977311
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -679,14 +679,14 @@ MonoBehaviour:
   feedbackManager: {fileID: 28977313}
   radialProgressBar: {fileID: 28977314}
   dependencyStatus: 0
-  emailLoginField: {fileID: 202276441}
-  passwordLoginField: {fileID: 1845647468}
+  emailLoginField: {fileID: 16405352}
+  passwordLoginField: {fileID: 357791252}
   warningLoginText: {fileID: 849841741}
   confirmLoginText: {fileID: 1036449251}
-  usernameRegisterField: {fileID: 1932035186}
-  emailRegisterField: {fileID: 2112442432}
-  passwordRegisterField: {fileID: 1184321865}
-  passwordRegisterVerifyField: {fileID: 387958283}
+  usernameRegisterField: {fileID: 1751459773}
+  emailRegisterField: {fileID: 541778807}
+  passwordRegisterField: {fileID: 569996086}
+  passwordRegisterVerifyField: {fileID: 1884862319}
   warningRegisterText: {fileID: 980835461}
   emailResetPasswordField: {fileID: 1567940922}
   warningResetPasswordText: {fileID: 1559411504}
@@ -1335,16 +1335,16 @@ RectTransform:
   m_GameObject: {fileID: 137346241}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 783311239}
   - {fileID: 143000626}
-  m_Father: {fileID: 201373681}
+  m_Father: {fileID: 1287116894}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 200}
+  m_AnchoredPosition: {x: -540, y: -1158}
   m_SizeDelta: {x: 250, y: 250}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &137346243
@@ -2357,7 +2357,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 630627802}
-  - {fileID: 1246327052}
   - {fileID: 1957023215}
   - {fileID: 552458458}
   - {fileID: 373574422}
@@ -2365,7 +2364,6 @@ RectTransform:
   - {fileID: 1729290007}
   - {fileID: 820229539}
   - {fileID: 667470354}
-  - {fileID: 137346242}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3641,7 +3639,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &373574422
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5374,7 +5372,6 @@ RectTransform:
   - {fileID: 1466550086}
   - {fileID: 31459270}
   - {fileID: 2098442879}
-  - {fileID: 980835460}
   m_Father: {fileID: 201373681}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6950,6 +6947,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 849841743}
+  - {fileID: 1036449253}
   - {fileID: 16405351}
   - {fileID: 357791251}
   - {fileID: 272582549}
@@ -7700,6 +7699,7 @@ RectTransform:
   - {fileID: 1873441811}
   - {fileID: 197468860}
   - {fileID: 1835437606}
+  - {fileID: 980835460}
   m_Father: {fileID: 1287116894}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -7834,16 +7834,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 849841740}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1957023215}
+  m_Father: {fileID: 649534188}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -9, y: 750}
+  m_AnchoredPosition: {x: -9, y: 630}
   m_SizeDelta: {x: 600, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &865326635
@@ -8361,7 +8361,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 915363480}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 28977311}
+        m_TargetAssemblyTypeName: AuthManager, Assembly-CSharp
+        m_MethodName: LoginButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &915363480
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9020,7 +9032,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 552458458}
+  m_Father: {fileID: 821730196}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -9256,16 +9268,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1036449250}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1957023215}
+  m_Father: {fileID: 649534188}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -15, y: 750}
+  m_AnchoredPosition: {x: -15, y: 630}
   m_SizeDelta: {x: 600, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1043461148
@@ -10977,14 +10989,14 @@ RectTransform:
   m_GameObject: {fileID: 1246327051}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 201373681}
+  m_Father: {fileID: 1287116894}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 900}
+  m_AnchoredPosition: {x: -540, y: -1158}
   m_SizeDelta: {x: 500, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1246327053
@@ -11184,8 +11196,10 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1074023006}
+  - {fileID: 1246327052}
   - {fileID: 649534188}
   - {fileID: 821730196}
+  - {fileID: 137346242}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -11222,8 +11236,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ffdf0e47fedfc74da43e17b1c455286, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loginUI: {fileID: 1957023214}
-  registerUI: {fileID: 552458457}
+  loginUI: {fileID: 649534187}
+  registerUI: {fileID: 821730195}
   mainUI: {fileID: 373574421}
   googleLogin: {fileID: 230471152}
   AuthManager: {fileID: 28977310}
@@ -12536,6 +12550,7 @@ GameObject:
   - component: {fileID: 1459959233}
   - component: {fileID: 1459959232}
   - component: {fileID: 1459959231}
+  - component: {fileID: 1459959234}
   m_Layer: 5
   m_Name: PreviewButton
   m_TagString: Untagged
@@ -12644,6 +12659,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1459959229}
   m_CullTransparentMesh: 1
+--- !u!114 &1459959234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459959229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f25bc586ae37bb8498e5cc0c0982ea18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passwordInputField: {fileID: 569996086}
+  toggleVisibilityButton: {fileID: 1459959231}
+  visibilityText: {fileID: 2099771294}
 --- !u!1 &1466550085
 GameObject:
   m_ObjectHideFlags: 0
@@ -14702,7 +14732,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1835437608}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1305445306}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: LoginScreen
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1835437608
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15137,7 +15179,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1873441813}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 28977311}
+        m_TargetAssemblyTypeName: AuthManager, Assembly-CSharp
+        m_MethodName: RegisterButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1873441813
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16009,7 +16063,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1927188024}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1305445306}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
+        m_MethodName: RegisterScreen
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1927188024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16238,7 +16304,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1957023215
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16252,8 +16318,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 144253040}
-  - {fileID: 1036449253}
-  - {fileID: 849841743}
   - {fileID: 389847660}
   - {fileID: 202276442}
   - {fileID: 1043461149}
@@ -17464,7 +17528,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2124577902}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 230471155}
+        m_TargetAssemblyTypeName: GoogleSignInManager, Assembly-CSharp
+        m_MethodName: SignIn
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2124577902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17646,15 +17722,15 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 230471154}
+  - {fileID: 28977312}
   - {fileID: 1305445308}
+  - {fileID: 1382450157}
+  - {fileID: 1136425832}
+  - {fileID: 480601027}
   - {fileID: 622018022}
   - {fileID: 1874521687}
   - {fileID: 201373681}
   - {fileID: 1287116894}
   - {fileID: 972004404}
-  - {fileID: 230471154}
-  - {fileID: 28977312}
   - {fileID: 1764638227}
-  - {fileID: 480601027}
-  - {fileID: 1136425832}
-  - {fileID: 1382450157}
