@@ -11,8 +11,6 @@ public class UIManager : MonoBehaviour
     public GameObject loginUI;
     public GameObject registerUI;
     public GameObject mainUI;
-    public GameObject googleLogin;
-    public GameObject AuthManager;
     public GameObject resetPasswordUi;
 
    // public GameObject userDataUI;
@@ -47,26 +45,26 @@ public class UIManager : MonoBehaviour
     {
         ClearScreen();
         loginUI.SetActive(true);
-        AuthManager.SetActive(true);
+        
     }
     public void RegisterScreen() // Regester button
     {
         ClearScreen();
         registerUI.SetActive(true);
-        AuthManager.SetActive(true);
+      
     }
     public void MainScreen()
     {
         ClearScreen();
         mainUI.SetActive(true);
-        googleLogin.SetActive(true);
+   
 
     }
     public void ResetScreen()
     {
         ClearScreen();
         resetPasswordUi.SetActive(true);
-        AuthManager.SetActive(true);
+      
     }
     
 

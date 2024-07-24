@@ -1,64 +1,89 @@
-/* eslint-disable no-constant-condition */
-/* eslint-disable linebreak-style */
-/* eslint-disable no-undef */
-/* eslint-disable linebreak-style */
+/* eslint-disable require-jsdoc */
 /* eslint-disable max-len */
-// Import the required modules
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const {onCall} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
-// Initialize the Firebase Admin SDK
-admin.initializeApp();
+initializeApp();
+const firestore = getFirestore();
 
-// Define the scheduled function
-const PAGE_SIZE = 500; // Number of documents per batch
+// Helper function to generate a 6-character player ID
+function generatePlayerId() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let playerId = "";
+  for (let i = 0; i < 6; i++) {
+    playerId += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return playerId;
+}
 
-exports.grantDailySpinTicket = functions.pubsub.schedule("every 24 hours").onRun(async (context) => {
-  const usersRef = admin.firestore().collection("users");
-  let lastDoc = null;
+// Function to check if a player ID already exists
+async function isPlayerIdUnique(playerId) {
+  const snapshot = await firestore.collection("publicProfiles").where("playerId", "==", playerId).get();
+  return snapshot.empty;
+}
+
+exports.setUser2 = onCall(async (request) => {
+  const {data, auth} = request;
 
   try {
-    while (true) {
-      const query = lastDoc ? usersRef.orderBy(admin.firestore.FieldPath.documentId()).startAfter(lastDoc).limit(PAGE_SIZE) : usersRef.limit(PAGE_SIZE);
-      const usersSnapshot = await query.get();
-
-      if (usersSnapshot.empty) {
-        break; // Exit loop when no more documents
-      }
-
-      const batch = admin.firestore().batch();
-
-      usersSnapshot.forEach((doc) => {
-        const userRef = doc.ref;
-        batch.get(userRef).then((userDoc) => {
-          if (!userDoc.exists) {
-            console.log(`User document not found: ${userRef.id}`);
-            return;
-          }
-
-          const userData = userDoc.data();
-          if (userData.spinTicket === undefined || userData.spinTicket === 0) {
-            batch.update(userRef, {
-              spinTicket: admin.firestore.FieldValue.increment(1),
-            });
-          } else {
-            console.log(`User ${userRef.id} already has a spin ticket.`);
-          }
-        }).catch((error) => {
-          console.error(`Error getting user document ${userRef.id}: `, error);
-        });
-      });
-
-      await batch.commit();
-      console.log("Batch committed.");
-
-      // Update lastDoc to the last document in the batch
-      lastDoc = usersSnapshot.docs[usersSnapshot.docs.length - 1];
+    // Check if the request is authenticated
+    if (!auth) {
+      throw new Error("You must be authenticated to call this function.");
     }
 
-    console.log("Successfully checked and granted spin tickets to all users.");
+    // Get the user ID from the authenticated user
+    const userId = auth.uid;
+
+    // Get the user data from the request
+    const {username, ...additionalUserData} = data;
+
+    // Set default values for private user data
+    const privateUserData = {
+      gems: 0,
+      coins: 0,
+      level: 1,
+      scores: 0,
+      xp: 0,
+      matchesWon: 0,
+      matchesLost: 0,
+      spinTicket: 0,
+      email: auth.token.email || null,
+      lastRefresh: FieldValue.serverTimestamp(), // Set the current server timestamp
+      profileComplete: true,
+      ...additionalUserData,
+    };
+
+    // Generate a unique player ID
+    let playerId;
+    do {
+      playerId = generatePlayerId();
+    } while (!await isPlayerIdUnique(playerId));
+
+    // Set default values for public user data
+    const publicUserData = {
+      username: username,
+      playerId: playerId,
+      // Add any other public fields here
+    };
+
+    // Set the private user data in Firestore
+    await firestore.collection("users").doc(userId).set(privateUserData);
+
+    // Set the public user data in Firestore
+    await firestore.collection("publicProfiles").doc(userId).set(publicUserData);
+
+    // Add hints document for the user
+    await firestore.collection("users").doc(userId).collection("hints").doc("hintsData").set({
+      joker: 0, // Default value for joker
+      extraTime: 0, // Default value for extraTime
+      tickets: 3,
+      // Add more hint fields as needed
+    });
+
+    return {success: true, message: "User data and hints set successfully."};
   } catch (error) {
-    console.error("Error granting spin tickets: ", error);
+    // Handle errors
+    throw new Error("An error occurred while setting user data and hints: " + error.message);
   }
 });
-
