@@ -1,27 +1,23 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
+
+/**
+ * Import function triggers from their respective submodules:
+ *
+ * const {onCall} = require("firebase-functions/v2/https");
+ * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+ *
+ * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ */
+
+// index.js
+
 const {onCall} = require("firebase-functions/v2/https");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
 initializeApp();
 const firestore = getFirestore();
-
-// Helper function to generate a 6-character player ID
-function generatePlayerId() {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let playerId = "";
-  for (let i = 0; i < 6; i++) {
-    playerId += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return playerId;
-}
-
-// Function to check if a player ID already exists
-async function isPlayerIdUnique(playerId) {
-  const snapshot = await firestore.collection("publicProfiles").where("playerId", "==", playerId).get();
-  return snapshot.empty;
-}
 
 exports.setUser2 = onCall(async (request) => {
   const {data, auth} = request;
@@ -38,8 +34,9 @@ exports.setUser2 = onCall(async (request) => {
     // Get the user data from the request
     const {username, ...additionalUserData} = data;
 
-    // Set default values for private user data
-    const privateUserData = {
+    // Set default values for user data including tickets and lastRefresh
+    const userData = {
+      username: username,
       gems: 0,
       coins: 0,
       level: 1,
@@ -54,24 +51,8 @@ exports.setUser2 = onCall(async (request) => {
       ...additionalUserData,
     };
 
-    // Generate a unique player ID
-    let playerId;
-    do {
-      playerId = generatePlayerId();
-    } while (!await isPlayerIdUnique(playerId));
-
-    // Set default values for public user data
-    const publicUserData = {
-      username: username,
-      playerId: playerId,
-      // Add any other public fields here
-    };
-
-    // Set the private user data in Firestore
-    await firestore.collection("users").doc(userId).set(privateUserData);
-
-    // Set the public user data in Firestore
-    await firestore.collection("publicProfiles").doc(userId).set(publicUserData);
+    // Set the user data in Firestore
+    await firestore.collection("users").doc(userId).set(userData);
 
     // Add hints document for the user
     await firestore.collection("users").doc(userId).collection("hints").doc("hintsData").set({
