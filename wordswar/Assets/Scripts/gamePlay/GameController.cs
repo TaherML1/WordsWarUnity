@@ -12,16 +12,13 @@ using Firebase.Functions;
 using System.Threading.Tasks;
 using Firebase.Firestore;
 
-
 /// <summary>
 /// Manages the game logic, including player scores, turns, and word submission.
 /// </summary>
-
 public class GameController : MonoBehaviour
 {
-
     public static GameController instance;
-     [SerializeField] FeedbackManager feedbackManager;
+    [SerializeField] FeedbackManager feedbackManager;
     [SerializeField] Chat ChatInstance;
     [SerializeField] MessageAnimator messageAnimator;
 
@@ -31,7 +28,6 @@ public class GameController : MonoBehaviour
     private FirebaseAuth auth;
     private FirebaseFirestore db;
     private FirebaseFunctions functions;
-
 
     [Header("Stats")]
     [SerializeField] TextMeshProUGUI timerText;
@@ -44,12 +40,11 @@ public class GameController : MonoBehaviour
     [SerializeField] TextMeshProUGUI enemyScoreText;
     [SerializeField] TextMeshProUGUI enemyNameText;
 
-    [Header("lcoalPlayer")]
+    [Header("LocalPlayer")]
     [SerializeField] TextMeshProUGUI localPlayScoreText;
     [SerializeField] TextMeshProUGUI localPlayerNameText;
 
-
-    [Header("Ui Elements")]
+    [Header("UI Elements")]
     [SerializeField] TMP_InputField playerInput;
     [SerializeField] ScrollRect scrollView;
     [SerializeField] Button submitButton;
@@ -75,38 +70,46 @@ public class GameController : MonoBehaviour
     string roomId;
     HashSet<string> displayedMessages = new HashSet<string>(); // Maintain a set to store displayed messages
 
-    async void Start()
+    private async void Awake()
     {
+        instance = this;
+
         roomId = PlayerPrefs.GetString("roomId");
 
-        // Wait for Firebase initialization to complete asynchronously
-        Task<DependencyStatus> firebaseTask = FirebaseApp.CheckAndFixDependenciesAsync();
-        await firebaseTask; // Await here
-
-        if (firebaseTask.Result == DependencyStatus.Available)
+        // Check if Firebase is already initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
-            // Set up Firebase references and components
-            databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
-            database = FirebaseDatabase.DefaultInstance;
-            functions = FirebaseFunctions.DefaultInstance;
-            auth = FirebaseAuth.DefaultInstance;
-            db = FirebaseFirestore.DefaultInstance;
-            localPlayerId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-
-
-
-            InitializeGame();
-
-            await FetchPlayerNameAsync(localPlayerId, localPlayerNameText);
-
-            submitButton.onClick.AddListener(submitAnswer);
+            InitializeFirebaseComponents();
         }
         else
         {
-            Debug.LogError("Failed to initialize Firebase");
+            // Wait until Firebase is initialized
+            FirebaseManager.Instance.OnFirebaseInitialized += HandleFirebaseInitialized;
         }
     }
-    void InitializeGame()
+
+    private void HandleFirebaseInitialized()
+    {
+        InitializeFirebaseComponents();
+    }
+
+    private async void InitializeFirebaseComponents()
+    {
+        databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
+        database = FirebaseDatabase.DefaultInstance;
+        functions = FirebaseFunctions.DefaultInstance;
+        auth = FirebaseAuth.DefaultInstance;
+        db = FirebaseFirestore.DefaultInstance;
+        localPlayerId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+
+        InitializeGame();
+
+        await FetchPlayerNameAsync(localPlayerId, localPlayerNameText);
+
+        submitButton.onClick.AddListener(submitAnswer);
+    }
+
+    private void InitializeGame()
     {
         // Call functions that should only be called once
         CheckTurn(localPlayerId, roomId);
@@ -116,11 +119,10 @@ public class GameController : MonoBehaviour
         ListenForUsedWordsUpdates(roomId);
         WinnerValueChangedListener(roomId);
         listenForTime(roomId);
-
     }
 
-    // just for testing to aviod displaying name error 
-    void FetchGameInfoDelayed()
+    // Just for testing to avoid displaying name error
+    private void FetchGameInfoDelayed()
     {
         FetchGameInfo(roomId);
     }

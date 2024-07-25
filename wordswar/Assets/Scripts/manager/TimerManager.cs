@@ -78,7 +78,7 @@ public class TimerManager : MonoBehaviour
         if (userHints.TryGetValue("tickets", out object TicketsObj))
         {
             currentTickets = Convert.ToInt32(TicketsObj);
-            Debug.Log("current ticketsssss " + currentTickets);
+
         }
         else
         {

@@ -20,28 +20,24 @@ public class ImageLoader : MonoBehaviour
     FirebaseStorage storage;
     StorageReference storageReference;
     FirebaseFirestore db;
+    FirebaseAuth auth;
 
     string currentUserID = "userID"; // Replace with actual user ID or dynamically get it
 
     private bool firebaseInitialized = false;
 
-    void Start()
+    private void Awake()
     {
-        // Check if Firebase is initialized
         if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
             InitializeFirebaseComponents();
         }
         else
         {
-            // Wait until Firebase is initialized
-            FirebaseManager.Instance.OnFirebaseInitialized += HandleFirebaseInitialized;
+            StartCoroutine(WaitForFirebaseInitialization());
         }
     }
-    private void HandleFirebaseInitialized()
-    {
-        InitializeFirebaseComponents();
-    }
+
     private void InitializeFirebaseComponents()
     {
         if (firebaseInitialized)
@@ -52,15 +48,24 @@ public class ImageLoader : MonoBehaviour
         storage = FirebaseStorage.DefaultInstance;
         storageReference = storage.GetReferenceFromUrl("gs://words-war-8d86e.appspot.com/avatars");
         db = FirebaseFirestore.DefaultInstance;
+        auth = FirebaseAuth.DefaultInstance;
 
         // Get the current user ID dynamically
-        currentUserID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        currentUserID = auth.CurrentUser.UserId;
 
         // Fetch the profile image
         FetchProfileImage();
     }
 
-    
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        while (FirebaseManager.Instance == null || !FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+        InitializeFirebaseComponents();
+    }
+
     public void LoadAvatarContainer()
     {
         // Load and display each image
@@ -73,7 +78,7 @@ public class ImageLoader : MonoBehaviour
         AdjustContainerSize();
     }
 
-    void LoadAndDisplayImage(string imageName)
+    private void LoadAndDisplayImage(string imageName)
     {
         // Get a reference to the image in Firebase Storage
         StorageReference imageRef = storageReference.Child(imageName);
@@ -109,7 +114,7 @@ public class ImageLoader : MonoBehaviour
         });
     }
 
-    IEnumerator LoadImage(string imageUrl, RawImage rawImage)
+    private IEnumerator LoadImage(string imageUrl, RawImage rawImage)
     {
         Debug.Log($"Loading image from URL: {imageUrl}");
 
@@ -127,7 +132,7 @@ public class ImageLoader : MonoBehaviour
         }
     }
 
-    void OnImageClicked(string imageUrl)
+    private void OnImageClicked(string imageUrl)
     {
         Debug.Log($"Image clicked: {imageUrl}");
 
@@ -138,7 +143,7 @@ public class ImageLoader : MonoBehaviour
         SaveProfileImageURL(imageUrl);
     }
 
-    void SaveProfileImageURL(string imageUrl)
+    private void SaveProfileImageURL(string imageUrl)
     {
         // Reference to the current user's document in Firestore
         DocumentReference userRef = db.Collection("users").Document(currentUserID);
@@ -157,7 +162,7 @@ public class ImageLoader : MonoBehaviour
         });
     }
 
-    void FetchProfileImage()
+    private void FetchProfileImage()
     {
         // Retrieve the profile image URL from Firestore
         DocumentReference userRef = db.Collection("users").Document(currentUserID);
@@ -190,7 +195,7 @@ public class ImageLoader : MonoBehaviour
         });
     }
 
-    void AdjustContainerSize()
+    private void AdjustContainerSize()
     {
         // Get the RectTransform of the container
         RectTransform containerRect = imageContainer.GetComponent<RectTransform>();

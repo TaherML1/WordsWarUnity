@@ -20,59 +20,58 @@ public class MatchmakingManager : MonoBehaviour
     string playerId;
 
     int currentTickets;
-    void Start()
+
+    private void Awake()
     {
-        // Initialize Firebase
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
-            if (task.Result == DependencyStatus.Available)
-            {
-                // Set up the Firebase Database reference
-                databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
-
-                // Initialize Firebase Authentication
-                auth = FirebaseAuth.DefaultInstance;
-                playerId = auth.CurrentUser.UserId;
-
-                // Set up listener after initializing Firebase
-                SetupPlayerValueListener();
-
-                UserManager.Instance.OnUserHintsUpdated += updateUserTickets;
-                UserManager.Instance.CheckUserProfileCompletion();
-            }
-            else
-            {
-                Debug.LogError("Failed to initialize Firebase");
-            }
-        });
-
-        void updateUserTickets(Dictionary<string, object> userHints)
-        {
-            if (userHints.TryGetValue("tickets", out object TicketsObj))
-            {
-                currentTickets = Convert.ToInt32(TicketsObj);
-                Debug.Log("current tickets " + currentTickets);
-            }
-            else
-            {
-                Debug.LogError("tickets key is missing in hintsData");
-            }
+            InitializeFirebaseComponents();
         }
-
-        // Set up the remove button click listener
-        if (RemoveButton != null)
+        else
         {
-            RemoveButton.onClick.AddListener(RemovePlayerFromMatchmaking);
+            StartCoroutine(WaitForFirebaseInitialization());
         }
     }
 
-    // Set up listener for changes in the player's matchmaking data
-    void SetupPlayerValueListener()
+    private void InitializeFirebaseComponents()
+    {
+        databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
+        auth = FirebaseAuth.DefaultInstance;
+        playerId = auth.CurrentUser.UserId;
+
+        SetupPlayerValueListener();
+
+        UserManager.Instance.OnUserHintsUpdated += UpdateUserTickets;
+        UserManager.Instance.CheckUserProfileCompletion();
+    }
+
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        while (FirebaseManager.Instance == null || !FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+        InitializeFirebaseComponents();
+    }
+
+    private void UpdateUserTickets(Dictionary<string, object> userHints)
+    {
+        if (userHints.TryGetValue("tickets", out object TicketsObj))
+        {
+            currentTickets = Convert.ToInt32(TicketsObj);
+            Debug.Log("Current tickets: " + currentTickets);
+        }
+        else
+        {
+            Debug.LogError("Tickets key is missing in hintsData");
+        }
+    }
+
+    private void SetupPlayerValueListener()
     {
         if (databaseReference != null && !string.IsNullOrEmpty(playerId))
         {
             DatabaseReference playerRef = databaseReference.Child("matchmaking").Child(playerId);
-
             playerRef.ValueChanged += HandlePlayerValueChanged;
         }
         else
@@ -81,8 +80,7 @@ public class MatchmakingManager : MonoBehaviour
         }
     }
 
-    // Handler for value changes
-    void HandlePlayerValueChanged(object sender, ValueChangedEventArgs e)
+    private void HandlePlayerValueChanged(object sender, ValueChangedEventArgs e)
     {
         if (e.DatabaseError != null)
         {
@@ -94,12 +92,9 @@ public class MatchmakingManager : MonoBehaviour
         {
             string currentValue = e.Snapshot.GetValue(true).ToString();
 
-            // Check if the value is no longer the placeholder
             if (currentValue != "placeholder")
             {
-                // Value has changed from "placeholder" to something else (likely a room ID)
-                RemoveButton.gameObject.SetActive(false); // Hide the RemoveButton
-
+                RemoveButton.gameObject.SetActive(false);
                 Debug.Log("Player matched. Room ID: " + currentValue);
             }
             else
@@ -109,24 +104,20 @@ public class MatchmakingManager : MonoBehaviour
         }
         else
         {
-            // Optionally, handle the case where the value does not exist anymore
             Debug.Log("Player value removed or does not exist.");
         }
     }
 
-    // Method to add the current player to the matchmaking queue
     public void AddPlayerToMatchmaking()
     {
-         if(currentTickets > 0)
+        if (currentTickets > 0)
         {
             if (auth.CurrentUser != null)
             {
-
-                // Check if the database reference is valid
                 if (databaseReference != null)
                 {
                     matchmakingPanel.SetActive(true);
-                    // Add the player to the matchmaking node in the Realtime Database
+
                     DatabaseReference matchmakingRef = databaseReference.Child("matchmaking").Child(playerId);
                     matchmakingRef.SetValueAsync("placeholder").ContinueWith(task =>
                     {
@@ -136,7 +127,6 @@ public class MatchmakingManager : MonoBehaviour
                         }
                         else
                         {
-                        
                             Debug.Log("Player added to matchmaking successfully");
                         }
                     });
@@ -151,24 +141,19 @@ public class MatchmakingManager : MonoBehaviour
                 Debug.LogError("Current user is not authenticated");
             }
         }
-        
-       else {
+        else
+        {
             purchaseTicketPanel.SetActive(true);
-            Debug.LogError("there is no enough tickets");
+            Debug.LogError("There are not enough tickets");
         }
-
     }
 
-    // Method to remove the current player from the matchmaking queue
     public void RemovePlayerFromMatchmaking()
     {
-
         if (auth.CurrentUser != null)
         {
-            // Check if the database reference is valid
             if (databaseReference != null)
             {
-                // Remove the player from the matchmaking node in the Realtime Database
                 DatabaseReference matchmakingRef = databaseReference.Child("matchmaking").Child(playerId);
                 matchmakingRef.RemoveValueAsync().ContinueWith(task =>
                 {
@@ -179,9 +164,6 @@ public class MatchmakingManager : MonoBehaviour
                     else
                     {
                         Debug.Log("Player removed from matchmaking successfully");
-
-                        // Optionally re-enable the StartButton if you want to allow rejoining the queue
-
                         RemoveButton.gameObject.SetActive(true);
                     }
                 });

@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Firebase;
 using Firebase.Firestore;
-using Firebase.Extensions;
 using TMPro;
 using System;
 
@@ -24,7 +22,7 @@ public class HintPricesManager : MonoBehaviour
     private int threeOfTickets;
     public static event Action PricesFetched;
 
-    private void Start()
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -33,14 +31,7 @@ public class HintPricesManager : MonoBehaviour
         }
         Instance = this;
 
-        // Check if there's a parent GameObject
-        if (transform.parent == null)
-        {
-            GameObject parentObject = new GameObject("HintPricesManagerParent");
-            transform.SetParent(parentObject.transform);
-            DontDestroyOnLoad(parentObject);
-        }
-
+        DontDestroyOnLoad(gameObject);
 
         if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
@@ -48,32 +39,22 @@ public class HintPricesManager : MonoBehaviour
         }
         else
         {
-            // Wait until Firebase is initialized
             StartCoroutine(WaitForFirebaseInitialization());
         }
-
-       
-
-        
     }
+
     private void InitializeFirebaseComponents()
     {
         db = FirebaseFirestore.DefaultInstance;
         RetrieveHintPrices();
     }
 
-
-   
-
     private IEnumerator WaitForFirebaseInitialization()
     {
-        // Wait until Firebase is initialized
         while (FirebaseManager.Instance == null || !FirebaseManager.Instance.IsFirebaseInitialized)
         {
             yield return null;
         }
-
-        // Firebase is now initialized, initialize HintPricesManager
         InitializeFirebaseComponents();
     }
 
@@ -93,7 +74,6 @@ public class HintPricesManager : MonoBehaviour
                 tickets = int.Parse(hintData["tickets"].ToString());
                 threeOfTickets = int.Parse(hintData["3tickets"].ToString());
 
-                // Perform UI updates on the main thread
                 extraTimeText.text = extraTime.ToString();
                 jokerText.text = joker.ToString();
                 ticketsText.text = tickets.ToString();
@@ -105,7 +85,7 @@ public class HintPricesManager : MonoBehaviour
                 Debug.Log("Joker price: " + joker);
                 Debug.Log("Extra time price: " + extraTime);
                 Debug.Log("Tickets price : " + tickets);
-                Debug.Log("3 tickets price is : " +  threeOfTickets);
+                Debug.Log("3 tickets price is : " + threeOfTickets);
             }
             else
             {
@@ -132,7 +112,8 @@ public class HintPricesManager : MonoBehaviour
     {
         return tickets;
     }
-    public  int getGroupOfTickets()
+
+    public int getGroupOfTickets()
     {
         return threeOfTickets;
     }
