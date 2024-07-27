@@ -59,7 +59,7 @@ public class MatchmakingManager : MonoBehaviour
         if (userHints.TryGetValue("tickets", out object TicketsObj))
         {
             currentTickets = Convert.ToInt32(TicketsObj);
-            Debug.Log("Current tickets: " + currentTickets);
+         
         }
         else
         {
@@ -94,7 +94,10 @@ public class MatchmakingManager : MonoBehaviour
 
             if (currentValue != "placeholder")
             {
-                RemoveButton.gameObject.SetActive(false);
+                if (RemoveButton != null && RemoveButton.gameObject != null)
+                {
+                    RemoveButton.gameObject.SetActive(false);
+                }
                 Debug.Log("Player matched. Room ID: " + currentValue);
             }
             else
@@ -107,6 +110,7 @@ public class MatchmakingManager : MonoBehaviour
             Debug.Log("Player value removed or does not exist.");
         }
     }
+
 
     public void AddPlayerToMatchmaking()
     {

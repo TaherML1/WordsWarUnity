@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 
@@ -19,6 +20,23 @@ const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 initializeApp();
 const firestore = getFirestore();
 
+// Function to generate a random 6-character player ID
+function generatePlayerId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let playerId = "";
+  for (let i = 0; i < 6; i++) {
+    playerId += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return playerId;
+}
+
+// Function to check if a player ID already exists in Firestore
+async function isPlayerIdUnique(playerId) {
+  const usersRef = firestore.collection("users");
+  const querySnapshot = await usersRef.where("playerId", "==", playerId).get();
+  return querySnapshot.empty;
+}
+
 exports.setUser2 = onCall(async (request) => {
   const {data, auth} = request;
 
@@ -31,12 +49,19 @@ exports.setUser2 = onCall(async (request) => {
     // Get the user ID from the authenticated user
     const userId = auth.uid;
 
+    // Generate a unique player ID
+    let playerId = generatePlayerId();
+    while (!(await isPlayerIdUnique(playerId))) {
+      playerId = generatePlayerId();
+    }
+
     // Get the user data from the request
     const {username, ...additionalUserData} = data;
 
     // Set default values for user data including tickets and lastRefresh
     const userData = {
       username: username,
+      playerId: playerId,
       gems: 0,
       coins: 0,
       level: 1,
