@@ -1,50 +1,29 @@
 /* eslint-disable max-len */
-/* eslint-disable no-unused-vars */
-// functions/index.js
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+admin.initializeApp();
 
-const {onCall} = require("firebase-functions/v2/https");
-const {initializeApp} = require("firebase-admin/app");
-const {getFirestore, FieldValue} = require("firebase-admin/firestore");
+exports.deleteFriend = functions.https.onCall(async (data, context) => {
+  const userId = context.auth.uid;
+  const friendId = data.friendId;
 
-initializeApp();
-const firestore = getFirestore();
+  if (!userId) {
+    throw new functions.https.HttpsError("unauthenticated", "User is not authenticated.");
+  }
 
-exports.acceptFriendRequest = onCall(async (request) => {
-  const {senderId, receiverId} = request.data;
+  if (!friendId) {
+    throw new functions.https.HttpsError("invalid-argument", "Friend ID is required.");
+  }
+
+  const userRef = admin.firestore().collection("users").doc(userId).collection("friends").doc(friendId);
+  const friendRef = admin.firestore().collection("users").doc(friendId).collection("friends").doc(userId);
 
   try {
-    const senderRef = firestore.collection("users").doc(senderId);
-    const receiverRef = firestore.collection("users").doc(receiverId);
-
-    // Fetch usernames
-    const senderDoc = await senderRef.get();
-    const receiverDoc = await receiverRef.get();
-
-    if (!senderDoc.exists || !receiverDoc.exists) {
-      throw new Error("Sender or receiver does not exist.");
-    }
-
-    const senderUsername = senderDoc.data().username || "Unknown";
-    const receiverUsername = receiverDoc.data().username || "Unknown";
-
-    // Add each other as friends
-    await senderRef.collection("friends").doc(receiverId).set({
-      friendId: receiverId,
-      username: receiverUsername,
-      timestamp: FieldValue.serverTimestamp(),
-    });
-
-    await receiverRef.collection("friends").doc(senderId).set({
-      friendId: senderId,
-      username: senderUsername,
-      timestamp: FieldValue.serverTimestamp(),
-    });
-
-    // Remove the friend request from the receiver's friendRequests subcollection
-    await receiverRef.collection("friendRequests").doc(senderId).delete();
-
-    return {success: true, message: "Friend request accepted successfully."};
+    await userRef.delete();
+    await friendRef.delete();
+    return {success: true};
   } catch (error) {
-    return {success: false, message: error.message};
+    console.error("Error deleting friend:", error);
+    throw new functions.https.HttpsError("internal", "Error deleting friend.");
   }
 });
