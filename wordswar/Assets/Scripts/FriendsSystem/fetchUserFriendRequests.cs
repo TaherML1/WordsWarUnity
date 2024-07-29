@@ -13,12 +13,14 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     [SerializeField] private Transform friendListParent;
     [SerializeField] private GameObject friendRequestPrefab;
     [SerializeField] private GameObject friendPrefab;
+    [SerializeField] InvitationManager invitationManager;
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseFunctions functions;
     private ListenerRegistration friendRequestListener;
     private ListenerRegistration friendsListener;
+
 
     void Start()
     {
@@ -143,14 +145,24 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     {
         GameObject friendInstance = Instantiate(friendPrefab, friendListParent);
 
-        TextMeshProUGUI usernameText = friendInstance.GetComponentInChildren<TextMeshProUGUI>();
+        var usernameText = friendInstance.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
+      
         usernameText.text = friendUsername;
-
-        Button deleteButton = friendInstance.GetComponentInChildren<Button>();
-        deleteButton.onClick.AddListener(() =>FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
-
+        
+        var deleteButtonTransform = friendInstance.transform.Find("DeleteButton");
+        
+         var deleteButton = deleteButtonTransform.GetComponent<Button>();
+                 
+         deleteButton.onClick.AddListener(() => FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
+                            
+        var sendInviteButtonTransform = friendInstance.transform.Find("SendInviteButton");
+    
+        var sendInviteButton = sendInviteButtonTransform.GetComponent<Button>();
+               
+         sendInviteButton.onClick.AddListener(() => invitationManager.SendInvitation(friendId));
 
     }
 
-   
+
+
 }

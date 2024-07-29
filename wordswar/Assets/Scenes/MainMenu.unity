@@ -6751,7 +6751,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5032343497057794630, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -10
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5032343497057794630, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -18135,6 +18135,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1262350568}
   m_CullTransparentMesh: 1
+--- !u!1 &1273015450
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1273015451}
+  - component: {fileID: 1273015453}
+  - component: {fileID: 1273015452}
+  m_Layer: 0
+  m_Name: RecivedInvitePanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1273015451
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273015450}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1577670505}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -16, y: 698}
+  m_SizeDelta: {x: 600, y: 300}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1273015452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273015450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1273015453
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273015450}
+  m_CullTransparentMesh: 1
 --- !u!1 &1282357492
 GameObject:
   m_ObjectHideFlags: 0
@@ -21886,6 +21961,7 @@ GameObject:
   - component: {fileID: 1577670505}
   - component: {fileID: 1577670506}
   - component: {fileID: 1577670507}
+  - component: {fileID: 1577670508}
   m_Layer: 0
   m_Name: Players
   m_TagString: Untagged
@@ -21907,6 +21983,7 @@ RectTransform:
   m_Children:
   - {fileID: 1045474322}
   - {fileID: 327423079}
+  - {fileID: 1273015451}
   m_Father: {fileID: 443605262}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -21945,6 +22022,21 @@ MonoBehaviour:
   friendListParent: {fileID: 1417142613}
   friendRequestPrefab: {fileID: 8001736518669716641, guid: 41607b068f97d7f47a7623034e851caf, type: 3}
   friendPrefab: {fileID: 2726738319328871033, guid: 538fac4619354094f8cbff3be34c0453, type: 3}
+  invitationManager: {fileID: 1577670508}
+--- !u!114 &1577670508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577670504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f859872b2c2d8f4eb6403328c1dd6a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  invitationPrefab: {fileID: 8199210538707026831, guid: 4e48eb29f6e701248ba259b3afc2c915, type: 3}
+  invitationParent: {fileID: 1273015451}
 --- !u!1 &1585523325
 GameObject:
   m_ObjectHideFlags: 0

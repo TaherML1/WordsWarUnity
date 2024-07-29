@@ -1,21 +1,48 @@
+/* eslint-disable require-jsdoc */
 /* eslint-disable max-len */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
+const database = admin.database();
 
-exports.declineFriendRequest = functions.https.onCall((data, context) => {
-  const userId = context.auth.uid;
-  const requestId = data.requestId;
+exports.startGameOnInvitationAccept = functions.database.ref("invitations/{invitationId}/status")
+    .onUpdate((change, context) => {
+      const status = change.after.val();
+      if (status === "accepted") {
+        const invitationId = context.params.invitationId;
 
-  if (!userId || !requestId) {
-    throw new functions.https.HttpsError("invalid-argument", "The function must be called with valid arguments.");
-  }
+        return database.ref(`invitations/${invitationId}`).once("value").then((snapshot) => {
+          const invitation = snapshot.val();
+          const fromPlayerId = invitation.from;
+          const toPlayerId = invitation.to;
+          const gameId = generateGameId();
 
-  return admin.firestore().collection("users").doc(userId).collection("friendRequests").doc(requestId).delete()
-      .then(() => {
-        return {result: "Friend request declined successfully"};
-      })
-      .catch((error) => {
-        throw new functions.https.HttpsError("unknown", "Failed to decline friend request", error);
-      });
-});
+          const game = {
+            gameInfo: {
+              gameId: gameId,
+              playersIds: [fromPlayerId, toPlayerId],
+              scores: {
+                [fromPlayerId]: 0,
+                [toPlayerId]: 0,
+              },
+              usedwords: {
+                [fromPlayerId]: [""],
+                [toPlayerId]: [""],
+              },
+              timer: 15,
+            },
+            turn: fromPlayerId,
+          };
+
+          return database.ref("games/" + gameId).set(game).then(() => {
+            console.log("Game created successfully!");
+            return null;
+          });
+        });
+      }
+      return null;
+    });
+
+function generateGameId() {
+  return "game-" + Math.random().toString(36).substr(2, 9);
+}
