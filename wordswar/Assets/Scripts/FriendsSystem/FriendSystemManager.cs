@@ -88,4 +88,48 @@ public class FriendSystemManager : MonoBehaviour
                 }
             });
     }
+
+    public void DeclineFriendRequest(string requestId, GameObject requestInstance)
+    {
+        Debug.Log("declayingggg");
+        var declineRequestFunction = functions.GetHttpsCallable("declineFriendRequest");
+        var data = new Dictionary<string, object>
+    {
+        { "requestId", requestId }
+    };
+
+        declineRequestFunction.CallAsync(data).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error declining friend request: " + task.Exception);
+                return;
+            }
+
+            Debug.Log("Friend request declined successfully");
+            Destroy(requestInstance);
+        });
+    }
+    public void DeleteFriend(string friendId, GameObject friendInstance)
+    {
+        Debug.Log("Deleting friend: " + friendId);
+
+        var deleteFriendFunction = functions.GetHttpsCallable("deleteFriend");
+        var data = new Dictionary<string, object>
+        {
+            { "friendId", friendId }
+        };
+
+        deleteFriendFunction.CallAsync(data).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Error deleting friend: " + task.Exception);
+                return;
+            }
+
+            Debug.Log("Friend deleted successfully");
+            Destroy(friendInstance);
+        });
+    }
 }

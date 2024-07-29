@@ -17,6 +17,8 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseFunctions functions;
+    private ListenerRegistration friendRequestListener;
+    private ListenerRegistration friendsListener;
 
     void Start()
     {
@@ -24,90 +26,118 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         auth = FirebaseAuth.DefaultInstance;
         functions = FirebaseFunctions.DefaultInstance;
 
-        FetchFriendRequests();
-        FetchFriends();
+        ListenToFriendRequests();
+        ListenToFriends();
     }
 
-    private void FetchFriendRequests()
+    void OnDestroy()
     {
-        Debug.Log("Fetching friend requests");
-        db.Collection("users").Document(auth.CurrentUser.UserId).Collection("friendRequests").GetSnapshotAsync().ContinueWithOnMainThread(task =>
-        {
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Error fetching friend requests: " + task.Exception);
-                return;
-            }
-
-            QuerySnapshot snapshot = task.Result;
-            Debug.Log("Friend request documents fetched: " + snapshot.Count);
-
-            foreach (DocumentSnapshot document in snapshot.Documents)
-            {
-                Debug.Log("Processing document with ID: " + document.Id);
-
-                Dictionary<string, object> data = document.ToDictionary();
-
-                if (data.ContainsKey("senderId"))
-                {
-                    string senderId = data["senderId"].ToString();
-                    string senderUsername = data.ContainsKey("username") ? data["username"].ToString() : "Unknown";
-
-                    DisplayFriendRequest(document.Id, senderId, senderUsername);
-                }
-                else
-                {
-                    Debug.LogWarning("Document is missing 'senderId' field");
-                }
-            }
-        });
+        friendRequestListener?.Stop();
+        friendsListener?.Stop();
     }
 
-    private void FetchFriends()
+    private void ListenToFriendRequests()
     {
-        Debug.Log("Fetching friends");
-        db.Collection("users").Document(auth.CurrentUser.UserId).Collection("friends").GetSnapshotAsync().ContinueWithOnMainThread(task =>
-        {
-            if (task.IsFaulted)
+        Debug.Log("Listening to friend requests");
+        friendRequestListener = db.Collection("users").Document(auth.CurrentUser.UserId).Collection("friendRequests")
+            .Listen(snapshot =>
             {
-                Debug.LogError("Error fetching friends: " + task.Exception);
-                return;
-            }
+                Debug.Log("Friend request documents changed: " + snapshot.Count);
 
-            QuerySnapshot snapshot = task.Result;
-            Debug.Log("Friend documents fetched: " + snapshot.Count);
+                foreach (DocumentChange change in snapshot.GetChanges())
+                {
+                    DocumentSnapshot document = change.Document;
 
-            foreach (DocumentSnapshot document in snapshot.Documents)
+                    if (change.ChangeType == DocumentChange.Type.Added)
+                    {
+                        Debug.Log("New friend request with ID: " + document.Id);
+
+                        Dictionary<string, object> data = document.ToDictionary();
+
+                        if (data.ContainsKey("senderId"))
+                        {
+                            string senderId = data["senderId"].ToString();
+                            string senderUsername = data.ContainsKey("username") ? data["username"].ToString() : "Unknown";
+
+                            DisplayFriendRequest(document.Id, senderId, senderUsername);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Document is missing 'senderId' field");
+                        }
+                    }
+                    else if (change.ChangeType == DocumentChange.Type.Removed)
+                    {
+                        // Handle friend request removal if needed
+                    }
+                }
+            });
+    }
+
+    private void ListenToFriends()
+    {
+        Debug.Log("Listening to friends");
+        friendsListener = db.Collection("users").Document(auth.CurrentUser.UserId).Collection("friends")
+            .Listen(snapshot =>
             {
-                Debug.Log("Processing document with ID: " + document.Id);
+                Debug.Log("Friend documents changed: " + snapshot.Count);
 
-                Dictionary<string, object> data = document.ToDictionary();
-
-                if (data.ContainsKey("friendId"))
+                foreach (DocumentChange change in snapshot.GetChanges())
                 {
-                    string friendId = data["friendId"].ToString();
-                    string friendUsername = data.ContainsKey("username") ? data["username"].ToString() : "Unknown";
+                    DocumentSnapshot document = change.Document;
 
-                    DisplayFriend(friendId, friendUsername);
+                    if (change.ChangeType == DocumentChange.Type.Added)
+                    {
+                        Debug.Log("New friend with ID: " + document.Id);
+
+                        Dictionary<string, object> data = document.ToDictionary();
+
+                        if (data.ContainsKey("friendId"))
+                        {
+                            string friendId = data["friendId"].ToString();
+                            string friendUsername = data.ContainsKey("username") ? data["username"].ToString() : "Unknown";
+
+                            DisplayFriend(friendId, friendUsername);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Document is missing 'friendId' field");
+                        }
+                    }
+                    else if (change.ChangeType == DocumentChange.Type.Removed)
+                    {
+                        // Handle friend removal if needed
+                    }
                 }
-                else
-                {
-                    Debug.LogWarning("Document is missing 'friendId' field");
-                }
-            }
-        });
+            });
     }
 
     private void DisplayFriendRequest(string documentId, string senderId, string senderUsername)
     {
+       
         GameObject requestInstance = Instantiate(friendRequestPrefab, friendRequestListParent);
 
-        TextMeshProUGUI usernameText = requestInstance.GetComponentInChildren<TextMeshProUGUI>();
+       
+        var usernameText = requestInstance.transform.Find("UserName")?.GetComponent<TextMeshProUGUI>();
+       
         usernameText.text = senderUsername;
 
-        Button acceptButton = requestInstance.GetComponentInChildren<Button>();
+       
+        var acceptButtonTransform = requestInstance.transform.Find("AcceptButton");
+        
+        var acceptButton = acceptButtonTransform.GetComponent<Button>();
+        
         acceptButton.onClick.AddListener(() => FriendSystemManager.Instance.AcceptFriendRequest(senderId, documentId, requestInstance));
+
+        
+        var declineButtonTransform = requestInstance.transform.Find("DeclineButton");
+        
+        var declineButton = declineButtonTransform.GetComponent<Button>();
+        
+        declineButton.onClick.AddListener(() => FriendSystemManager.Instance.DeclineFriendRequest(documentId, requestInstance));
     }
+
+
 
     private void DisplayFriend(string friendId, string friendUsername)
     {
@@ -117,29 +147,10 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         usernameText.text = friendUsername;
 
         Button deleteButton = friendInstance.GetComponentInChildren<Button>();
-        deleteButton.onClick.AddListener(() => DeleteFriend(friendId, friendInstance));
+        deleteButton.onClick.AddListener(() =>FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
+
+
     }
 
-    private void DeleteFriend(string friendId, GameObject friendInstance)
-    {
-        Debug.Log("Deleting friend: " + friendId);
-
-        var deleteFriendFunction = functions.GetHttpsCallable("deleteFriend");
-        var data = new Dictionary<string, object>
-        {
-            { "friendId", friendId }
-        };
-
-        deleteFriendFunction.CallAsync(data).ContinueWithOnMainThread(task =>
-        {
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Error deleting friend: " + task.Exception);
-                return;
-            }
-
-            Debug.Log("Friend deleted successfully");
-            Destroy(friendInstance);
-        });
-    }
+   
 }
