@@ -90,6 +90,7 @@ GameObject:
   - component: {fileID: 5371341981492241818}
   - component: {fileID: 8110192472026044294}
   - component: {fileID: 8612764536923247849}
+  - component: {fileID: 9018089888796263267}
   m_Layer: 0
   m_Name: SendInviteButton
   m_TagString: Untagged
@@ -198,7 +199,34 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8110192472026044294}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 3001638680306490011}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+--- !u!114 &9018089888796263267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3001638680306490011}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4689ae585ded68d40afdbe1eca41cab5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  countdownText: {fileID: 0}
+  MatchStartPanel: {fileID: 0}
+  countdownTime: 6
 --- !u!1 &3498163462663066824
 GameObject:
   m_ObjectHideFlags: 0

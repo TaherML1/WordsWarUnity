@@ -6,6 +6,7 @@ using Firebase.Extensions;
 using Firebase.Auth;
 using System.Collections.Generic;
 using Firebase.Functions;
+using System.Collections;
 
 public class FetchUserFriendsAndRequests : MonoBehaviour
 {
@@ -21,8 +22,21 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     private ListenerRegistration friendRequestListener;
     private ListenerRegistration friendsListener;
 
-
     void Start()
+    {
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            InitializeFirebaseComponents();
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            StartCoroutine(WaitForFirebaseInitialization());
+        }
+    }
+
+    private void InitializeFirebaseComponents()
     {
         db = FirebaseFirestore.DefaultInstance;
         auth = FirebaseAuth.DefaultInstance;
@@ -30,6 +44,18 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
 
         ListenToFriendRequests();
         ListenToFriends();
+    }
+
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (!FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+
+        // Firebase is now initialized, initialize Firebase components
+        InitializeFirebaseComponents();
     }
 
     void OnDestroy()
@@ -116,53 +142,33 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
 
     private void DisplayFriendRequest(string documentId, string senderId, string senderUsername)
     {
-       
         GameObject requestInstance = Instantiate(friendRequestPrefab, friendRequestListParent);
 
-       
         var usernameText = requestInstance.transform.Find("UserName")?.GetComponent<TextMeshProUGUI>();
-       
         usernameText.text = senderUsername;
 
-       
         var acceptButtonTransform = requestInstance.transform.Find("AcceptButton");
-        
         var acceptButton = acceptButtonTransform.GetComponent<Button>();
-        
         acceptButton.onClick.AddListener(() => FriendSystemManager.Instance.AcceptFriendRequest(senderId, documentId, requestInstance));
 
-        
         var declineButtonTransform = requestInstance.transform.Find("DeclineButton");
-        
         var declineButton = declineButtonTransform.GetComponent<Button>();
-        
         declineButton.onClick.AddListener(() => FriendSystemManager.Instance.DeclineFriendRequest(documentId, requestInstance));
     }
-
-
 
     private void DisplayFriend(string friendId, string friendUsername)
     {
         GameObject friendInstance = Instantiate(friendPrefab, friendListParent);
 
         var usernameText = friendInstance.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
-      
         usernameText.text = friendUsername;
-        
+
         var deleteButtonTransform = friendInstance.transform.Find("DeleteButton");
-        
-         var deleteButton = deleteButtonTransform.GetComponent<Button>();
-                 
-         deleteButton.onClick.AddListener(() => FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
-                            
+        var deleteButton = deleteButtonTransform.GetComponent<Button>();
+        deleteButton.onClick.AddListener(() => FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
+
         var sendInviteButtonTransform = friendInstance.transform.Find("SendInviteButton");
-    
         var sendInviteButton = sendInviteButtonTransform.GetComponent<Button>();
-               
-         sendInviteButton.onClick.AddListener(() => invitationManager.SendInvitation(friendId));
-
+        sendInviteButton.onClick.AddListener(() => invitationManager.SendInvitation(friendId));
     }
-
-
-
 }

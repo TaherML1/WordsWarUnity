@@ -3,11 +3,13 @@ using Firebase.Functions;
 using Firebase.Auth;
 using Firebase.Extensions;
 using System.Collections.Generic;
+using System.Collections;
 
 public class FriendSystemManager : MonoBehaviour
 {
     public static FriendSystemManager Instance { get; private set; }
     private FirebaseFunctions functions;
+    private FirebaseAuth auth;
 
     private void Awake()
     {
@@ -24,12 +26,38 @@ public class FriendSystemManager : MonoBehaviour
 
     private void Start()
     {
+        // Check if Firebase is initialized
+        if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            InitializeFirebaseComponents();
+        }
+        else
+        {
+            // Wait until Firebase is initialized
+            StartCoroutine(WaitForFirebaseInitialization());
+        }
+    }
+
+    private void InitializeFirebaseComponents()
+    {
         functions = FirebaseFunctions.DefaultInstance;
+        auth = FirebaseAuth.DefaultInstance;
+    }
+
+    private IEnumerator WaitForFirebaseInitialization()
+    {
+        // Wait until Firebase is initialized
+        while (!FirebaseManager.Instance.IsFirebaseInitialized)
+        {
+            yield return null;
+        }
+
+        // Firebase is now initialized, initialize Firebase components
+        InitializeFirebaseComponents();
     }
 
     public void SendFriendRequest(string receiverId)
     {
-        FirebaseAuth auth = FirebaseAuth.DefaultInstance;
         string senderId = auth.CurrentUser.UserId;
 
         Debug.Log("Attempting to send friend request...");
@@ -59,7 +87,6 @@ public class FriendSystemManager : MonoBehaviour
 
     public void AcceptFriendRequest(string senderId, string documentId, GameObject requestInstance)
     {
-        FirebaseAuth auth = FirebaseAuth.DefaultInstance;
         string receiverId = auth.CurrentUser.UserId;
 
         Debug.Log("Attempting to accept friend request...");
@@ -91,12 +118,13 @@ public class FriendSystemManager : MonoBehaviour
 
     public void DeclineFriendRequest(string requestId, GameObject requestInstance)
     {
-        Debug.Log("declayingggg");
+        Debug.Log("Declining friend request: " + requestId);
+
         var declineRequestFunction = functions.GetHttpsCallable("declineFriendRequest");
         var data = new Dictionary<string, object>
-    {
-        { "requestId", requestId }
-    };
+        {
+            { "requestId", requestId }
+        };
 
         declineRequestFunction.CallAsync(data).ContinueWithOnMainThread(task =>
         {
@@ -110,6 +138,7 @@ public class FriendSystemManager : MonoBehaviour
             Destroy(requestInstance);
         });
     }
+
     public void DeleteFriend(string friendId, GameObject friendInstance)
     {
         Debug.Log("Deleting friend: " + friendId);
