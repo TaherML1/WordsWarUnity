@@ -14,6 +14,7 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     [SerializeField] private Transform friendListParent;
     [SerializeField] private GameObject friendRequestPrefab;
     [SerializeField] private GameObject friendPrefab;
+    [SerializeField] private GameObject friendOptionsPrefab;
     [SerializeField] InvitationManager invitationManager;
 
     private FirebaseFirestore db;
@@ -158,17 +159,60 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
 
     private void DisplayFriend(string friendId, string friendUsername)
     {
+        // Instantiate the friendPrefab and set it as a child of friendListParent
         GameObject friendInstance = Instantiate(friendPrefab, friendListParent);
 
-        var usernameText = friendInstance.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
-        usernameText.text = friendUsername;
+        // Find the delete button and the text component inside it
+        var expandButtonTransform = friendInstance.transform.Find("ExpandButton");
+        var usernameText = expandButtonTransform.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
 
-        var deleteButtonTransform = friendInstance.transform.Find("DeleteButton");
+
+         usernameText.text = friendUsername;
+
+
+        // Find the delete button component and add an onClick listener
+        var expandButton = expandButtonTransform.GetComponent<Button>();
+        expandButton.onClick.AddListener(() => ShowFriendOptions(friendId, friendUsername, friendInstance));
+
+      
+    }
+    private void ShowFriendOptions(string friendId, string friendUsername, GameObject friendInstance)
+    {
+        // Destroy existing options if any
+        Transform existingOptions = friendInstance.transform.Find("FriendOptions");
+        if (existingOptions != null)
+        {
+            Destroy(existingOptions.gameObject);
+        }
+
+        // Create and set up the options prefab
+        GameObject optionsInstance = Instantiate(friendOptionsPrefab, friendInstance.transform);
+        optionsInstance.name = "FriendOptions";
+
+        // Adjust the position of the optionsInstance to be more to the right
+        RectTransform optionsRectTransform = optionsInstance.GetComponent<RectTransform>();
+        RectTransform friendRectTransform = friendInstance.GetComponent<RectTransform>();
+
+        if (optionsRectTransform != null && friendRectTransform != null)
+        {
+             optionsRectTransform = optionsInstance.GetComponent<RectTransform>();
+            optionsRectTransform.anchorMin = new Vector2(1, 0.5f); // Anchors to the right
+            optionsRectTransform.anchorMax = new Vector2(1, 0.5f); // Anchors to the right
+            optionsRectTransform.pivot = new Vector2(-0.2f, 0.5f); // Pivot in the middle-right
+            optionsRectTransform.anchoredPosition = new Vector2(-200, 0); // Offset to the left from the anchor
+
+        }
+
+        // Find and set up the delete button
+        var deleteButtonTransform = optionsInstance.transform.Find("DeleteButton");
         var deleteButton = deleteButtonTransform.GetComponent<Button>();
         deleteButton.onClick.AddListener(() => FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
 
-        var sendInviteButtonTransform = friendInstance.transform.Find("SendInviteButton");
+        // Find and set up the send invite button
+        var sendInviteButtonTransform = optionsInstance.transform.Find("SendInviteButton");
         var sendInviteButton = sendInviteButtonTransform.GetComponent<Button>();
         sendInviteButton.onClick.AddListener(() => invitationManager.SendInvitation(friendId));
     }
+
+
 }

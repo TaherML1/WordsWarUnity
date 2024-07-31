@@ -6,30 +6,28 @@ using Firebase.Extensions;
 using System.Collections;
 using Firebase.Auth;
 using System;
+using System.Linq;
 
 public class SearchPlayer : MonoBehaviour
 {
-   
     [SerializeField] TMP_InputField searchInput;
     [SerializeField] GameObject playerSearchResultPrefab;
+    [SerializeField] GameObject playerProfilePrefab;
     [SerializeField] Transform resultParent;
+    [SerializeField] Transform profileParent;
 
     private FirebaseFirestore db;
-    
-
-    string currentUserId;
-    string currentPlayerId;
+    private string currentUserId;
+    private string currentPlayerId;
 
     void Start()
     {
-        // Check if Firebase is initialized
         if (FirebaseManager.Instance != null && FirebaseManager.Instance.IsFirebaseInitialized)
         {
             InitializeFirebaseComponents();
         }
         else
         {
-            // Wait until Firebase is initialized
             StartCoroutine(WaitForFirebaseInitialization());
         }
     }
@@ -42,13 +40,10 @@ public class SearchPlayer : MonoBehaviour
 
     private IEnumerator WaitForFirebaseInitialization()
     {
-        // Wait until Firebase is initialized
         while (!FirebaseManager.Instance.IsFirebaseInitialized)
         {
             yield return null;
         }
-
-        // Firebase is now initialized, initialize Firebase components
         InitializeFirebaseComponents();
     }
 
@@ -66,99 +61,72 @@ public class SearchPlayer : MonoBehaviour
         }
         else
         {
-            Debug.Log("you cant search yourself");
+            Debug.Log("You can't search for yourself.");
         }
-       
     }
 
     private void SearchPlayerById(string playerId)
     {
         Debug.Log("Searching for player ID: " + playerId);
-        Debug.Log("current playerId : " + currentPlayerId);
-        
-            db.Collection("users").WhereEqualTo("playerId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        db.Collection("users").WhereEqualTo("playerId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
             {
-                if (task.IsCompleted)
+                QuerySnapshot snapshot = task.Result;
+                if (snapshot.Count > 0)
                 {
-                    Debug.Log("Search query completed.");
-                    QuerySnapshot snapshot = task.Result;
-                    Debug.Log("Snapshot count: " + snapshot.Count);
-                    foreach (DocumentSnapshot document in snapshot.Documents)
+                    var document = snapshot.Documents.First(); // Use LINQ to get the first document
+                    if (document.TryGetValue("username", out string username))
                     {
-                        Debug.Log("Document ID: " + document.Id);
-                        Debug.Log("Document Data: " + document.ToDictionary());
-                    }
-
-                    if (snapshot.Count > 0)
-                    {
-                        Debug.Log("Player found in the database.");
-                        foreach (DocumentSnapshot document in snapshot.Documents)
-                        {
-                            if (document.TryGetValue("username", out string username))
-                            {
-                                Debug.Log("Player username: " + username);
-                                CheckIfAlreadyFriends(playerId, username);
-                            }
-                            else
-                            {
-                                Debug.Log("Username not found in the document.");
-                            }
-                        }
+                        CheckIfAlreadyFriends(playerId, username, document);
                     }
                     else
                     {
-                        Debug.Log("Player not found in the database.");
-                        DisplaySearchResult("", "Player not found.", false);
+                        Debug.Log("Username not found in the document.");
                     }
                 }
                 else
                 {
-                    Debug.LogError("Search query failed: " + task.Exception.Message);
-                    DisplaySearchResult("", "Error: " + task.Exception.Message, false);
+                    Debug.Log("Player not found in the database.");
+                    DisplaySearchResult("", "Player not found.", false, null);
                 }
-            });
-        
-        
+            }
+            else
+            {
+                Debug.LogError("Search query failed: " + task.Exception.Message);
+                DisplaySearchResult("", "Error: " + task.Exception.Message, false, null);
+            }
+        });
     }
 
-    private void CheckIfAlreadyFriends(string playerId, string username)
+    private void CheckIfAlreadyFriends(string playerId, string username, DocumentSnapshot playerDoc)
     {
-       
-
-        Debug.Log("Checking if " + playerId + " is a friend of " + currentUserId);
-
         var userFriendsCollection = db.Collection("users").Document(currentUserId).Collection("friends");
 
-        // Check by friendId
         userFriendsCollection.WhereEqualTo("friendId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompleted)
             {
                 QuerySnapshot friendIdSnapshot = task.Result;
-                Debug.Log("Query completed for friendId. Number of friend records found: " + friendIdSnapshot.Count);
-
                 if (friendIdSnapshot.Count > 0)
                 {
-                    DisplaySearchResult(playerId, username, false); // Friend found by friendId
+                    DisplaySearchResult(playerId, username, false, playerDoc);
                     return;
                 }
                 else
                 {
-                    // If no match found by friendId, check by playerId
                     userFriendsCollection.WhereEqualTo("playerId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(playerIdTask =>
                     {
                         if (playerIdTask.IsCompleted)
                         {
                             QuerySnapshot playerIdSnapshot = playerIdTask.Result;
-                            Debug.Log("Query completed for playerId. Number of friend records found: " + playerIdSnapshot.Count);
-
                             bool isFriend = playerIdSnapshot.Count > 0;
-                            DisplaySearchResult(playerId, username, !isFriend); // Pass !isFriend
+                            DisplaySearchResult(playerId, username, !isFriend, playerDoc);
                         }
                         else
                         {
                             Debug.LogError("Failed to check friends list by playerId: " + playerIdTask.Exception);
-                            DisplaySearchResult(playerId, username, true); // Assume not a friend if there is an error
+                            DisplaySearchResult(playerId, username, true, playerDoc);
                         }
                     });
                 }
@@ -166,37 +134,130 @@ public class SearchPlayer : MonoBehaviour
             else
             {
                 Debug.LogError("Failed to check friends list by friendId: " + task.Exception);
-                DisplaySearchResult(playerId, username, true); // Assume not a friend if there is an error
+                DisplaySearchResult(playerId, username, true, playerDoc);
             }
         });
     }
 
-
-    private void DisplaySearchResult(string playerId, string message, bool showAddButton)
+    private void DisplaySearchResult(string playerId, string username, bool showAddButton, DocumentSnapshot playerDoc)
     {
-        // Clear any existing results
         foreach (Transform child in resultParent)
         {
             Destroy(child.gameObject);
         }
 
-        // Instantiate the result prefab
         GameObject resultInstance = Instantiate(playerSearchResultPrefab, resultParent);
 
-        // Set the text and button
         TextMeshProUGUI resultText = resultInstance.GetComponentInChildren<TextMeshProUGUI>();
-        resultText.text = message;
+        resultText.text = username;
 
-        Button sendButton = resultInstance.GetComponentInChildren<Button>();
+        Button addButton = resultInstance.transform.Find("AddFriendButton").GetComponent<Button>();
+        Button profileButton = resultInstance.transform.Find("ShowProfileButton").GetComponent<Button>();
+
         if (!string.IsNullOrEmpty(playerId) && showAddButton)
         {
-            sendButton.onClick.RemoveAllListeners();
-            sendButton.onClick.AddListener(() => FriendSystemManager.Instance.SendFriendRequest(playerId));
-            sendButton.gameObject.SetActive(true);
+            addButton.onClick.RemoveAllListeners();
+            addButton.onClick.AddListener(() => FriendSystemManager.Instance.SendFriendRequest(playerId));
+            addButton.gameObject.SetActive(true);
         }
         else
         {
-            sendButton.gameObject.SetActive(false);
+            addButton.gameObject.SetActive(false);
         }
+
+        profileButton.onClick.RemoveAllListeners();
+        profileButton.onClick.AddListener(() => ShowPlayerProfile(playerDoc));
+        profileButton.gameObject.SetActive(true);
     }
+
+    private void ShowPlayerProfile(DocumentSnapshot playerDoc)
+    {
+        Debug.Log("ShowProfileButton clicked");
+
+        // Log the player document data
+        Debug.Log("Player Document Data: " + playerDoc.ToDictionary());
+
+        // Activate the profileParent GameObject
+        profileParent.gameObject.SetActive(true);
+
+        // Clear previous profile data
+        foreach (Transform child in profileParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Instantiate the profile prefab
+        GameObject profileInstance = Instantiate(playerProfilePrefab, profileParent);
+        Debug.Log("Profile instance instantiated");
+
+        // Set up profile data
+        TextMeshProUGUI usernameText = profileInstance.transform.Find("UsernameText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI levelText = profileInstance.transform.Find("LevelText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText").GetComponent<TextMeshProUGUI>();
+
+        if (playerDoc.TryGetValue("username", out string username))
+        {
+            Debug.Log("Username found: " + username);
+            usernameText.text = "Username: " + username;
+        }
+        else
+        {
+            Debug.Log("Username not found");
+        }
+
+        if (playerDoc.TryGetValue("level", out long level))
+        {
+            Debug.Log("Level found: " + level);
+            levelText.text = "Level: " + level;
+        }
+        else
+        {
+            Debug.Log("Level not found");
+        }
+
+        if (playerDoc.TryGetValue("matchesWon", out long matchesWon))
+        {
+            Debug.Log("Matches Won found: " + matchesWon);
+            winsText.text = "Wins: " + matchesWon;
+        }
+        else
+        {
+            Debug.Log("Matches Won not found");
+        }
+
+        if (playerDoc.TryGetValue("matchesLost", out long matchesLost))
+        {
+            Debug.Log("Matches Lost found: " + matchesLost);
+            lossesText.text = "Losses: " + matchesLost;
+        }
+        else
+        {
+            Debug.Log("Matches Lost not found");
+        }
+
+        if (playerDoc.TryGetValue("scores", out long scores))
+        {
+            Debug.Log("Scores found: " + scores);
+            scoreText.text = "Score: " + scores;
+        }
+        else
+        {
+            Debug.Log("Scores not found");
+        }
+
+        // Find and configure the back button
+        Button backButton = profileInstance.transform.Find("BackButton").GetComponent<Button>();
+        backButton.onClick.RemoveAllListeners();
+        backButton.onClick.AddListener(() =>
+        {
+            Destroy(profileInstance);         // Destroy the profileInstance
+            profileParent.gameObject.SetActive(false);  // Deactivate the profileParent
+        });
+    }
+
+
+
+
 }
