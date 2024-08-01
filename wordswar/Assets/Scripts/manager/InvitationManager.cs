@@ -127,11 +127,20 @@ public class InvitationManager : MonoBehaviour
 
         var acceptButtonTransform = invitationInstance.transform.Find("AcceptButton");
         var acceptButton = acceptButtonTransform.GetComponent<Button>();
-        acceptButton.onClick.AddListener(() => AcceptInvitation(invitationId));
+        acceptButton.onClick.AddListener(() =>
+        {
+            AcceptInvitation(invitationId);
+            Destroy(invitationInstance);
+            
+        });
 
         var declineButtonTransform = invitationInstance.transform.Find("DeclineButton");
         var declineButton = declineButtonTransform.GetComponent<Button>();
-        declineButton.onClick.AddListener(() => DeclineInvitation(invitationId));
+        declineButton.onClick.AddListener(() =>
+        {
+            DeclineInvitation(invitationId);
+            Destroy(invitationInstance);
+         });
     }
 
     // Function to accept an invitation

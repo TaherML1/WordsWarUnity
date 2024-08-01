@@ -7,15 +7,20 @@ using Firebase.Auth;
 using System.Collections.Generic;
 using Firebase.Functions;
 using System.Collections;
+using System.Linq;
+using System;
 
 public class FetchUserFriendsAndRequests : MonoBehaviour
 {
     [SerializeField] private Transform friendRequestListParent;
     [SerializeField] private Transform friendListParent;
+    [SerializeField] Transform profileParent;
     [SerializeField] private GameObject friendRequestPrefab;
     [SerializeField] private GameObject friendPrefab;
     [SerializeField] private GameObject friendOptionsPrefab;
+    [SerializeField] GameObject playerProfilePrefab;
     [SerializeField] InvitationManager invitationManager;
+
 
     private FirebaseFirestore db;
     private FirebaseAuth auth;
@@ -278,13 +283,166 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         // Find and set up the delete button
         var deleteButtonTransform = optionsInstance.transform.Find("DeleteButton");
         var deleteButton = deleteButtonTransform.GetComponent<Button>();
-        deleteButton.onClick.AddListener(() => FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance));
+        deleteButton.onClick.AddListener(() =>
+        {
+            FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance);
+            Destroy(overlay);
+        });
 
         // Find and set up the send invite button
         var sendInviteButtonTransform = optionsInstance.transform.Find("SendInviteButton");
         var sendInviteButton = sendInviteButtonTransform.GetComponent<Button>();
-        sendInviteButton.onClick.AddListener(() => invitationManager.SendInvitation(friendId));
+        sendInviteButton.onClick.AddListener(() =>
+        {
+            invitationManager.SendInvitation(friendId);
+            Destroy(overlay);
+        });
+
+        // Find and set up the show profile button
+        var showProfileButtonTransform = optionsInstance.transform.Find("ShowProfileButton");
+        var showProfileButton = showProfileButtonTransform.GetComponent<Button>();
+        showProfileButton.onClick.AddListener(() =>
+        {
+            SearchPlayerById(friendId);
+            Destroy(overlay);
+        });
     }
+
+
+
+    private void SearchPlayerById(string playerId)
+    {
+        Debug.Log("Searching for player ID: " + playerId);
+
+        // Reference the specific user document using playerId
+        DocumentReference playerDocRef = db.Collection("users").Document(playerId);
+
+        // Fetch the document asynchronously
+        playerDocRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                DocumentSnapshot document = task.Result;
+
+                if (document.Exists)
+                {
+                    // Document exists, process the data
+                    Debug.Log("Document data: " + document.ToDictionary());
+
+                    if (document.TryGetValue("username", out string username))
+                    {
+                        Debug.Log("Username found: " + username);
+                        ShowFriendProfile(document); // Show the profile with the fetched document
+                    }
+                    else
+                    {
+                        Debug.Log("Username not found in the document.");
+                    }
+                }
+                else
+                {
+                    Debug.Log("Player document does not exist.");
+                }
+            }
+            else if (task.IsFaulted)
+            {
+                // Handle any errors that occurred during the fetch
+                Debug.LogError("Failed to fetch document: " + task.Exception);
+            }
+        });
+    }
+
+
+
+
+
+    private void ShowFriendProfile(DocumentSnapshot playerDoc)
+    {
+        Debug.Log("ShowProfileButton clicked");
+
+        // Log the player document data
+        Debug.Log("Player Document Data: " + playerDoc.ToDictionary());
+
+        // Activate the profileParent GameObject
+        profileParent.gameObject.SetActive(true);
+
+        // Clear previous profile data
+        foreach (Transform child in profileParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Instantiate the profile prefab
+        GameObject profileInstance = Instantiate(playerProfilePrefab, profileParent);
+        Debug.Log("Profile instance instantiated");
+
+        // Set up profile data
+        TextMeshProUGUI usernameText = profileInstance.transform.Find("UsernameText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI levelText = profileInstance.transform.Find("LevelText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText").GetComponent<TextMeshProUGUI>();
+
+        if (playerDoc.TryGetValue("username", out string username))
+        {
+            Debug.Log("Username found: " + username);
+            usernameText.text = "Username: " + username;
+        }
+        else
+        {
+            Debug.Log("Username not found");
+        }
+
+        if (playerDoc.TryGetValue("level", out long level))
+        {
+            Debug.Log("Level found: " + level);
+            levelText.text = "Level: " + level;
+        }
+        else
+        {
+            Debug.Log("Level not found");
+        }
+
+        if (playerDoc.TryGetValue("matchesWon", out long matchesWon))
+        {
+            Debug.Log("Matches Won found: " + matchesWon);
+            winsText.text = "Wins: " + matchesWon;
+        }
+        else
+        {
+            Debug.Log("Matches Won not found");
+        }
+
+        if (playerDoc.TryGetValue("matchesLost", out long matchesLost))
+        {
+            Debug.Log("Matches Lost found: " + matchesLost);
+            lossesText.text = "Losses: " + matchesLost;
+        }
+        else
+        {
+            Debug.Log("Matches Lost not found");
+        }
+
+        if (playerDoc.TryGetValue("scores", out long scores))
+        {
+            Debug.Log("Scores found: " + scores);
+            scoreText.text = "Score: " + scores;
+        }
+        else
+        {
+            Debug.Log("Scores not found");
+        }
+
+        // Find and configure the back button
+        Button backButton = profileInstance.transform.Find("BackButton").GetComponent<Button>();
+        backButton.onClick.RemoveAllListeners();
+        backButton.onClick.AddListener(() =>
+        {
+            Destroy(profileInstance);         // Destroy the profileInstance
+            profileParent.gameObject.SetActive(false);  // Deactivate the profileParent
+        });
+    }
+
 
 
 

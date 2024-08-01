@@ -29,21 +29,18 @@ exports.acceptFriendRequest = onCall(async (request) => {
 
     const senderUsername = senderData.username || "Unknown";
     const senderPlayerId = senderData.playerId || "Unknown";
-    const senderScore = senderData.score || 0; // Default value if not present
-    const senderLevel = senderData.level || 1; // Default value if not present
+
 
     const receiverUsername = receiverData.username || "Unknown";
     const receiverPlayerId = receiverData.playerId || "Unknown";
-    const receiverScore = receiverData.score || 0; // Default value if not present
-    const receiverLevel = receiverData.level || 1; // Default value if not present
+
 
     // Add each other as friends
     await senderRef.collection("friends").doc(receiverId).set({
       friendId: receiverId,
       username: receiverUsername,
       playerId: receiverPlayerId,
-      scores: receiverScore,
-      level: receiverLevel,
+
       timestamp: FieldValue.serverTimestamp(),
     });
 
@@ -51,8 +48,7 @@ exports.acceptFriendRequest = onCall(async (request) => {
       friendId: senderId,
       username: senderUsername,
       playerId: senderPlayerId,
-      scores: senderScore,
-      level: senderLevel,
+
       timestamp: FieldValue.serverTimestamp(),
     });
 
