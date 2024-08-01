@@ -1,61 +1,66 @@
-/* eslint-disable no-undef */
 /* eslint-disable max-len */
 /* eslint-disable no-unused-vars */
 // functions/index.js
 
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const {onCall} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
-admin.initializeApp(); // Initialize the Firebase Admin SDK
-const firestore = admin.firestore();
+initializeApp();
+const firestore = getFirestore();
 
-exports.sendFriendRequest1 = functions.https.onCall(async (data, context) => {
-  const senderId = data.senderId;
-  const receiverPlayerId = data.receiverId;
-
-  if (!senderId || !receiverPlayerId) {
-    console.error("Invalid arguments:", {senderId, receiverPlayerId});
-    throw new functions.https.HttpsError("invalid-argument", "The function must be called with two arguments \"senderId\" and \"receiverId\".");
-  }
+exports.acceptFriendRequest = onCall(async (request) => {
+  const {senderId, receiverId} = request.data;
 
   try {
-    const db = admin.firestore();
+    const senderRef = firestore.collection("users").doc(senderId);
+    const receiverRef = firestore.collection("users").doc(receiverId);
 
-    // Fetch the receiver's document
-    const receiverQuery = await db.collection("users").where("playerId", "==", receiverPlayerId).get();
+    // Fetch usernames, playerIds, scores, and levels
+    const senderDoc = await senderRef.get();
+    const receiverDoc = await receiverRef.get();
 
-    if (receiverQuery.empty) {
-      console.error("Receiver not found for Player ID:", receiverPlayerId);
-      throw new functions.https.HttpsError("not-found", "Receiver not found.");
-    }
-
-    const receiverDoc = receiverQuery.docs[0];
-    const receiverRef = receiverDoc.ref;
-
-    // Fetch the sender's document to get the username and playerId
-    const senderDoc = await db.collection("users").doc(senderId).get();
-
-    if (!senderDoc.exists) {
-      console.error("Sender not found for ID:", senderId);
-      throw new functions.https.HttpsError("not-found", "Sender not found.");
+    if (!senderDoc.exists || !receiverDoc.exists) {
+      throw new Error("Sender or receiver does not exist.");
     }
 
     const senderData = senderDoc.data();
-    const senderUsername = senderData.username || "Unknown"; // Use "Unknown" if the username field is missing
-    const senderPlayerId = senderData.playerId || "Unknown";
+    const receiverData = receiverDoc.data();
 
-    // Add the friend request to the receiver's friendRequests subcollection
-    await receiverRef.collection("friendRequests").doc(senderId).set({
-      senderId: senderId,
-      username: senderUsername,
-      playerId: senderPlayerId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    const senderUsername = senderData.username || "Unknown";
+    const senderPlayerId = senderData.playerId || "Unknown";
+    const senderScore = senderData.score || 0; // Default value if not present
+    const senderLevel = senderData.level || 1; // Default value if not present
+
+    const receiverUsername = receiverData.username || "Unknown";
+    const receiverPlayerId = receiverData.playerId || "Unknown";
+    const receiverScore = receiverData.score || 0; // Default value if not present
+    const receiverLevel = receiverData.level || 1; // Default value if not present
+
+    // Add each other as friends
+    await senderRef.collection("friends").doc(receiverId).set({
+      friendId: receiverId,
+      username: receiverUsername,
+      playerId: receiverPlayerId,
+      scores: receiverScore,
+      level: receiverLevel,
+      timestamp: FieldValue.serverTimestamp(),
     });
 
-    console.log("Friend request sent successfully.");
-    return {success: true};
+    await receiverRef.collection("friends").doc(senderId).set({
+      friendId: senderId,
+      username: senderUsername,
+      playerId: senderPlayerId,
+      scores: senderScore,
+      level: senderLevel,
+      timestamp: FieldValue.serverTimestamp(),
+    });
+
+    // Remove the friend request from the receiver's friendRequests subcollection
+    await receiverRef.collection("friendRequests").doc(senderId).delete();
+
+    return {success: true, message: "Friend request accepted successfully."};
   } catch (error) {
-    console.error("Error sending friend request:", error);
-    throw new functions.https.HttpsError("unknown", "An error occurred while sending the friend request.");
+    return {success: false, message: error.message};
   }
 });

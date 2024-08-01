@@ -23,6 +23,9 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     private ListenerRegistration friendRequestListener;
     private ListenerRegistration friendsListener;
 
+    // Dictionary to track friend instances by their IDs
+    private Dictionary<string, GameObject> friendInstances = new Dictionary<string, GameObject>();
+
     void Start()
     {
         // Check if Firebase is initialized
@@ -135,7 +138,8 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
                     }
                     else if (change.ChangeType == DocumentChange.Type.Removed)
                     {
-                        // Handle friend removal if needed
+                        Debug.Log("Friend removed with ID: " + document.Id);
+                        RemoveFriend(document.Id);
                     }
                 }
             });
@@ -165,17 +169,25 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         // Find the delete button and the text component inside it
         var expandButtonTransform = friendInstance.transform.Find("ExpandButton");
         var usernameText = expandButtonTransform.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
-
-
-         usernameText.text = friendUsername;
-
+        usernameText.text = friendUsername;
 
         // Find the delete button component and add an onClick listener
         var expandButton = expandButtonTransform.GetComponent<Button>();
         expandButton.onClick.AddListener(() => ShowFriendOptions(friendId, friendUsername, friendInstance));
 
-      
+        // Add the friend instance to the dictionary
+        friendInstances[friendId] = friendInstance;
     }
+
+    private void RemoveFriend(string friendId)
+    {
+        if (friendInstances.TryGetValue(friendId, out GameObject friendInstance))
+        {
+            Destroy(friendInstance);
+            friendInstances.Remove(friendId);
+        }
+    }
+
     private void ShowFriendOptions(string friendId, string friendUsername, GameObject friendInstance)
     {
         // Destroy existing options if any
@@ -185,22 +197,82 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             Destroy(existingOptions.gameObject);
         }
 
+        // Create the transparent overlay
+        GameObject overlay = new GameObject("Overlay");
+        overlay.transform.SetParent(friendInstance.transform.root, false); // Parent to the root to cover the entire screen
+        RectTransform overlayRect = overlay.AddComponent<RectTransform>();
+
+        // Set the overlay's size and position
+        overlayRect.anchorMin = new Vector2(0.5f, 0.5f);
+        overlayRect.anchorMax = new Vector2(0.5f, 0.5f);
+        overlayRect.pivot = new Vector2(0.5f, 0.5f);
+        overlayRect.anchoredPosition = new Vector2(0, -120); // Coordinates for position 
+        overlayRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 1080f);
+        overlayRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 2400);
+
+        CanvasRenderer overlayCanvasRenderer = overlay.AddComponent<CanvasRenderer>();
+        Image overlayImage = overlay.AddComponent<Image>();
+        overlayImage.color = new Color(0, 0, 0, 0); // Fully transparent
+
+        // Add a button component to detect clicks
+        Button overlayButton = overlay.AddComponent<Button>();
+        overlayButton.onClick.AddListener(() => Destroy(overlay)); // Destroy the overlay (and panel) on click
+
         // Create and set up the options prefab
-        GameObject optionsInstance = Instantiate(friendOptionsPrefab, friendInstance.transform);
+        GameObject optionsInstance = Instantiate(friendOptionsPrefab, overlay.transform); // Parent to overlay
         optionsInstance.name = "FriendOptions";
 
-        // Adjust the position of the optionsInstance to be more to the right
+        // Set the size of the optionsInstance
         RectTransform optionsRectTransform = optionsInstance.GetComponent<RectTransform>();
-        RectTransform friendRectTransform = friendInstance.GetComponent<RectTransform>();
+        optionsRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 350); // Adjust width as needed
+        optionsRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 350); // Adjust height as needed
 
+        // Position the options panel on the right of the friend instance
+        RectTransform friendRectTransform = friendInstance.GetComponent<RectTransform>();
         if (optionsRectTransform != null && friendRectTransform != null)
         {
-             optionsRectTransform = optionsInstance.GetComponent<RectTransform>();
-            optionsRectTransform.anchorMin = new Vector2(1, 0.5f); // Anchors to the right
-            optionsRectTransform.anchorMax = new Vector2(1, 0.5f); // Anchors to the right
-            optionsRectTransform.pivot = new Vector2(-0.2f, 0.5f); // Pivot in the middle-right
-            optionsRectTransform.anchoredPosition = new Vector2(-200, 0); // Offset to the left from the anchor
+            // Get the size of the friend instance
+            Vector2 friendSize = friendRectTransform.rect.size;
 
+            // Calculate the position for the options panel to be on the right of the friend instance
+            Vector2 optionsSize = optionsRectTransform.rect.size;
+            Vector2 friendPosition = (Vector2)friendRectTransform.position;
+            float offset = 250; // Adjust this value to move the panel further to the left or right
+            Vector2 optionsPosition = new Vector2(friendPosition.x + friendSize.x / 2 + optionsSize.x / 2 - offset,
+                                                   friendPosition.y);
+            // Adjust the options panel position
+            optionsRectTransform.position = optionsPosition;
+
+            // Check if the options panel goes off the right side of the screen
+            if (optionsRectTransform.position.x + optionsSize.x / 2 > Screen.width)
+            {
+                optionsRectTransform.position = new Vector3(Screen.width - optionsSize.x / 2,
+                                                            optionsRectTransform.position.y,
+                                                            optionsRectTransform.position.z);
+            }
+
+            // Check if the options panel goes off the left side of the screen
+            if (optionsRectTransform.position.x - optionsSize.x / 2 < 0)
+            {
+                optionsRectTransform.position = new Vector3(optionsSize.x / 2,
+                                                            optionsRectTransform.position.y,
+                                                            optionsRectTransform.position.z);
+            }
+
+            // Check if the options panel goes off the top or bottom of the screen
+            if (optionsRectTransform.position.y + optionsSize.y / 2 > Screen.height)
+            {
+                optionsRectTransform.position = new Vector3(optionsRectTransform.position.x,
+                                                            Screen.height - optionsSize.y / 2,
+                                                            optionsRectTransform.position.z);
+            }
+
+            if (optionsRectTransform.position.y - optionsSize.y / 2 < 0)
+            {
+                optionsRectTransform.position = new Vector3(optionsRectTransform.position.x,
+                                                            optionsSize.y / 2,
+                                                            optionsRectTransform.position.z);
+            }
         }
 
         // Find and set up the delete button
@@ -213,6 +285,8 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         var sendInviteButton = sendInviteButtonTransform.GetComponent<Button>();
         sendInviteButton.onClick.AddListener(() => invitationManager.SendInvitation(friendId));
     }
+
+
 
 
 }
