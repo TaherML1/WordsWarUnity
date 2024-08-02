@@ -122,8 +122,19 @@ public class InvitationManager : MonoBehaviour
     private void ShowInvitationPanel(string invitationId, string fromPlayerUsername)
     {
         GameObject invitationInstance = Instantiate(invitationPrefab, invitationParent);
+
+        // Center the invitation instance in the parent
+        var rectTransform = invitationInstance.GetComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = Vector2.zero;
+
         var usernameText = invitationInstance.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
-        usernameText.text = "Invitation from: " + fromPlayerUsername;
+        if (usernameText != null)
+        {
+            usernameText.text = "Invitation from: " + fromPlayerUsername;
+        }
 
         var acceptButtonTransform = invitationInstance.transform.Find("AcceptButton");
         var acceptButton = acceptButtonTransform.GetComponent<Button>();
@@ -131,7 +142,6 @@ public class InvitationManager : MonoBehaviour
         {
             AcceptInvitation(invitationId);
             Destroy(invitationInstance);
-            
         });
 
         var declineButtonTransform = invitationInstance.transform.Find("DeclineButton");
@@ -140,8 +150,9 @@ public class InvitationManager : MonoBehaviour
         {
             DeclineInvitation(invitationId);
             Destroy(invitationInstance);
-         });
+        });
     }
+
 
     // Function to accept an invitation
     public void AcceptInvitation(string invitationId)

@@ -138,12 +138,12 @@ namespace TS.PageSlider
                 if (i == activePageIndex)
                 {
                     // Animate the active button moving up
-                    StartCoroutine(AnimateButtonPosition(button.GetComponent<RectTransform>(), 100f, 0.25f)); // move up by 100 units over 0.25 seconds
+                    StartCoroutine(AnimateButtonPosition(button.GetComponent<RectTransform>(), 50f, 0.25f)); // move up by 100 units over 0.25 seconds
                 }
                 else
                 {
                     // Animate the inactive button returning to its original position
-                    StartCoroutine(AnimateButtonPosition(button.GetComponent<RectTransform>(), 50f, 0.25f)); // move back to original position over 0.25 seconds
+                    StartCoroutine(AnimateButtonPosition(button.GetComponent<RectTransform>(), 0f, 0.25f)); // move back to original position over 0.25 seconds
                 }
             }
         }
