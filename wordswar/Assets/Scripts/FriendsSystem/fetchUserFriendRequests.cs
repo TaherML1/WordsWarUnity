@@ -466,7 +466,22 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
 
             Debug.Log("winImage.fillAmount set to: " + winRate);
             Debug.Log("loseImage.fillAmount set to: 1");
+
+            // Calculate win percentage
+            int winPercentage = Mathf.RoundToInt(winRate * 100);
+            string winPercentageText = winPercentage.ToString() + "%";
+
+            // Display win percentage
+            TextMeshProUGUI winPercentageTextComponent = profileInstance.transform.Find("WinPercentageText").GetComponent<TextMeshProUGUI>();
+            winPercentageTextComponent.text = winPercentageText;
+
+            Debug.Log("Win percentage set to: " + winPercentageText);
         }
+        else
+        {
+            Debug.Log("No matches played.");
+        }
+
 
         // Find and configure the back button
         Button backButton = profileInstance.transform.Find("BackButton").GetComponent<Button>();
