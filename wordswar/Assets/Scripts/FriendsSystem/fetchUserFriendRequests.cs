@@ -383,21 +383,43 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI playerIdText = profileInstance.transform.Find("playerId").GetComponent<TextMeshProUGUI>();
+        Image winImage = profileInstance.transform.Find("WinImage").GetComponent<Image>();
+        Image loseImage = profileInstance.transform.Find("LoseImage").GetComponent<Image>();
+
+        if (usernameText != null) Debug.Log("usernameText found");
+        if (levelText != null) Debug.Log("levelText found");
+        if (winsText != null) Debug.Log("winsText found");
+        if (lossesText != null) Debug.Log("lossesText found");
+        if (scoreText != null) Debug.Log("scoreText found");
+        if (playerIdText != null) Debug.Log("playerIdText found");
+        if (winImage != null) Debug.Log("winImage found");
+        if (loseImage != null) Debug.Log("loseImage found");
 
         if (playerDoc.TryGetValue("username", out string username))
         {
             Debug.Log("Username found: " + username);
-            usernameText.text = "Username: " + username;
+            usernameText.text = username.ToString();
         }
         else
         {
             Debug.Log("Username not found");
         }
 
+        if (playerDoc.TryGetValue("playerId", out string playerId))
+        {
+            Debug.Log("playerId found: " + playerId);
+            playerIdText.text = "#" + playerId;
+        }
+        else
+        {
+            Debug.Log("playerId not found");
+        }
+
         if (playerDoc.TryGetValue("level", out long level))
         {
             Debug.Log("Level found: " + level);
-            levelText.text = "Level: " + level;
+            levelText.text = level.ToString();
         }
         else
         {
@@ -407,7 +429,7 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         if (playerDoc.TryGetValue("matchesWon", out long matchesWon))
         {
             Debug.Log("Matches Won found: " + matchesWon);
-            winsText.text = "Wins: " + matchesWon;
+            winsText.text = matchesWon.ToString();
         }
         else
         {
@@ -417,7 +439,7 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         if (playerDoc.TryGetValue("matchesLost", out long matchesLost))
         {
             Debug.Log("Matches Lost found: " + matchesLost);
-            lossesText.text = "Losses: " + matchesLost;
+            lossesText.text = matchesLost.ToString();
         }
         else
         {
@@ -427,11 +449,23 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         if (playerDoc.TryGetValue("scores", out long scores))
         {
             Debug.Log("Scores found: " + scores);
-            scoreText.text = "Score: " + scores;
+            scoreText.text = scores.ToString();
         }
         else
         {
             Debug.Log("Scores not found");
+        }
+
+        // Calculate and set win and loss rates
+        long totalMatches = matchesWon + matchesLost;
+        if (totalMatches > 0)
+        {
+            float winRate = (float)matchesWon / totalMatches;
+            winImage.fillAmount = winRate;
+            loseImage.fillAmount = 1; // Set to full
+
+            Debug.Log("winImage.fillAmount set to: " + winRate);
+            Debug.Log("loseImage.fillAmount set to: 1");
         }
 
         // Find and configure the back button
@@ -443,8 +477,6 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             profileParent.gameObject.SetActive(false);  // Deactivate the profileParent
         });
     }
-
-
 
 
 

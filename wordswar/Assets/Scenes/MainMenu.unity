@@ -19814,13 +19814,13 @@ PrefabInstance:
       addedObject: {fileID: 963755485}
     - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 543735953}
+    - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 1718871799}
     - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 936233906}
-    - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 543735953}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
 --- !u!224 &1417142613 stripped
@@ -22089,6 +22089,7 @@ GameObject:
   - component: {fileID: 1577670506}
   - component: {fileID: 1577670507}
   - component: {fileID: 1577670508}
+  - component: {fileID: 1577670509}
   m_Layer: 0
   m_Name: Players
   m_TagString: Untagged
@@ -22168,6 +22169,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   invitationPrefab: {fileID: 8199210538707026831, guid: 4e48eb29f6e701248ba259b3afc2c915, type: 3}
   invitationParent: {fileID: 1273015451}
+--- !u!114 &1577670509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577670504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91c3efc0add4a3f4a9907bfd12ffd479, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  winImage: {fileID: 0}
+  lossImage: {fileID: 0}
 --- !u!1 &1585523325
 GameObject:
   m_ObjectHideFlags: 0

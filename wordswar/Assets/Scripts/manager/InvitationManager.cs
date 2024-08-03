@@ -133,7 +133,7 @@ public class InvitationManager : MonoBehaviour
         var usernameText = invitationInstance.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
         if (usernameText != null)
         {
-            usernameText.text = "Invitation from: " + fromPlayerUsername;
+            usernameText.text =  fromPlayerUsername;
         }
 
         var acceptButtonTransform = invitationInstance.transform.Find("AcceptButton");

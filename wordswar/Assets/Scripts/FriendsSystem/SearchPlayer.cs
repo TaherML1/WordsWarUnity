@@ -204,6 +204,7 @@ public class SearchPlayer : MonoBehaviour
         TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI playerIdText = profileInstance.transform.Find("playerId").GetComponent<TextMeshProUGUI>();
 
         if (playerDoc.TryGetValue("username", out string username))
         {
@@ -213,6 +214,14 @@ public class SearchPlayer : MonoBehaviour
         else
         {
             Debug.Log("Username not found");
+        }
+        if(playerDoc.TryGetValue("playerId", out string playerId))
+        {
+            Debug.Log("playerId found" +  playerId);
+
+        }else
+        {
+            Debug.Log("player id not found");
         }
 
         if (playerDoc.TryGetValue("level", out long level))
