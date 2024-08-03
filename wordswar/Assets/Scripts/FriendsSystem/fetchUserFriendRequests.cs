@@ -173,6 +173,7 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
 
         // Find the delete button and the text component inside it
         var expandButtonTransform = friendInstance.transform.Find("ExpandButton");
+
         var usernameText = expandButtonTransform.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
         usernameText.text = friendUsername;
 

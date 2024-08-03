@@ -83,6 +83,7 @@ public class SearchPlayer : MonoBehaviour
                     else
                     {
                         Debug.Log("Username not found in the document.");
+                        DisplaySearchResult("", "Username not found in the document.", false, null);
                     }
                 }
                 else
@@ -165,9 +166,16 @@ public class SearchPlayer : MonoBehaviour
             addButton.gameObject.SetActive(false);
         }
 
-        profileButton.onClick.RemoveAllListeners();
-        profileButton.onClick.AddListener(() => ShowPlayerProfile(playerDoc));
-        profileButton.gameObject.SetActive(true);
+        if (!string.IsNullOrEmpty(playerId))
+        {
+            profileButton.onClick.RemoveAllListeners();
+            profileButton.onClick.AddListener(() => ShowPlayerProfile(playerDoc));
+            profileButton.gameObject.SetActive(true);
+        }
+        else
+        {
+            profileButton.gameObject.SetActive(false);
+        }
     }
 
     private void ShowPlayerProfile(DocumentSnapshot playerDoc)
@@ -256,8 +264,4 @@ public class SearchPlayer : MonoBehaviour
             profileParent.gameObject.SetActive(false);  // Deactivate the profileParent
         });
     }
-
-
-
-
 }
