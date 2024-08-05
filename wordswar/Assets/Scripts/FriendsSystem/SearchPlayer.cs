@@ -83,64 +83,81 @@ public class SearchPlayer : MonoBehaviour
                     else
                     {
                         Debug.Log("Username not found in the document.");
-                        DisplaySearchResult("", "Username not found in the document.", false, null);
+                        DisplaySearchResult("", "Username not found in the document.", false, false, null);
                     }
                 }
                 else
                 {
                     Debug.Log("Player not found in the database.");
-                    DisplaySearchResult("", "Player not found.", false, null);
+                    DisplaySearchResult("", "Player not found.", false,false, null);
                 }
             }
             else
             {
                 Debug.LogError("Search query failed: " + task.Exception.Message);
-                DisplaySearchResult("", "Error: " + task.Exception.Message, false, null);
+                DisplaySearchResult("", "Error: " + task.Exception.Message, false, false,null);
             }
         });
     }
 
     private void CheckIfAlreadyFriends(string playerId, string username, DocumentSnapshot playerDoc)
     {
-        var userFriendsCollection = db.Collection("users").Document(currentUserId).Collection("friends");
+        Debug.Log($"Checking if already friends or if request has been sent. PlayerId: {playerId}, Username: {username}");
 
+        var userFriendsCollection = db.Collection("users").Document(currentUserId).Collection("friends");
+        var friendRequestsCollection = db.Collection("users").Document(currentUserId).Collection("sentRequests");
+
+        // Check if the player is already a friend
         userFriendsCollection.WhereEqualTo("friendId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompleted)
             {
                 QuerySnapshot friendIdSnapshot = task.Result;
+                Debug.Log($"Friends snapshot count: {friendIdSnapshot.Count}");
                 if (friendIdSnapshot.Count > 0)
                 {
-                    DisplaySearchResult(playerId, username, false, playerDoc);
-                    return;
+                    Debug.Log("Player is already a friend.");
+                    DisplaySearchResult(playerId, username, false, false, playerDoc);
                 }
                 else
                 {
-                    userFriendsCollection.WhereEqualTo("playerId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(playerIdTask =>
+                    // No friend found, check if a request has been sent
+                    Debug.Log("No friend found, checking if a request has been sent.");
+                    friendRequestsCollection.WhereEqualTo("receiverId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(requestTask =>
                     {
-                        if (playerIdTask.IsCompleted)
+                        if (requestTask.IsCompleted)
                         {
-                            QuerySnapshot playerIdSnapshot = playerIdTask.Result;
-                            bool isFriend = playerIdSnapshot.Count > 0;
-                            DisplaySearchResult(playerId, username, !isFriend, playerDoc);
+                            QuerySnapshot requestSnapshot = requestTask.Result;
+                            bool requestSent = requestSnapshot.Count > 0;
+                            Debug.Log($"Friend requests snapshot count: {requestSnapshot.Count}");
+                            if (requestSent)
+                            {
+                                Debug.Log("Friend request has already been sent.");
+                            }
+                            else
+                            {
+                                Debug.Log("No friend request has been sent.");
+                            }
+                            DisplaySearchResult(playerId, username, !requestSent, requestSent, playerDoc);
                         }
                         else
                         {
-                            Debug.LogError("Failed to check friends list by playerId: " + playerIdTask.Exception);
-                            DisplaySearchResult(playerId, username, true, playerDoc);
+                            Debug.LogError("Failed to check friend requests: " + requestTask.Exception);
+                            DisplaySearchResult(playerId, username, true, false, playerDoc);
                         }
                     });
                 }
             }
             else
             {
-                Debug.LogError("Failed to check friends list by friendId: " + task.Exception);
-                DisplaySearchResult(playerId, username, true, playerDoc);
+                Debug.LogError("Failed to check friends list: " + task.Exception);
+                DisplaySearchResult(playerId, username, true, false, playerDoc);
             }
         });
     }
 
-    private void DisplaySearchResult(string playerId, string username, bool showAddButton, DocumentSnapshot playerDoc)
+
+    private void DisplaySearchResult(string playerId, string username, bool showAddButton, bool requestSent, DocumentSnapshot playerDoc)
     {
         foreach (Transform child in resultParent)
         {
@@ -153,17 +170,38 @@ public class SearchPlayer : MonoBehaviour
         resultText.text = username;
 
         Button addButton = resultInstance.transform.Find("AddFriendButton").GetComponent<Button>();
+        TextMeshProUGUI requestText = resultInstance.transform.Find("RequestSentText").GetComponent<TextMeshProUGUI>();
         Button profileButton = resultInstance.transform.Find("ShowProfileButton").GetComponent<Button>();
 
-        if (!string.IsNullOrEmpty(playerId) && showAddButton)
+        if (showAddButton)
         {
             addButton.onClick.RemoveAllListeners();
-            addButton.onClick.AddListener(() => FriendSystemManager.Instance.SendFriendRequest(playerId));
+            addButton.onClick.AddListener(() =>
+            {
+                FriendSystemManager.Instance.SendFriendRequest(playerId, requestSentSuccess =>
+                {
+                    if (requestSentSuccess)
+                    {
+                        // Update the UI to show "Request Sent"
+                        addButton.gameObject.SetActive(false);
+                        requestText.gameObject.SetActive(true);
+                        requestText.text = "Request Sent";
+                    }
+                });
+            });
             addButton.gameObject.SetActive(true);
+            requestText.gameObject.SetActive(false);
+        }
+        else if (requestSent)
+        {
+            addButton.gameObject.SetActive(false);
+            requestText.gameObject.SetActive(true);
+            requestText.text = "Request Sent";
         }
         else
         {
             addButton.gameObject.SetActive(false);
+            requestText.gameObject.SetActive(false);
         }
 
         if (!string.IsNullOrEmpty(playerId))
@@ -177,6 +215,8 @@ public class SearchPlayer : MonoBehaviour
             profileButton.gameObject.SetActive(false);
         }
     }
+
+
 
     private void ShowPlayerProfile(DocumentSnapshot playerDoc)
     {
@@ -205,11 +245,12 @@ public class SearchPlayer : MonoBehaviour
         TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText").GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI playerIdText = profileInstance.transform.Find("playerId").GetComponent<TextMeshProUGUI>();
+        
 
         if (playerDoc.TryGetValue("username", out string username))
         {
             Debug.Log("Username found: " + username);
-            usernameText.text = "Username: " + username;
+            usernameText.text =  username;
         }
         else
         {
@@ -217,6 +258,7 @@ public class SearchPlayer : MonoBehaviour
         }
         if(playerDoc.TryGetValue("playerId", out string playerId))
         {
+            playerIdText.text = playerId;
             Debug.Log("playerId found" +  playerId);
 
         }else
@@ -227,7 +269,7 @@ public class SearchPlayer : MonoBehaviour
         if (playerDoc.TryGetValue("level", out long level))
         {
             Debug.Log("Level found: " + level);
-            levelText.text = "Level: " + level;
+            levelText.text =  level.ToString();
         }
         else
         {
@@ -237,7 +279,7 @@ public class SearchPlayer : MonoBehaviour
         if (playerDoc.TryGetValue("matchesWon", out long matchesWon))
         {
             Debug.Log("Matches Won found: " + matchesWon);
-            winsText.text = "Wins: " + matchesWon;
+            winsText.text =  matchesWon.ToString();
         }
         else
         {
@@ -247,7 +289,7 @@ public class SearchPlayer : MonoBehaviour
         if (playerDoc.TryGetValue("matchesLost", out long matchesLost))
         {
             Debug.Log("Matches Lost found: " + matchesLost);
-            lossesText.text = "Losses: " + matchesLost;
+            lossesText.text =  matchesLost.ToString();
         }
         else
         {
@@ -257,7 +299,7 @@ public class SearchPlayer : MonoBehaviour
         if (playerDoc.TryGetValue("scores", out long scores))
         {
             Debug.Log("Scores found: " + scores);
-            scoreText.text = "Score: " + scores;
+            scoreText.text = scores.ToString();
         }
         else
         {

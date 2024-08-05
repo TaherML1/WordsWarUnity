@@ -4,6 +4,7 @@ using Firebase.Auth;
 using Firebase.Extensions;
 using System.Collections.Generic;
 using System.Collections;
+using System;
 
 public class FriendSystemManager : MonoBehaviour
 {
@@ -56,18 +57,19 @@ public class FriendSystemManager : MonoBehaviour
         InitializeFirebaseComponents();
     }
 
-    public void SendFriendRequest(string receiverId)
+    public void SendFriendRequest(string receiverId, Action<bool> onRequestSent)
     {
+        onRequestSent?.Invoke(true);
         string senderId = auth.CurrentUser.UserId;
 
         Debug.Log("Attempting to send friend request...");
 
         // Create the data payload to send to the Cloud Function
         Dictionary<string, object> data = new Dictionary<string, object>
-        {
-            { "senderId", senderId },
-            { "receiverId", receiverId }
-        };
+    {
+        { "senderId", senderId },
+        { "receiverId", receiverId }
+    };
 
         // Call the Cloud Function
         functions.GetHttpsCallable("sendFriendRequest1")
@@ -77,13 +79,16 @@ public class FriendSystemManager : MonoBehaviour
                 if (task.IsFaulted)
                 {
                     Debug.LogError("Error sending friend request: " + task.Exception.Flatten().InnerException.Message);
+                    onRequestSent?.Invoke(false);
                 }
                 else if (task.IsCompleted)
                 {
                     Debug.Log("Friend request sent successfully.");
+                   
                 }
             });
     }
+
 
     public void AcceptFriendRequest(string senderId, string documentId, GameObject requestInstance)
     {
