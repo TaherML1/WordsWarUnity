@@ -108,7 +108,7 @@ public class SearchPlayer : MonoBehaviour
         var friendRequestsCollection = db.Collection("users").Document(currentUserId).Collection("sentRequests");
 
         // Check if the player is already a friend
-        userFriendsCollection.WhereEqualTo("friendId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        userFriendsCollection.WhereEqualTo("playerId", playerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsCompleted)
             {
