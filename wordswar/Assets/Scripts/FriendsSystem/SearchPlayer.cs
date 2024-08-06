@@ -7,6 +7,7 @@ using System.Collections;
 using Firebase.Auth;
 using System;
 using System.Linq;
+using UnityEngine.Networking;
 
 public class SearchPlayer : MonoBehaviour
 {
@@ -226,93 +227,167 @@ public class SearchPlayer : MonoBehaviour
         Debug.Log("Player Document Data: " + playerDoc.ToDictionary());
 
         // Activate the profileParent GameObject
-        profileParent.gameObject.SetActive(true);
+        if (profileParent != null)
+        {
+            profileParent.gameObject.SetActive(true);
+            Debug.Log("Profile parent activated.");
+        }
+        else
+        {
+            Debug.LogError("profileParent is not assigned.");
+        }
 
         // Clear previous profile data
         foreach (Transform child in profileParent)
         {
             Destroy(child.gameObject);
         }
+        Debug.Log("Cleared previous profile data.");
 
         // Instantiate the profile prefab
-        GameObject profileInstance = Instantiate(playerProfilePrefab, profileParent);
-        Debug.Log("Profile instance instantiated");
-
-        // Set up profile data
-        TextMeshProUGUI usernameText = profileInstance.transform.Find("UsernameText").GetComponent<TextMeshProUGUI>();
-        TextMeshProUGUI levelText = profileInstance.transform.Find("LevelText").GetComponent<TextMeshProUGUI>();
-        TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText").GetComponent<TextMeshProUGUI>();
-        TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText").GetComponent<TextMeshProUGUI>();
-        TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText").GetComponent<TextMeshProUGUI>();
-        TextMeshProUGUI playerIdText = profileInstance.transform.Find("playerId").GetComponent<TextMeshProUGUI>();
-        
-
-        if (playerDoc.TryGetValue("username", out string username))
+        if (playerProfilePrefab != null)
         {
-            Debug.Log("Username found: " + username);
-            usernameText.text =  username;
+            GameObject profileInstance = Instantiate(playerProfilePrefab, profileParent);
+            Debug.Log("Profile instance instantiated.");
+
+            // Set up profile data
+            TextMeshProUGUI usernameText = profileInstance.transform.Find("UsernameText")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI levelText = profileInstance.transform.Find("LevelText")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI playerIdText = profileInstance.transform.Find("PlayerIdText")?.GetComponent<TextMeshProUGUI>();
+            Image profileImage = profileInstance.transform.Find("ProfileImage")?.GetComponent<Image>();
+
+            if (usernameText != null)
+            {
+                if (playerDoc.TryGetValue("username", out string username))
+                {
+                    Debug.Log("Username found: " + username);
+                    usernameText.text = username;
+                }
+                
+            }
+            
+
+            if (playerIdText != null)
+            {
+                if (playerDoc.TryGetValue("playerId", out string playerId))
+                {
+                    playerIdText.text = playerId;
+                    Debug.Log("Player ID found: " + playerId);
+                }
+              
+            }
+            
+
+            if (levelText != null)
+            {
+                if (playerDoc.TryGetValue("level", out long level))
+                {
+                    Debug.Log("Level found: " + level);
+                    levelText.text = level.ToString();
+                }
+               
+            }
+           
+
+            if (winsText != null)
+            {
+                if (playerDoc.TryGetValue("matchesWon", out long matchesWon))
+                {
+                    Debug.Log("Matches Won found: " + matchesWon);
+                    winsText.text = matchesWon.ToString();
+                }
+               
+            }
+           
+
+            if (lossesText != null)
+            {
+                if (playerDoc.TryGetValue("matchesLost", out long matchesLost))
+                {
+                    Debug.Log("Matches Lost found: " + matchesLost);
+                    lossesText.text = matchesLost.ToString();
+                }
+               
+            }
+            
+
+            if (scoreText != null)
+            {
+                if (playerDoc.TryGetValue("scores", out long scores))
+                {
+                    Debug.Log("Scores found: " + scores);
+                    scoreText.text = scores.ToString();
+                }
+               
+            }
+            
+
+            if (profileImage != null)
+            {
+                if (playerDoc.TryGetValue("profileImageURL", out string profileImageURL))
+                {
+                    Debug.Log("Profile Image URL found: " + profileImageURL);
+                    StartCoroutine(LoadProfileImage(profileImageURL, profileImage));
+                }
+                else
+                {
+                    Debug.Log("Profile Image URL not found");
+                }
+            }
+            else
+            {
+                Debug.LogError("ProfileImage component not found in profileInstance.");
+            }
+
+            // Find and configure the back button
+            Button backButton = profileInstance.transform.Find("BackButton")?.GetComponent<Button>();
+            if (backButton != null)
+            {
+                backButton.onClick.RemoveAllListeners();
+                backButton.onClick.AddListener(() =>
+                {
+                    Debug.Log("Back button clicked.");
+                    Destroy(profileInstance);         // Destroy the profileInstance
+                    profileParent.gameObject.SetActive(false);  // Deactivate the profileParent
+                    Debug.Log("Profile instance destroyed and profileParent deactivated.");
+                });
+            }
+            else
+            {
+                Debug.LogError("BackButton component not found in profileInstance.");
+            }
         }
         else
         {
-            Debug.Log("Username not found");
+            Debug.LogError("playerProfilePrefab is not assigned.");
         }
-        if(playerDoc.TryGetValue("playerId", out string playerId))
-        {
-            playerIdText.text = playerId;
-            Debug.Log("playerId found" +  playerId);
-
-        }else
-        {
-            Debug.Log("player id not found");
-        }
-
-        if (playerDoc.TryGetValue("level", out long level))
-        {
-            Debug.Log("Level found: " + level);
-            levelText.text =  level.ToString();
-        }
-        else
-        {
-            Debug.Log("Level not found");
-        }
-
-        if (playerDoc.TryGetValue("matchesWon", out long matchesWon))
-        {
-            Debug.Log("Matches Won found: " + matchesWon);
-            winsText.text =  matchesWon.ToString();
-        }
-        else
-        {
-            Debug.Log("Matches Won not found");
-        }
-
-        if (playerDoc.TryGetValue("matchesLost", out long matchesLost))
-        {
-            Debug.Log("Matches Lost found: " + matchesLost);
-            lossesText.text =  matchesLost.ToString();
-        }
-        else
-        {
-            Debug.Log("Matches Lost not found");
-        }
-
-        if (playerDoc.TryGetValue("scores", out long scores))
-        {
-            Debug.Log("Scores found: " + scores);
-            scoreText.text = scores.ToString();
-        }
-        else
-        {
-            Debug.Log("Scores not found");
-        }
-
-        // Find and configure the back button
-        Button backButton = profileInstance.transform.Find("BackButton").GetComponent<Button>();
-        backButton.onClick.RemoveAllListeners();
-        backButton.onClick.AddListener(() =>
-        {
-            Destroy(profileInstance);         // Destroy the profileInstance
-            profileParent.gameObject.SetActive(false);  // Deactivate the profileParent
-        });
     }
+
+    private IEnumerator LoadProfileImage(string imageUrl, Image profileImage)
+    {
+        Debug.Log($"Loading profile image from URL: {imageUrl}");
+
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                Sprite profileSprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                profileImage.sprite = profileSprite;
+                Debug.Log("Profile image loaded successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to load profile image: " + uwr.error);
+            }
+        }
+    }
+
+
+
 }
