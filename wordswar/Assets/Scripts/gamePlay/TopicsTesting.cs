@@ -16,6 +16,8 @@ using Firebase.Extensions;
 
 public class TopicsTesting : MonoBehaviour
 {
+    [SerializeField] FeedbackManager feedbackManager;
+
     public Chat ChatInstance;
     private FirebaseDatabase database;
     private DatabaseReference databaseReference;
@@ -66,10 +68,12 @@ public class TopicsTesting : MonoBehaviour
         {
             submitButton.interactable = true;
             Debug.Log("your word is correct");
+            feedbackManager.ShowFeedback("your word is correct");
         }else
         {
             submitButton.interactable = true;
             Debug.Log("your word is not correct");
+            feedbackManager.ShowFeedback("your word in not correct");
         }
 
     }

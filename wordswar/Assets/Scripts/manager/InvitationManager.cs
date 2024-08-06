@@ -8,14 +8,17 @@ using UnityEngine.UI;
 using Firebase.Auth;
 using System;
 using System.Collections;
+using Firebase.Firestore;
 
 public class InvitationManager : MonoBehaviour
 {
     public static InvitationManager Instance { get; private set; }
     private DatabaseReference databaseRef;
     private FirebaseAuth auth;
-    public GameObject invitationPrefab; // Reference to the invitation prefab
-    public Transform invitationParent; // Parent to hold the invitation panels
+    [SerializeField] GameObject invitationPrefab; // Reference to the invitation prefab
+    [SerializeField] Transform invitationParent; // Parent to hold the invitation panels
+    [SerializeField] GameObject invitationSentPrefab; // Reference to the invitation sent prefab
+    [SerializeField] Transform invitationSentParent; // Parent to hold the invitation sent panels
 
     private string senderUsername;
 
@@ -78,6 +81,7 @@ public class InvitationManager : MonoBehaviour
             if (task.IsCompleted)
             {
                 Debug.Log("Invitation sent successfully.");
+                ShowInvitationSentPanel(toPlayerId, invitationId);
             }
             else
             {
@@ -133,7 +137,7 @@ public class InvitationManager : MonoBehaviour
         var usernameText = invitationInstance.transform.Find("friendName")?.GetComponent<TextMeshProUGUI>();
         if (usernameText != null)
         {
-            usernameText.text =  fromPlayerUsername;
+            usernameText.text = fromPlayerUsername;
         }
 
         var acceptButtonTransform = invitationInstance.transform.Find("AcceptButton");
@@ -150,6 +154,64 @@ public class InvitationManager : MonoBehaviour
         {
             DeclineInvitation(invitationId);
             Destroy(invitationInstance);
+        });
+    }
+
+    private void ShowInvitationSentPanel(string toPlayerId, string invitationId)
+    {
+        // Fetch the receiver's username from Firestore
+        FirebaseFirestore.DefaultInstance.Collection("users").Document(toPlayerId).GetSnapshotAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                DocumentSnapshot document = task.Result;
+                if (document.Exists)
+                {
+                    if (document.TryGetValue("username", out string receiverUsername))
+                    {
+                        DisplayInvitationSentPanel(receiverUsername, invitationId);
+                    }
+                    else
+                    {
+                        Debug.LogError("Receiver username not found in the document.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Receiver document does not exist.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to fetch receiver document: " + task.Exception);
+            }
+        });
+    }
+
+
+    private void DisplayInvitationSentPanel(string receiverUsername, string invitationId)
+    {
+        GameObject invitationSentInstance = Instantiate(invitationSentPrefab, invitationSentParent);
+
+        // Center the invitation sent instance in the parent
+        var rectTransform = invitationSentInstance.GetComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = Vector2.zero;
+
+        var usernameText = invitationSentInstance.transform.Find("ReceiverName")?.GetComponent<TextMeshProUGUI>();
+        if (usernameText != null)
+        {
+            usernameText.text = receiverUsername;
+        }
+
+        var closeButtonTransform = invitationSentInstance.transform.Find("CloseButton");
+        var closeButton = closeButtonTransform.GetComponent<Button>();
+        closeButton.onClick.AddListener(() =>
+        {
+            DeclineInvitation(invitationId);
+            Destroy(invitationSentInstance);
         });
     }
 

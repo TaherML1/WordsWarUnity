@@ -274,7 +274,7 @@ public class SearchPlayer : MonoBehaviour
             {
                 if (playerDoc.TryGetValue("playerId", out string playerId))
                 {
-                    playerIdText.text = playerId;
+                    playerIdText.text = "#" +  playerId;
                     Debug.Log("Player ID found: " + playerId);
                 }
               
