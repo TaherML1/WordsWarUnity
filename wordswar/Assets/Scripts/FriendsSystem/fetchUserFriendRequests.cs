@@ -23,6 +23,7 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
     [SerializeField] InvitationManager invitationManager;
     [SerializeField] private TextMeshProUGUI friendCountText; // Add this line
 
+
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private FirebaseFunctions functions;
@@ -395,15 +396,21 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             TextMeshProUGUI winsText = profileInstance.transform.Find("WinsText")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI lossesText = profileInstance.transform.Find("LossesText")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText")?.GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI winPercentageText = profileInstance.transform.Find("WinPercentageText")?.GetComponent<TextMeshProUGUI>();
             Transform copyButtonTransform = profileInstance.transform.Find("CopyButton");
             TextMeshProUGUI playerIdText = copyButtonTransform?.Find("PlayerIdText")?.GetComponent<TextMeshProUGUI>();
             Button copyButton = copyButtonTransform?.GetComponent<Button>();
             Image profileImage = profileInstance.transform.Find("ProfileImage")?.GetComponent<Image>();
+            Image winImage = profileInstance.transform.Find("WinImage")?.GetComponent<Image>();
+            Image loseImage = profileInstance.transform.Find("LoseImage")?.GetComponent<Image>();
 
-            if (usernameText != null && playerDoc.TryGetValue("username", out string username))
+            if (usernameText != null)
             {
-                Debug.Log("Username found: " + username);
-                usernameText.text = username;
+                if (playerDoc.TryGetValue("username", out string username))
+                {
+                    Debug.Log("Username found: " + username);
+                    usernameText.text = username;
+                }
             }
 
             if (playerIdText != null && playerDoc.TryGetValue("playerId", out string playerId))
@@ -422,28 +429,42 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
                 }
             }
 
-            if (levelText != null && playerDoc.TryGetValue("level", out long level))
+            if (levelText != null)
             {
-                Debug.Log("Level found: " + level);
-                levelText.text = level.ToString();
+                if (playerDoc.TryGetValue("level", out long level))
+                {
+                    Debug.Log("Level found: " + level);
+                    levelText.text = level.ToString();
+                }
             }
 
-            if (winsText != null && playerDoc.TryGetValue("matchesWon", out long matchesWon))
+            long matchesWon = 0;
+            if (winsText != null)
             {
-                Debug.Log("Matches Won found: " + matchesWon);
-                winsText.text = matchesWon.ToString();
+                if (playerDoc.TryGetValue("matchesWon", out matchesWon))
+                {
+                    Debug.Log("Matches Won found: " + matchesWon);
+                    winsText.text = matchesWon.ToString();
+                }
             }
 
-            if (lossesText != null && playerDoc.TryGetValue("matchesLost", out long matchesLost))
+            long matchesLost = 0;
+            if (lossesText != null)
             {
-                Debug.Log("Matches Lost found: " + matchesLost);
-                lossesText.text = matchesLost.ToString();
+                if (playerDoc.TryGetValue("matchesLost", out matchesLost))
+                {
+                    Debug.Log("Matches Lost found: " + matchesLost);
+                    lossesText.text = matchesLost.ToString();
+                }
             }
 
-            if (scoreText != null && playerDoc.TryGetValue("scores", out long scores))
+            if (scoreText != null)
             {
-                Debug.Log("Scores found: " + scores);
-                scoreText.text = scores.ToString();
+                if (playerDoc.TryGetValue("scores", out long scores))
+                {
+                    Debug.Log("Scores found: " + scores);
+                    scoreText.text = scores.ToString();
+                }
             }
 
             if (profileImage != null)
@@ -462,6 +483,28 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             {
                 Debug.LogError("ProfileImage component not found in profileInstance.");
             }
+
+            // Calculate and set win and loss rates
+            long totalMatches = matchesWon + matchesLost;
+            if (totalMatches > 0)
+            {
+                float winRate = (float)matchesWon / totalMatches;
+                winImage.fillAmount = winRate;
+                loseImage.fillAmount = 1; // Set to full
+
+                Debug.Log("winImage.fillAmount set to: " + winRate);
+                Debug.Log("loseImage.fillAmount set to: 1");
+
+                // Calculate and set win percentage
+                int winPercentage = Mathf.RoundToInt(winRate * 100f);
+
+                if (winPercentageText != null)
+                {
+                    winPercentageText.text = $"{winPercentage}%";
+                    Debug.Log("Win percentage set to: " + winPercentageText.text);
+                }
+            }
+
             // Find and configure the back button
             Button backButton = profileInstance.transform.Find("BackButton")?.GetComponent<Button>();
             if (backButton != null)
@@ -485,7 +528,6 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             Debug.LogError("playerProfilePrefab is not assigned.");
         }
     }
-
     private IEnumerator LoadProfileImage(string imageUrl, Image profileImage)
     {
         Debug.Log($"Loading profile image from URL: {imageUrl}");

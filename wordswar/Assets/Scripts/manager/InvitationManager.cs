@@ -19,8 +19,10 @@ public class InvitationManager : MonoBehaviour
     [SerializeField] Transform invitationParent; // Parent to hold the invitation panels
     [SerializeField] GameObject invitationSentPrefab; // Reference to the invitation sent prefab
     [SerializeField] Transform invitationSentParent; // Parent to hold the invitation sent panels
+    [SerializeField] GameObject BGPanel;
 
     private string senderUsername;
+    private Dictionary<string, GameObject> invitationSentInstances = new Dictionary<string, GameObject>();
 
     private void Start()
     {
@@ -82,6 +84,7 @@ public class InvitationManager : MonoBehaviour
             {
                 Debug.Log("Invitation sent successfully.");
                 ShowInvitationSentPanel(toPlayerId, invitationId);
+                ListenForInvitationStatusChanges(invitationId); // Listen for status changes
             }
             else
             {
@@ -188,7 +191,6 @@ public class InvitationManager : MonoBehaviour
         });
     }
 
-
     private void DisplayInvitationSentPanel(string receiverUsername, string invitationId)
     {
         GameObject invitationSentInstance = Instantiate(invitationSentPrefab, invitationSentParent);
@@ -204,6 +206,7 @@ public class InvitationManager : MonoBehaviour
         if (usernameText != null)
         {
             usernameText.text = receiverUsername;
+            BGPanel.SetActive(true);
         }
 
         var closeButtonTransform = invitationSentInstance.transform.Find("CloseButton");
@@ -211,10 +214,88 @@ public class InvitationManager : MonoBehaviour
         closeButton.onClick.AddListener(() =>
         {
             DeclineInvitation(invitationId);
+            BGPanel?.SetActive(false);
             Destroy(invitationSentInstance);
         });
+
+        // Store the instance in the dictionary
+        invitationSentInstances[invitationId] = invitationSentInstance;
     }
 
+    private void ListenForInvitationStatusChanges(string invitationId)
+    {
+        DatabaseReference invitationRef = databaseRef.Child("invitations").Child(invitationId);
+        invitationRef.ValueChanged += (sender, args) =>
+        {
+            if (args.DatabaseError != null)
+            {
+                Debug.LogError("Error receiving invitation status: " + args.DatabaseError.Message);
+                return;
+            }
+
+            if (args.Snapshot.Exists)
+            {
+                Dictionary<string, object> invitation = args.Snapshot.Value as Dictionary<string, object>;
+                string status = invitation["status"].ToString();
+
+                if (status == "accepted")
+                {
+                    Debug.Log("Invitation accepted.");
+                    // Handle accepted invitation
+                }
+                else if (status == "declined")
+                {
+                    Debug.Log("Invitation declined.");
+                    // Handle declined invitation
+                    ShowInvitationDeclinedNotification(invitationId);
+                }
+            }
+            else
+            {
+                Debug.Log("Invitation removed.");
+
+                // Handle removed invitation
+                if (invitationSentInstances.TryGetValue(invitationId, out GameObject invitationSentInstance))
+                {
+                    Destroy(invitationSentInstance);
+                    invitationSentInstances.Remove(invitationId);
+                    BGPanel?.SetActive(false);
+                }
+            }
+        };
+    }
+
+    private void ShowInvitationDeclinedNotification(string invitationId)
+    {
+        // Display a notification or update the UI to inform the sender that the invitation was declined
+        Debug.Log("Invitation declined. Notification should be displayed here.");
+
+        // Example: Show a UI panel or a popup
+        GameObject notificationInstance = Instantiate(invitationSentPrefab, invitationSentParent);
+
+        // Center the notification instance in the parent
+        var rectTransform = notificationInstance.GetComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = Vector2.zero;
+
+        var usernameText = notificationInstance.transform.Find("ReceiverName")?.GetComponent<TextMeshProUGUI>();
+        if (usernameText != null)
+        {
+            usernameText.text = "Invitation Declined";
+            BGPanel.SetActive(true);
+            Destroy(notificationInstance);
+        }
+
+        var closeButtonTransform = notificationInstance.transform.Find("CloseButton");
+        var closeButton = closeButtonTransform.GetComponent<Button>();
+        closeButton.onClick.AddListener(() =>
+        {
+            BGPanel?.SetActive(false);
+            Destroy(notificationInstance);
+        });
+    }
 
     // Function to accept an invitation
     public void AcceptInvitation(string invitationId)
@@ -245,10 +326,25 @@ public class InvitationManager : MonoBehaviour
     {
         DatabaseReference invitationRef = databaseRef.Child("invitations").Child(invitationId);
 
-        invitationRef.RemoveValueAsync().ContinueWith(task => {
+        Dictionary<string, object> update = new Dictionary<string, object>
+        {
+            ["status"] = "declined"
+        };
+
+        invitationRef.UpdateChildrenAsync(update).ContinueWith(task => {
             if (task.IsCompleted)
             {
-                Debug.Log("Invitation declined and removed.");
+                Debug.Log("Invitation declined.");
+                invitationRef.RemoveValueAsync().ContinueWith(removeTask => {
+                    if (removeTask.IsCompleted)
+                    {
+                        Debug.Log("Invitation removed.");
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to remove invitation: " + removeTask.Exception);
+                    }
+                });
             }
             else
             {
