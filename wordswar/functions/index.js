@@ -74,52 +74,76 @@ exports.checkGameEnd = functions.database.ref("/games/{gameId}/gameEnd")
           const winnerHintsDoc = await transaction.get(winnerHintsRef);
           const loserHintsDoc = await transaction.get(loserHintsRef);
 
-          // Determine refresh time and tickets after decrement
+          // Determine ticket counts and refresh times after decrement
           let winnerTickets = winnerHintsDoc.data().tickets;
+          let winnerRefreshedTickets = winnerHintsDoc.data().refreshedTickets;
           let loserTickets = loserHintsDoc.data().tickets;
-          let winnerRefreshTime; let loserRefreshTime;
+          let loserRefreshedTickets = loserHintsDoc.data().refreshedTickets;
+          let winnerRefreshTime;
+          let loserRefreshTime;
 
+          // Update winner's tickets
           if (winnerTickets > 0) {
             winnerTickets -= 1;
-            if (winnerTickets === 2) {
+          } else if (winnerRefreshedTickets > 0) {
+            winnerRefreshedTickets -= 1;
+            if (winnerRefreshedTickets === 2) {
               winnerRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 60 * 1000)); // 30 minutes
-            } else if (winnerTickets === 1) {
+            } else if (winnerRefreshedTickets === 1) {
               winnerRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 60 * 60 * 1000)); // 1 hour
             } else {
-              winnerRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 90 * 60 * 1000)); // 60 minutes
+              winnerRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 90 * 60 * 1000)); // 90 minutes
             }
           }
 
+          // Update loser's tickets
           if (loserTickets > 0) {
             loserTickets -= 1;
-            if (loserTickets === 2) {
+          } else if (loserRefreshedTickets > 0) {
+            loserRefreshedTickets -= 1;
+            if (loserRefreshedTickets === 2) {
               loserRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 60 * 1000)); // 30 minutes
-            } else if (loserTickets === 1) {
+            } else if (loserRefreshedTickets === 1) {
               loserRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 60 * 60 * 1000)); // 1 hour
             } else {
               loserRefreshTime = admin.firestore.Timestamp.fromDate(new Date(Date.now() + 90 * 60 * 1000)); // 90 minutes
             }
           }
 
-          // Update Firestore documents with new values and set refreshTime
-          transaction.update(winnerRef, {
+          // Create update objects and conditionally include refreshTime if defined
+          const winnerUpdateData = {
             coins: winnerCoins,
             xp: winnerXP,
             scores: winnerScores,
             matchesWon: winnerMatchesWon,
-            refreshTime: winnerRefreshTime, // Set refresh time for the winner
-          });
+          };
+          if (winnerRefreshTime) {
+            winnerUpdateData.refreshTime = winnerRefreshTime;
+          }
 
-          transaction.update(loserRef, {
+          const loserUpdateData = {
             coins: loserCoins,
             xp: loserXP,
             scores: loserScores,
             matchesLost: loserMatchesLost,
-            refreshTime: loserRefreshTime, // Set refresh time for the loser
+          };
+          if (loserRefreshTime) {
+            loserUpdateData.refreshTime = loserRefreshTime;
+          }
+
+          // Perform the Firestore updates
+          transaction.update(winnerRef, winnerUpdateData);
+          transaction.update(loserRef, loserUpdateData);
+
+          transaction.update(winnerHintsRef, {
+            tickets: winnerTickets,
+            refreshedTickets: winnerRefreshedTickets,
           });
 
-          transaction.update(winnerHintsRef, {tickets: winnerTickets});
-          transaction.update(loserHintsRef, {tickets: loserTickets});
+          transaction.update(loserHintsRef, {
+            tickets: loserTickets,
+            refreshedTickets: loserRefreshedTickets,
+          });
 
           console.log("Updated winner's and loser's stats and set refresh time.");
         });

@@ -7140,7 +7140,10 @@ PrefabInstance:
     - {fileID: 1865655777068739240, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
     - {fileID: 4844761048363838820, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
     - {fileID: 5816822691967115042, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1803264881083791115, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 576883152}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
 --- !u!1 &504972488
@@ -8505,7 +8508,7 @@ GameObject:
   - component: {fileID: 576883154}
   - component: {fileID: 576883153}
   m_Layer: 0
-  m_Name: InvitationSentParent
+  m_Name: FriendsCountLabel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8525,12 +8528,12 @@ RectTransform:
   m_Children:
   - {fileID: 2038234787}
   - {fileID: 2073931477}
-  m_Father: {fileID: 1939404666}
+  m_Father: {fileID: 1173729325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.453003, y: -150}
-  m_SizeDelta: {x: -105.0939, y: 0}
+  m_AnchoredPosition: {x: 47.453033, y: 720.8073}
+  m_SizeDelta: {x: 940.06287, y: -55.6147}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &576883153
 MonoBehaviour:
@@ -22412,6 +22415,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cc3c7e77c6f2134bb594578d3e27c2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  invitationManager: {fileID: 1577670508}
   friendRequestListParent: {fileID: 1785282314}
   friendListParent: {fileID: 1417142613}
   profileParent: {fileID: 89269776}
@@ -22419,7 +22423,7 @@ MonoBehaviour:
   friendPrefab: {fileID: 2726738319328871033, guid: 538fac4619354094f8cbff3be34c0453, type: 3}
   friendOptionsPrefab: {fileID: 4742739338031711271, guid: f8e5fb538b086cf4cb98a7d40a18e399, type: 3}
   playerProfilePrefab: {fileID: 5920394800533429377, guid: 75b16e0fbfb0b8d40927f987282131c3, type: 3}
-  invitationManager: {fileID: 1577670508}
+  confirmationDialogPrefab: {fileID: 7102419847719768113, guid: 8d0a0e3de3ecedd4ba427cfbb0fad0c3, type: 3}
   friendCountText: {fileID: 2038234788}
 --- !u!114 &1577670508
 MonoBehaviour:
@@ -29454,7 +29458,6 @@ RectTransform:
   - {fileID: 1564047016}
   - {fileID: 1837153573}
   - {fileID: 326658658}
-  - {fileID: 576883152}
   - {fileID: 1170504206}
   - {fileID: 1542964470}
   m_Father: {fileID: 327423079}
@@ -29552,7 +29555,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
+  m_Color: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

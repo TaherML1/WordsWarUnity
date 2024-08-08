@@ -12,6 +12,8 @@ public class FetchUserHints : MonoBehaviour
     private int jokerHints;
     private int extraTimeHints;
     private int tickets;
+    private int refreshedTickets;
+    private int totalTickets;
 
     public static FetchUserHints Instance { get; private set; }
     void Start()
@@ -39,12 +41,15 @@ public class FetchUserHints : MonoBehaviour
     private void UpdateUserHints(Dictionary<string, object> userHints)
     {
         // Update UI elements with user hints data
-        if (userHints.TryGetValue("joker", out object jokerObj) && userHints.TryGetValue("extraTime", out object extraTimeObj) && userHints.TryGetValue("tickets",out object ticketsObj))
+        if (userHints.TryGetValue("joker", out object jokerObj) && userHints.TryGetValue("extraTime", out object extraTimeObj) && userHints.TryGetValue("tickets",out object ticketsObj) && userHints.TryGetValue("refreshedTickets", out object refreshedTicketsObj))
         {
             jokerHints = Convert.ToInt32(jokerObj);
             extraTimeHints = Convert.ToInt32(extraTimeObj);
             tickets = Convert.ToInt32(ticketsObj);
-            UpdateUI(jokerHints, extraTimeHints,tickets);
+            refreshedTickets = Convert.ToInt32(refreshedTicketsObj);
+
+            totalTickets = tickets + refreshedTickets;
+            UpdateUI(jokerHints, extraTimeHints,totalTickets);
         }
         else
         {
@@ -59,7 +64,7 @@ public class FetchUserHints : MonoBehaviour
         ticketsText.text = "3/"+ tickets.ToString();
         Debug.Log("joker hints : " + jokerHints);
         Debug.Log("extra time hints : " + extraTimeHints);
-        Debug.Log("tickets : " + tickets);
+        Debug.Log("Total tickets : " + tickets);
     }
     public int GetTickets()
     {

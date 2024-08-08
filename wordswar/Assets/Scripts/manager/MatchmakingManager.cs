@@ -20,6 +20,8 @@ public class MatchmakingManager : MonoBehaviour
     string playerId;
 
     int currentTickets;
+    int refreshedTickets;
+    int totalTickets;
 
     private void Awake()
     {
@@ -59,12 +61,23 @@ public class MatchmakingManager : MonoBehaviour
         if (userHints.TryGetValue("tickets", out object TicketsObj))
         {
             currentTickets = Convert.ToInt32(TicketsObj);
-         
         }
         else
         {
             Debug.LogError("Tickets key is missing in hintsData");
         }
+
+        if (userHints.TryGetValue("refreshedTickets", out object refreshedTicketsObj))
+        {
+            refreshedTickets = Convert.ToInt32(refreshedTicketsObj);
+        }
+        else
+        {
+            Debug.LogError("RefreshedTickets key is missing in hintsData");
+        }
+
+        // Calculate total tickets as the sum of currentTickets and refreshedTickets
+        totalTickets = currentTickets + refreshedTickets;
     }
 
     private void SetupPlayerValueListener()
@@ -111,10 +124,9 @@ public class MatchmakingManager : MonoBehaviour
         }
     }
 
-
     public void AddPlayerToMatchmaking()
     {
-        if (currentTickets > 0)
+        if (totalTickets > 0)
         {
             if (auth.CurrentUser != null)
             {

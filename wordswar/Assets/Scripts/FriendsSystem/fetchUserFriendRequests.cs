@@ -13,14 +13,20 @@ using UnityEngine.Networking;
 
 public class FetchUserFriendsAndRequests : MonoBehaviour
 {
+    [SerializeField] InvitationManager invitationManager;
+
     [SerializeField] private Transform friendRequestListParent;
     [SerializeField] private Transform friendListParent;
     [SerializeField] Transform profileParent;
+    
     [SerializeField] private GameObject friendRequestPrefab;
     [SerializeField] private GameObject friendPrefab;
     [SerializeField] private GameObject friendOptionsPrefab;
     [SerializeField] GameObject playerProfilePrefab;
-    [SerializeField] InvitationManager invitationManager;
+    [SerializeField] private GameObject confirmationDialogPrefab;
+   
+   
+    
     [SerializeField] private TextMeshProUGUI friendCountText; // Add this line
 
 
@@ -294,8 +300,7 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         var deleteButton = deleteButtonTransform.GetComponent<Button>();
         deleteButton.onClick.AddListener(() =>
         {
-            FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance);
-            Destroy(overlay);
+            ShowConfirmationDialog(friendId, friendInstance, overlay);
         });
 
         // Find and set up the send invite button
@@ -562,4 +567,34 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             Debug.LogError("friendCountText is not assigned.");
         }
     }
+
+    private void ShowConfirmationDialog(string friendId, GameObject friendInstance, GameObject overlay)
+    {
+        // Instantiate the confirmation dialog prefab
+        GameObject confirmationDialog = Instantiate(confirmationDialogPrefab, overlay.transform);
+        RectTransform dialogRect = confirmationDialog.GetComponent<RectTransform>();
+
+        // Position the dialog in the center of the overlay
+        dialogRect.anchorMin = new Vector2(0.5f, 0.5f);
+        dialogRect.anchorMax = new Vector2(0.5f, 0.5f);
+        dialogRect.pivot = new Vector2(0.5f, 0.5f);
+        dialogRect.anchoredPosition = Vector2.zero;
+
+        // Find and set up the Confirm and Cancel buttons
+        var confirmButtonTransform = confirmationDialog.transform.Find("ConfirmButton");
+        var confirmButton = confirmButtonTransform.GetComponent<Button>();
+        confirmButton.onClick.AddListener(() =>
+        {
+            FriendSystemManager.Instance.DeleteFriend(friendId, friendInstance);
+            Destroy(overlay);
+        });
+
+        var cancelButtonTransform = confirmationDialog.transform.Find("CancelButton");
+        var cancelButton = cancelButtonTransform.GetComponent<Button>();
+        cancelButton.onClick.AddListener(() =>
+        {
+            Destroy(confirmationDialog);
+        });
+    }
+
 }

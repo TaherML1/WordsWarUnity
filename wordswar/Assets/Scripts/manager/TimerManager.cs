@@ -5,9 +5,9 @@ using Firebase.Functions;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using Firebase;
 using System.Collections.Generic;
 using System.Collections;
+using Firebase;
 
 public class TimerManager : MonoBehaviour
 {
@@ -16,9 +16,11 @@ public class TimerManager : MonoBehaviour
     FirebaseAuth auth;
     FirebaseFunctions functions;
     [SerializeField] Text timerText;
+    [SerializeField] Text ticketsText;
     [SerializeField] GameObject Panel;
 
     int currentTickets;
+    int refreshedTickets;
 
     private Timestamp serverStartTime;
     private Timestamp targetTime;
@@ -36,9 +38,16 @@ public class TimerManager : MonoBehaviour
                 Debug.Log("Firebase dependencies are available.");
 
                 FirebaseUser user = auth.CurrentUser;
-                RetrieveServerTime(user.UserId);
-                UserManager.Instance.OnUserHintsUpdated += updateUserTickets;
-                UserManager.Instance.CheckUserProfileCompletion();
+                if (user != null)
+                {
+                    RetrieveServerTime(user.UserId);
+                    UserManager.Instance.OnUserHintsUpdated += UpdateUserTicketsAndRefreshedTickets;
+                    UserManager.Instance.CheckUserProfileCompletion();
+                }
+                else
+                {
+                    Debug.LogError("User is not authenticated.");
+                }
             }
             else
             {
@@ -58,7 +67,6 @@ public class TimerManager : MonoBehaviour
                 if (snapshot.Exists)
                 {
                     serverStartTime = snapshot.GetValue<Timestamp>("time");
-               //     Debug.Log("server time : " + serverStartTime);
                     RetrieveTimer(userId);
                 }
                 else
@@ -73,16 +81,30 @@ public class TimerManager : MonoBehaviour
         });
     }
 
-    void updateUserTickets(Dictionary<string, object> userHints)
+    void UpdateUserTicketsAndRefreshedTickets(Dictionary<string, object> userHints)
     {
-        if (userHints.TryGetValue("tickets", out object TicketsObj))
+        if (userHints.TryGetValue("tickets", out object ticketsObj))
         {
-            currentTickets = Convert.ToInt32(TicketsObj);
-
+            currentTickets = Convert.ToInt32(ticketsObj);
         }
         else
         {
             Debug.LogError("tickets key is missing in hintsData");
+        }
+
+        if (userHints.TryGetValue("refreshedTickets", out object refreshedTicketsObj))
+        {
+            refreshedTickets = Convert.ToInt32(refreshedTicketsObj);
+        }
+        else
+        {
+            Debug.LogError("refreshedTickets key is missing in hintsData");
+        }
+
+        // Update UI to display tickets and refreshedTickets
+        if (ticketsText != null)
+        {
+            ticketsText.text = $"Tickets: {currentTickets} / Refreshed: {refreshedTickets}";
         }
     }
 
@@ -98,7 +120,6 @@ public class TimerManager : MonoBehaviour
                 if (snapshot.Exists)
                 {
                     targetTime = snapshot.GetValue<Timestamp>("refreshTime");
-                 //   Debug.Log($"Timer set for: {targetTime.ToDateTime()}");
                     StartCoroutine(StartCountdown());
                 }
                 else
@@ -117,18 +138,17 @@ public class TimerManager : MonoBehaviour
     {
         while (true)
         {
-            if (currentTickets >= 3)
+            if (refreshedTickets >= 3)
             {
-                // If the player has 3 or more tickets, don't start the timer
-                Debug.Log("You already have 3 tickets. No need to wait.");
+                Debug.Log("You already have 3 refreshed tickets. No need to wait.");
                 yield break;
             }
 
             TimeSpan remainingTime = targetTime.ToDateTime() - serverStartTime.ToDateTime();
 
-            // Adjust the remaining time based on the number of tickets
+            // Adjust remaining time based on the number of refreshed tickets
             float ticketMultiplier = 1f;
-            switch (currentTickets)
+            switch (refreshedTickets)
             {
                 case 0:
                     ticketMultiplier = 3f;
@@ -140,50 +160,38 @@ public class TimerManager : MonoBehaviour
                     ticketMultiplier = 1f;
                     break;
             }
+
             TimeSpan adjustedRemainingTime = TimeSpan.FromSeconds(remainingTime.TotalSeconds / ticketMultiplier);
 
             if (adjustedRemainingTime.TotalSeconds <= 0)
             {
                 Debug.Log("Timer ended.");
-
-                // Increase tickets and reset timer
                 IncreaseTicketsLocally();
-                currentTickets++;
+                refreshedTickets++;
 
-                if (currentTickets < 3)
+                if (refreshedTickets < 3)
                 {
-                    // Reset timer to 30 minutes (or any other desired duration)
+                    // Reset timer for the next interval
                     targetTime = Timestamp.FromDateTime(serverStartTime.ToDateTime().AddMinutes(30));
-
-                    // Restart the timer
                     serverStartTime = Timestamp.FromDateTime(DateTime.Now);
                 }
                 else
                 {
-                    // If the player has 3 tickets, don't restart the timer
                     yield break;
                 }
             }
             else
             {
-                string remainingTimeString;
-                if (adjustedRemainingTime.TotalHours >= 1)
-                {
-                    remainingTimeString = $"{(int)adjustedRemainingTime.TotalHours:D2}:{adjustedRemainingTime.Minutes:D2}:{adjustedRemainingTime.Seconds:D2}";
-                }
-                else
-                {
-                    remainingTimeString = $"{adjustedRemainingTime.Minutes:D2}:{adjustedRemainingTime.Seconds:D2}";
-                }
+                string remainingTimeString = adjustedRemainingTime.TotalHours >= 1
+                    ? $"{(int)adjustedRemainingTime.TotalHours:D2}:{adjustedRemainingTime.Minutes:D2}:{adjustedRemainingTime.Seconds:D2}"
+                    : $"{adjustedRemainingTime.Minutes:D2}:{adjustedRemainingTime.Seconds:D2}";
 
                 if (timerText != null)
                 {
                     timerText.text = remainingTimeString;
                 }
 
-                // Decrement serverStartTime by 1 second
-                serverStartTime = Timestamp.FromDateTime(serverStartTime.ToDateTime().AddSeconds(1*ticketMultiplier));
-
+                serverStartTime = Timestamp.FromDateTime(serverStartTime.ToDateTime().AddSeconds(1 * ticketMultiplier));
                 yield return new WaitForSeconds(1);
             }
         }
@@ -203,19 +211,30 @@ public class TimerManager : MonoBehaviour
                     if (snapshot.Exists)
                     {
                         int currentTickets = snapshot.GetValue<int>("tickets");
+                        int refreshedTickets = snapshot.GetValue<int>("refreshedTickets");
 
-                        if (currentTickets < 3)
+                        if (refreshedTickets < 3)
                         {
-                            // Update the tickets locally
-                            currentTickets += 1;
-                            // Reflect the updated tickets in UI or local state
-                            Debug.Log("Tickets increased locally.");
-                            // Call Cloud Function to validate and finalize the update
+                            refreshedTickets += 1;
+                            Debug.Log("Refreshed tickets increased locally.");
                             CallCloudFunctionToUpdateTickets();
                         }
                         else
                         {
-                            Debug.LogWarning("Ticket limit reached. Cannot increase tickets.");
+                            Debug.LogWarning("Refreshed ticket limit reached. Cannot increase refreshed tickets.");
+                        }
+
+                        // Update the tickets locally
+                        if (currentTickets < 3)
+                        {
+                            currentTickets += 1;
+                            Debug.Log("Tickets increased locally.");
+                        }
+
+                        // Update UI
+                        if (ticketsText != null)
+                        {
+                            ticketsText.text = $"Tickets: {currentTickets} / Refreshed: {refreshedTickets}";
                         }
                     }
                     else
@@ -237,17 +256,16 @@ public class TimerManager : MonoBehaviour
 
     void CallCloudFunctionToUpdateTickets()
     {
-        functions.GetHttpsCallable("increaseTickets").
-      CallAsync().ContinueWithOnMainThread(task =>
-      {
-          if (task.IsCompleted)
-          {
-              Debug.Log("Cloud Function called successfully.");
-          }
-          else
-          {
-              Debug.LogError("Failed to call Cloud Function: " + task.Exception);
-          }
-      });
+        functions.GetHttpsCallable("increaseTickets").CallAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                Debug.Log("Cloud Function called successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to call Cloud Function: " + task.Exception);
+            }
+        });
     }
 }

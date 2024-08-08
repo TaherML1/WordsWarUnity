@@ -5982,7 +5982,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   loginUI: {fileID: 649534187}
   registerUI: {fileID: 821730195}
-  mainUI: {fileID: 0}
+  mainUI: {fileID: 821730195}
   resetPasswordUi: {fileID: 436125048}
 --- !u!4 &1305445308
 Transform:

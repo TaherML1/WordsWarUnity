@@ -146,6 +146,7 @@ public class FriendSystemManager : MonoBehaviour
 
     public void DeleteFriend(string friendId, GameObject friendInstance)
     {
+        Destroy(friendInstance);
         Debug.Log("Deleting friend: " + friendId);
 
         var deleteFriendFunction = functions.GetHttpsCallable("deleteFriend");
@@ -163,7 +164,7 @@ public class FriendSystemManager : MonoBehaviour
             }
 
             Debug.Log("Friend deleted successfully");
-            Destroy(friendInstance);
+          
         });
     }
 }
