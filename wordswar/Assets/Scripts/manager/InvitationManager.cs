@@ -20,6 +20,7 @@ public class InvitationManager : MonoBehaviour
     [SerializeField] GameObject invitationSentPrefab; // Reference to the invitation sent prefab
     [SerializeField] Transform invitationSentParent; // Parent to hold the invitation sent panels
     [SerializeField] GameObject BGPanel;
+    [SerializeField] GameObject GameListener;
 
     private string senderUsername;
     private Dictionary<string, GameObject> invitationSentInstances = new Dictionary<string, GameObject>();
@@ -61,6 +62,7 @@ public class InvitationManager : MonoBehaviour
     // Function to send an invitation
     public void SendInvitation(string toPlayerId)
     {
+        GameListener.SetActive(true);
         string fromPlayerId = auth.CurrentUser.UserId;
 
         // Fetch the sender's username from UserManager
@@ -85,6 +87,7 @@ public class InvitationManager : MonoBehaviour
                 Debug.Log("Invitation sent successfully.");
                 ShowInvitationSentPanel(toPlayerId, invitationId);
                 ListenForInvitationStatusChanges(invitationId); // Listen for status changes
+             
             }
             else
             {
@@ -193,6 +196,7 @@ public class InvitationManager : MonoBehaviour
 
     private void DisplayInvitationSentPanel(string receiverUsername, string invitationId)
     {
+        invitationSentParent.gameObject.SetActive(true);
         GameObject invitationSentInstance = Instantiate(invitationSentPrefab, invitationSentParent);
 
         // Center the invitation sent instance in the parent
@@ -301,6 +305,7 @@ public class InvitationManager : MonoBehaviour
     // Function to accept an invitation
     public void AcceptInvitation(string invitationId)
     {
+        GameListener.SetActive(true);
         DatabaseReference invitationRef = databaseRef.Child("invitations").Child(invitationId);
 
         Dictionary<string, object> update = new Dictionary<string, object>
@@ -314,6 +319,7 @@ public class InvitationManager : MonoBehaviour
                 Debug.Log("Invitation accepted.");
                 // Start the game
                 StartGame(invitationId);
+
             }
             else
             {
@@ -325,6 +331,7 @@ public class InvitationManager : MonoBehaviour
     // Function to decline an invitation
     public void DeclineInvitation(string invitationId)
     {
+        GameListener.SetActive(false);
         DatabaseReference invitationRef = databaseRef.Child("invitations").Child(invitationId);
 
         Dictionary<string, object> update = new Dictionary<string, object>
