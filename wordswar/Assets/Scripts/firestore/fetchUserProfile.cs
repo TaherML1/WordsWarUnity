@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using System;
 using UnityEngine.UI;
+using System.Collections;
 
 public class FetchUserProfile : MonoBehaviour
 {
@@ -16,7 +17,11 @@ public class FetchUserProfile : MonoBehaviour
     [SerializeField] TextMeshProUGUI matchesLostText;
     [SerializeField] TextMeshProUGUI matchesWonText;
     [SerializeField] TextMeshProUGUI ScoresText;
+    [SerializeField] TextMeshProUGUI PlayerId2Text;
+    [SerializeField] TextMeshProUGUI textCopiedText;
     [SerializeField] FeedbackManager feedbackManager;
+
+    
     public GameObject setUserPanel;
     [SerializeField] Image progressBarFill;
 
@@ -80,7 +85,9 @@ public class FetchUserProfile : MonoBehaviour
         if (userProfile.TryGetValue("playerId", out object playerIdObj))
         {
             playerIdText.text = "# " + playerIdObj?.ToString() ?? "N/A";
+            PlayerId2Text.text = playerIdObj.ToString();
             playerId  = Convert.ToString(playerIdObj);
+
         }
 
         if (userProfile.TryGetValue("coins", out object coinsObj))
@@ -140,7 +147,7 @@ public class FetchUserProfile : MonoBehaviour
         xpText.text = $" {playerXP} / {requiredXP}";
     }
 
-    public void CopyRoomIdToClipboard()
+    public void CopyPlayerIdToClipboard()
     {
         Debug.Log("Copy button clicked.");
         if (!string.IsNullOrEmpty(playerId))
@@ -148,6 +155,8 @@ public class FetchUserProfile : MonoBehaviour
             GUIUtility.systemCopyBuffer = playerId;
             Debug.Log("Room ID copied to clipboard: " + playerId);
             feedbackManager.ShowFeedback("لقد تم نسخ رقم الاعب");
+            textCopiedText.text = "لقد تم نسخ رقم الاعب";
+            StartCoroutine(HideCopiedTextAfterDelay(2f));
 
         }
         else
@@ -156,6 +165,10 @@ public class FetchUserProfile : MonoBehaviour
             feedbackManager.ShowFeedback("لا يوجد رقم لاعب للنسخ");
         }
     }
-
+    private IEnumerator HideCopiedTextAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        textCopiedText.text = "";  // Clear the text after the delay
+    }
 
 }

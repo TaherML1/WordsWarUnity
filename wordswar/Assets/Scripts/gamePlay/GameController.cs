@@ -778,6 +778,7 @@ public class GameController : MonoBehaviour
 
         if (args.Snapshot != null && args.Snapshot.Exists)
         {
+            roomId = "";
             string winnerId = args.Snapshot.Value.ToString();
 
             if (winnerId == localPlayerId)

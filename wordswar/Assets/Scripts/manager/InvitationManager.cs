@@ -274,7 +274,7 @@ public class InvitationManager : MonoBehaviour
         // Display a notification or update the UI to inform the sender that the invitation was declined
         Debug.Log("Invitation declined. Notification should be displayed here.");
 
-
+        invitationSentParent.gameObject.SetActive(false);
         // Example: Show a UI panel or a popup
         GameObject notificationInstance = Instantiate(invitationSentPrefab, invitationSentParent);
 

@@ -49,6 +49,8 @@ public class SearchPlayer : MonoBehaviour
         InitializeFirebaseComponents();
     }
 
+    
+
     public void OnSearchButtonClicked()
     {
         string playerId = searchInput.text;

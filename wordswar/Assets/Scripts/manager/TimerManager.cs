@@ -166,7 +166,9 @@ public class TimerManager : MonoBehaviour
             if (adjustedRemainingTime.TotalSeconds <= 0)
             {
                 Debug.Log("Timer ended.");
-                IncreaseTicketsLocally();
+
+                CallCloudFunctionToUpdatefreshedTickets();
+
                 refreshedTickets++;
 
                 if (refreshedTickets < 3)
@@ -254,6 +256,8 @@ public class TimerManager : MonoBehaviour
         }
     }
 
+
+
     void CallCloudFunctionToUpdateTickets()
     {
         functions.GetHttpsCallable("increaseTickets").CallAsync().ContinueWithOnMainThread(task =>
@@ -268,4 +272,20 @@ public class TimerManager : MonoBehaviour
             }
         });
     }
+
+    void CallCloudFunctionToUpdatefreshedTickets()
+    {
+        functions.GetHttpsCallable("increaserefreshedTickets").CallAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted)
+            {
+                Debug.Log("Cloud Function called successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to call Cloud Function: " + task.Exception);
+            }
+        });
+    }
+
 }

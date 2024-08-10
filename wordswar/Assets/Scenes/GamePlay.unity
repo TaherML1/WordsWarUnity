@@ -8384,6 +8384,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   feedbackText: {fileID: 1136068488}
   animationDuration: 0.5
+  moveDistance: 50
 --- !u!114 &1465354458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8398,6 +8399,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   feedbackText: {fileID: 1297514956}
   animationDuration: 0.5
+  moveDistance: 50
 --- !u!114 &1465354459
 MonoBehaviour:
   m_ObjectHideFlags: 0
