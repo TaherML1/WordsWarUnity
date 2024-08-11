@@ -11,6 +11,7 @@ using System;
 using Firebase.Functions;
 using System.Threading.Tasks;
 using Firebase.Firestore;
+using UnityEngine.Networking;
 
 /// <summary>
 /// Manages the game logic, including player scores, turns, and word submission.
@@ -39,10 +40,12 @@ public class GameController : MonoBehaviour
     [Header("EnemyPlayer")]
     [SerializeField] TextMeshProUGUI enemyScoreText;
     [SerializeField] TextMeshProUGUI enemyNameText;
+    [SerializeField] Image enemyProfileImage;
 
     [Header("LocalPlayer")]
     [SerializeField] TextMeshProUGUI localPlayScoreText;
     [SerializeField] TextMeshProUGUI localPlayerNameText;
+    [SerializeField] Image localPlayerProfileImage;
 
     [Header("UI Elements")]
     [SerializeField] TMP_InputField playerInput;
@@ -104,7 +107,7 @@ public class GameController : MonoBehaviour
 
         InitializeGame();
 
-        await FetchPlayerNameAsync(localPlayerId, localPlayerNameText);
+        await FetchPlayerNameAsync(localPlayerId, localPlayerNameText, localPlayerProfileImage);
 
         submitButton.onClick.AddListener(submitAnswer);
     }
@@ -324,7 +327,7 @@ public class GameController : MonoBehaviour
             enemyPlayerId = playerIds.Find(id => id != localPlayerId);
 
             // Fetch enemy player name asynchronously
-            await FetchPlayerNameAsync(enemyPlayerId, enemyNameText);
+            await FetchPlayerNameAsync(enemyPlayerId, enemyNameText,enemyProfileImage);
         }
         catch (Exception ex)
         {
@@ -333,7 +336,7 @@ public class GameController : MonoBehaviour
     }
 
 
-    public async Task FetchPlayerNameAsync(string playerId, TextMeshProUGUI playerNameText)
+    public async Task FetchPlayerNameAsync(string playerId, TextMeshProUGUI playerNameText, Image ProfileImage)
     {
         try
         {
@@ -344,10 +347,29 @@ public class GameController : MonoBehaviour
             {
                 Dictionary<string, object> userData = snapshot.ToDictionary();
                 string username = userData["username"].ToString();
+                if (userData.TryGetValue("profileImageURL", out object profileImageObject))
+                {
+                    string profileImageURL = profileImageObject as string;
+                    if (profileImageURL != null)
+                    {
+                        Debug.Log("Profile Image URL found: " + profileImageURL);
+                        StartCoroutine(LoadProfileImage(profileImageURL, ProfileImage));
+                    }
+                    else
+                    {
+                        Debug.Log("Profile Image URL is not a string.");
+                    }
+                }
+                else
+                {
+                    Debug.Log("Profile Image URL not found.");
+                }
+
 
                 // Display the username in the UI
                 playerNameText.text = username;
                 playerNameText.gameObject.SetActive(true); // Activate the playerNameText GameObject
+
 
                 Debug.Log("Player name fetched and displayed: " + username);
             }
@@ -359,6 +381,27 @@ public class GameController : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogError("Failed to fetch player name: " + ex.Message);
+        }
+    }
+    private IEnumerator LoadProfileImage(string imageUrl, Image profileImage)
+    {
+        Debug.Log($"Loading profile image from URL: {imageUrl}");
+
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                Sprite profileSprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                profileImage.sprite = profileSprite;
+                Debug.Log("Profile image loaded successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to load profile image: " + uwr.error);
+            }
         }
     }
 
@@ -432,7 +475,7 @@ public class GameController : MonoBehaviour
 
             Debug.Log("It's your turn!");
             // Enable the input field
-            TurnLabel.text = "Its your turn ";
+            TurnLabel.text = "انه دورك";
             playerInput.interactable = true;
             submitButton.interactable = true;
             jokerHintButton.interactable = true;
@@ -446,7 +489,7 @@ public class GameController : MonoBehaviour
         {
             Debug.Log("It's the opponent's turn.");
 
-            TurnLabel.text = "Its enemy turn";
+            TurnLabel.text = "دور الخصم";
             // Disable the input field
             playerInput.interactable = false;
             submitButton.interactable = false;

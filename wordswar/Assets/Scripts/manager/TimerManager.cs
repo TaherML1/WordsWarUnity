@@ -101,11 +101,7 @@ public class TimerManager : MonoBehaviour
             Debug.LogError("refreshedTickets key is missing in hintsData");
         }
 
-        // Update UI to display tickets and refreshedTickets
-        if (ticketsText != null)
-        {
-            ticketsText.text = $"Tickets: {currentTickets} / Refreshed: {refreshedTickets}";
-        }
+        
     }
 
     void RetrieveTimer(string userId)
@@ -204,51 +200,23 @@ public class TimerManager : MonoBehaviour
         FirebaseUser user = auth.CurrentUser;
         if (user != null)
         {
-            DocumentReference docRef = db.Collection("users").Document(user.UserId).Collection("hints").Document("hintsData");
-            docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
+            if (refreshedTickets < 3)
             {
-                if (task.IsCompleted)
-                {
-                    DocumentSnapshot snapshot = task.Result;
-                    if (snapshot.Exists)
-                    {
-                        int currentTickets = snapshot.GetValue<int>("tickets");
-                        int refreshedTickets = snapshot.GetValue<int>("refreshedTickets");
+                refreshedTickets += 1;
+                Debug.Log("Refreshed tickets increased locally.");
+                CallCloudFunctionToUpdateTickets();
+            }
+            else
+            {
+                Debug.LogWarning("Refreshed ticket limit reached. Cannot increase refreshed tickets.");
+            }
 
-                        if (refreshedTickets < 3)
-                        {
-                            refreshedTickets += 1;
-                            Debug.Log("Refreshed tickets increased locally.");
-                            CallCloudFunctionToUpdateTickets();
-                        }
-                        else
-                        {
-                            Debug.LogWarning("Refreshed ticket limit reached. Cannot increase refreshed tickets.");
-                        }
-
-                        // Update the tickets locally
-                        if (currentTickets < 3)
-                        {
-                            currentTickets += 1;
-                            Debug.Log("Tickets increased locally.");
-                        }
-
-                        // Update UI
-                        if (ticketsText != null)
-                        {
-                            ticketsText.text = $"Tickets: {currentTickets} / Refreshed: {refreshedTickets}";
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError("Document does not exist.");
-                    }
-                }
-                else
-                {
-                    Debug.LogError("Failed to retrieve document: " + task.Exception);
-                }
-            });
+            // Update the tickets locally
+            if (currentTickets < 3)
+            {
+                currentTickets += 1;
+                Debug.Log("Tickets increased locally.");
+            }
         }
         else
         {
