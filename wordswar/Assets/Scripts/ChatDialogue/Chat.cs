@@ -26,9 +26,7 @@ public class Chat : MonoBehaviour
 
     void Start()
     {
-        // Initialize colors using hex values
-        ColorUtility.TryParseHtmlString("#B2FBF5", out localPlayerColor);
-        ColorUtility.TryParseHtmlString("#F0C97B", out nonLocalPlayerColor);
+       
     }
 
     public void SendMessage()
@@ -63,8 +61,7 @@ public class Chat : MonoBehaviour
 
         // Set initial state for animation
         messageObject.transform.localScale = Vector3.zero;
-        background.color = new Color(background.color.r, background.color.g, background.color.b, 0);
-        messageText.color = new Color(messageText.color.r, messageText.color.g, messageText.color.b, 0);
+       
 
         if (isLocalPlayer)
         {
@@ -74,7 +71,7 @@ public class Chat : MonoBehaviour
             rectTransform.pivot = new Vector2(2.13f, 0.5f); // Changed pivot for local player
             messageText.alignment = TextAlignmentOptions.Right;
             messageText.margin = new Vector4(0, 0, 10, 0); // Add margin to the right
-            background.color = localPlayerColor;
+            
         }
         else
         {
@@ -84,7 +81,7 @@ public class Chat : MonoBehaviour
             rectTransform.pivot = new Vector2(-1.4f, 0.5f); // Changed pivot for non-local player
             messageText.alignment = TextAlignmentOptions.Left;
             messageText.margin = new Vector4(10, 0, 0, 0); // Add margin to the left
-            background.color = nonLocalPlayerColor;
+         
         }
 
         // Ensure the Content size is updated

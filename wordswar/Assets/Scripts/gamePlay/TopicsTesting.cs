@@ -63,7 +63,7 @@ public class TopicsTesting : MonoBehaviour
         currentInput = NormalizeWord(currentInput);
         Debug.Log("your current input is : " + currentInput);
         wordExists = await CallCloudFunction(selectedTopic, currentInput);
-        ChatInstance.GetMessage(currentInput, islocalplayer);
+    //    ChatInstance.GetMessage(currentInput, islocalplayer);
         if (wordExists)
         {
             submitButton.interactable = true;

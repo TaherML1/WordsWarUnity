@@ -1,96 +1,99 @@
 /* eslint-disable max-len */
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// index.js (assuming this is your Cloud Function file name)
-
-const functions = require("firebase-functions");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+
+// Initialize Firebase Admin SDK
 admin.initializeApp();
 const database = admin.database();
 
-exports.matchmaker = functions.database.ref("matchmaking/{playerId}")
-    .onCreate((snap, context) => {
-      const gameId = generateGameId();
+// Define the Gen 2 Cloud Function for getting a joker hint
+exports.getJokerHint2 = onCall(
+    {
+      // Optional: Add runtime options like memory, timeout, etc.
+      // Example: memory: '256MiB', timeoutSeconds: 120
+    },
+    async (request) => {
+      try {
+        console.log("Fetching joker hint...");
 
-      database.ref("matchmaking").once("value").then((players) => {
-        let secondPlayer = null;
-        players.forEach((player) => {
-          if (player.val() === "placeholder" && player.key !== context.params.playerId) {
-            secondPlayer = player;
-          }
+        // Ensure the user is authenticated
+        if (!request.auth) {
+          throw new HttpsError("unauthenticated", "You must be authenticated to use a joker hint.");
+        }
+
+        const gameId = request.data.gameId; // ID of the current game
+        const selectedTopic = request.data.selectedTopic; // Selected topic for the game
+
+        console.log("Game ID:", gameId);
+        console.log("Selected Topic:", selectedTopic);
+
+        // Fetch all used words for the current game from the database
+        const usedWordsSnapshot = await database.ref(`/games/${gameId}/gameInfo/usedwords`).once("value");
+        const usedWordsObject = usedWordsSnapshot.val() || {}; // If no used words, initialize as an empty object
+
+        // Flatten used words from all players into a single array and convert to lowercase
+        const usedWords = Object.values(usedWordsObject).flatMap((playerWords) =>
+          Object.values(playerWords).flatMap((categoryWords) =>
+            Object.values(categoryWords).map((word) => word.toLowerCase()),
+          ),
+        );
+
+        console.log("Used Words:", usedWords);
+
+        // Fetch all words under the selected topic from the database
+        const topicSnapshot = await database.ref(`/topics/${selectedTopic}`).once("value");
+        const topicWords = topicSnapshot.val();
+
+        if (!topicWords) {
+          console.log(`Topic '${selectedTopic}' does not exist.`);
+          throw new HttpsError("not-found", `Topic '${selectedTopic}' does not exist.`);
+        }
+
+        console.log("Topic Words:", topicWords);
+
+        // Extract only primary words (keys of the topicWords object)
+        const primaryWords = Object.keys(topicWords).map((word) => word.toLowerCase());
+
+        console.log("Primary Words:", primaryWords);
+
+        // Filter out primary words that have been used
+        const availablePrimaryWords = primaryWords.filter((word) => !usedWords.includes(word));
+
+        console.log("Available Primary Words:", availablePrimaryWords);
+
+        // If no available primary words found after filtering, return an error
+        if (availablePrimaryWords.length === 0) {
+          console.log("No available primary words for joker hint.");
+          throw new HttpsError("failed-precondition", "No available primary words for joker hint.");
+        }
+
+        // Check if the user has enough hints available
+        const userId = request.auth.uid;
+        const userHintDocRef = admin.firestore().collection("users").doc(userId).collection("hints").doc("hintsData");
+        const userHintData = (await userHintDocRef.get()).data();
+        const userHintCount = userHintData ? userHintData["joker"] || 0 : 0;
+
+        if (userHintCount <= 0) {
+          console.log("User doesn't have enough hints.");
+          throw new HttpsError("failed-precondition", "You don't have enough hints.");
+        }
+
+        // Randomly select a primary word from the available primary words
+        const randomPrimaryWord = availablePrimaryWords[Math.floor(Math.random() * availablePrimaryWords.length)];
+
+        console.log("Selected Joker Hint Primary Word:", randomPrimaryWord);
+
+        // Decrease the hint count for the user
+        await userHintDocRef.update({
+          ["joker"]: admin.firestore.FieldValue.increment(-1),
         });
 
-        if (secondPlayer === null) return null;
+        console.log("Hint count decreased.");
 
-        database.ref("matchmaking").transaction((matchmaking) => {
-          // If any of the players gets into another game during the transaction, abort the operation
-          if (matchmaking === null || matchmaking[context.params.playerId] !== "placeholder" || matchmaking[secondPlayer.key] !== "placeholder") return matchmaking;
-
-          matchmaking[context.params.playerId] = gameId;
-          matchmaking[secondPlayer.key] = gameId;
-          return matchmaking;
-        }).then((result) => {
-          if (result.snapshot.child(context.params.playerId).val() !== gameId) return;
-
-          const game = {
-            gameInfo: {
-              gameId: gameId,
-              playersIds: [context.params.playerId, secondPlayer.key],
-              scores: {
-                [context.params.playerId]: 0, // Initialize player scores to 0
-                [secondPlayer.key]: 0,
-              },
-              usedwords: {
-                [context.params.playerId]: {
-                  correct: [""],
-                  incorrect: [""],
-                },
-                [secondPlayer.key]: {
-                  correct: [""],
-                  incorrect: [""],
-                },
-              },
-              timer: 15, // Initialize timer to 15 seconds
-            },
-            turn: context.params.playerId,
-          };
-
-          database.ref("games/" + gameId).set(game).then((snapshot) => {
-            console.log("Game created successfully!");
-            return null;
-          }).catch((error) => {
-            console.log(error);
-          });
-
-          return null;
-        }).catch((error) => {
-          console.log(error);
-        });
-
-        return null;
-      }).catch((error) => {
-        console.log(error);
-      });
-    });
-
-/**
-* Generates a random game ID.
-* @return {string} The randomly generated game ID.
-*/
-function generateGameId() {
-  const possibleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let gameId = "";
-  for (let j = 0; j < 20; j++) gameId += possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
-  return gameId;
-}
+        return randomPrimaryWord; // Return just the joker hint primary word
+      } catch (error) {
+        console.error("Error fetching joker hint:", error);
+        throw new HttpsError("internal", "An error occurred while fetching joker hint.", error);
+      }
+    },
+);
