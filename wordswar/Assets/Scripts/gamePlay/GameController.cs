@@ -130,9 +130,6 @@ public class GameController : MonoBehaviour
         FetchGameInfo(roomId);
     }
 
-
-
-
     void SetTopic(string topic)
     {
         topicText.text = ArabicFixer.Fix(topic) + ArabicFixer.Fix(" الموضوع : ");
@@ -154,9 +151,7 @@ public class GameController : MonoBehaviour
             return;
         }
 
-
-
-        wordIsUsed = await CheckIfWordIsUsed(roomId,selectedTopicManager.selectedTopic, currentInput);
+        wordIsUsed = await CheckIfWordIsUsed(roomId, selectedTopicManager.selectedTopic, currentInput);
         if (wordIsUsed)
         {
             // Handle the case where the word has already been used
@@ -170,7 +165,6 @@ public class GameController : MonoBehaviour
         wordExists = await CallCloudFunction(selectedTopicManager.selectedTopic, currentInput);
         if (wordExists)
         {
-
             Debug.Log("roomm id from submit word is : " + roomId);
             Debug.Log("Word exists in the database from word exist .");
             //UpdateScore();
@@ -184,9 +178,7 @@ public class GameController : MonoBehaviour
             clearInputfiled();
             ListenForUsedWordsUpdates(roomId);
             // Update the used words in the database
-            UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
-
-
+            UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId, true);
         }
         else
         {
@@ -194,24 +186,18 @@ public class GameController : MonoBehaviour
             Debug.LogWarning("Word does not exist in the database from word exist.");
             feedbackManager.ShowFeedback("خطا,كلمة لا تتعلق بالموضوع");
             invalidWordText.gameObject.SetActive(true);
-            UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId);
+            UpdateUsedWordsInDatabase(roomId, currentInput, localPlayerId, false);
             // Set the timer to zero when a wrong answer is submitted
             incorrectSound.Play();
             ListenForUsedWordsUpdates(roomId);
             clearInputfiled();
             //  Invoke("determinewinner", 1f);
             submitButton.interactable = true;
-
         }
-
     }
-
-
 
     string NormalizeWord(string word)
     {
-        
-
         // Normalize the word by removing diacritics (like hamza) and other variations
         // Replace "أ" (alef with hamza above) with "ا" (alef without hamza)
         word = word.Replace("أ", "ا");
@@ -224,9 +210,6 @@ public class GameController : MonoBehaviour
 
         return word;
     }
-
-
-
 
     async void FetchAndDisplaySelectedTopic(string roomId)
     {
@@ -263,6 +246,7 @@ public class GameController : MonoBehaviour
             Debug.LogError("Error fetching and displaying selected topic: " + e.Message);
         }
     }
+
     public async Task<bool> CallCloudFunction(string topicName, string word)
     {
         topicName = topicName.Trim();
@@ -300,6 +284,7 @@ public class GameController : MonoBehaviour
             return false; // Return false in case of an error
         }
     }
+
     async void FetchGameInfo(string gameId)
     {
         try
@@ -327,14 +312,13 @@ public class GameController : MonoBehaviour
             enemyPlayerId = playerIds.Find(id => id != localPlayerId);
 
             // Fetch enemy player name asynchronously
-            await FetchPlayerNameAsync(enemyPlayerId, enemyNameText,enemyProfileImage);
+            await FetchPlayerNameAsync(enemyPlayerId, enemyNameText, enemyProfileImage);
         }
         catch (Exception ex)
         {
             Debug.LogError("Failed to fetch game info: " + ex.Message);
         }
     }
-
 
     public async Task FetchPlayerNameAsync(string playerId, TextMeshProUGUI playerNameText, Image ProfileImage)
     {
@@ -365,11 +349,9 @@ public class GameController : MonoBehaviour
                     Debug.Log("Profile Image URL not found.");
                 }
 
-
                 // Display the username in the UI
                 playerNameText.text = username;
                 playerNameText.gameObject.SetActive(true); // Activate the playerNameText GameObject
-
 
                 Debug.Log("Player name fetched and displayed: " + username);
             }
@@ -383,6 +365,7 @@ public class GameController : MonoBehaviour
             Debug.LogError("Failed to fetch player name: " + ex.Message);
         }
     }
+
     private IEnumerator LoadProfileImage(string imageUrl, Image profileImage)
     {
         Debug.Log($"Loading profile image from URL: {imageUrl}");
@@ -421,6 +404,7 @@ public class GameController : MonoBehaviour
 
         scoresRef.ValueChanged += OnScoresChanged;
     }
+
     void OnScoresChanged(object sender, ValueChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -456,7 +440,6 @@ public class GameController : MonoBehaviour
         }
     }
 
-
     void OnTurnValueChanged(object sender, ValueChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -471,8 +454,6 @@ public class GameController : MonoBehaviour
         // Check if it's the local player's turn
         if (currentTurn == localPlayerId)
         {
-
-
             Debug.Log("It's your turn!");
             // Enable the input field
             TurnLabel.text = "انه دورك";
@@ -481,9 +462,6 @@ public class GameController : MonoBehaviour
             jokerHintButton.interactable = true;
             panelToHideKeyboard.SetActive(false);
             timer = originalTimer;
-
-
-
         }
         else
         {
@@ -498,7 +476,6 @@ public class GameController : MonoBehaviour
             timer = originalTimer;
         }
     }
-
 
     public void IncrementPlayerScore(string gameId, string playerId)
     {
@@ -593,24 +570,29 @@ public class GameController : MonoBehaviour
         });
     }
 
-
-
-
-    void UpdateUsedWordsInDatabase(string roomId, string word, string localPlayerId)
+    void UpdateUsedWordsInDatabase(string roomId, string word, string localPlayerId, bool isCorrect)
     {
         try
         {
             // Construct the reference to the used words node for the specific game
             DatabaseReference usedWordsRef = databaseReference.Child("games").Child(roomId).Child("gameInfo").Child("usedwords").Child(localPlayerId);
 
-            // Push the new word to the list of used words
-            usedWordsRef.Push().SetValueAsync(word);
+            // Push the new word to the correct list (correct or incorrect)
+            if (isCorrect)
+            {
+                usedWordsRef.Child("correct").Push().SetValueAsync(word);
+            }
+            else
+            {
+                usedWordsRef.Child("incorrect").Push().SetValueAsync(word);
+            }
         }
         catch (Exception ex)
         {
             Debug.LogError("Failed to update used words in the database: " + ex.Message);
         }
     }
+
     public async Task<bool> CheckIfWordIsUsed(string roomId, string topicName, string word)
     {
         var checkWordUsage = functions.GetHttpsCallable("checkWordUsage");
@@ -647,7 +629,6 @@ public class GameController : MonoBehaviour
         }
     }
 
-
     void ListenForUsedWordsUpdates(string roomId)
     {
         // Construct the reference to the used words node for the specific game
@@ -660,6 +641,7 @@ public class GameController : MonoBehaviour
             FetchAndDisplayUsedWords(roomId, localPlayerId);
         };
     }
+
     async void FetchAndDisplayUsedWords(string roomId, string localPlayerId)
     {
         try
@@ -678,31 +660,36 @@ public class GameController : MonoBehaviour
                     string playerId = playerSnapshot.Key;
 
                     // Iterate through each word under the player's ID node
-                    foreach (DataSnapshot wordSnapshot in playerSnapshot.Children)
+                    foreach (DataSnapshot categorySnapshot in playerSnapshot.Children)
                     {
-                        string usedWord = wordSnapshot.Value.ToString();
+                        string category = categorySnapshot.Key; // 'correct' or 'incorrect'
 
-                        // Check if the word is not null or empty
-                        if (!string.IsNullOrEmpty(usedWord))
+                        foreach (DataSnapshot wordSnapshot in categorySnapshot.Children)
                         {
-                            // Determine which player used the word and add it to the corresponding list
-                            if (playerId == localPlayerId)
-                            {
-                                Debug.Log("The local player submitted: " + usedWord);
-                            }
-                            else
-                            {
-                                Debug.Log("The enemy player submitted: " + usedWord);
-                            }
+                            string usedWord = wordSnapshot.Value.ToString();
 
-                            // Check if the message has been displayed already
-                            if (!displayedMessages.Contains(usedWord))
+                            // Check if the word is not null or empty
+                            if (!string.IsNullOrEmpty(usedWord))
                             {
-                                // If not, display the message and add it to the set of displayed messages
-                                ChatInstance.GetMessage(usedWord, playerId == localPlayerId);
-                               // messageAnimator.ShowMessage(usedWord, playerId == localPlayerId);
-                                
-                                displayedMessages.Add(usedWord);
+                                // Determine which player used the word and add it to the corresponding list
+                                if (playerId == localPlayerId)
+                                {
+                                    Debug.Log("The local player submitted: " + usedWord + " (" + category + ")");
+                                }
+                                else
+                                {
+                                    Debug.Log("The enemy player submitted: " + usedWord + " (" + category + ")");
+                                }
+
+                                // Check if the message has been displayed already
+                                if (!displayedMessages.Contains(usedWord))
+                                {
+                                    // If not, display the message and add it to the set of displayed messages
+                                    ChatInstance.GetMessage(usedWord, playerId == localPlayerId);
+                                    // messageAnimator.ShowMessage(usedWord, playerId == localPlayerId);
+
+                                    displayedMessages.Add(usedWord);
+                                }
                             }
                         }
                     }
@@ -721,14 +708,6 @@ public class GameController : MonoBehaviour
     }
 
 
-
-
-
-
-
-
-
-
     private void StartListeningForUsedWords(string roomId, string localPlayerId)
     {
         // Construct the reference to the used words node for the specific game
@@ -737,6 +716,7 @@ public class GameController : MonoBehaviour
         // Add a listener for child added event
         usedWordsRef.ChildAdded += HandleUsedWordAdded;
     }
+
     private void HandleUsedWordAdded(object sender, ChildChangedEventArgs args)
     {
         List<string> enemyPlayerUsedWords = new List<string>();
@@ -759,8 +739,6 @@ public class GameController : MonoBehaviour
                 }
 
                 string enemyPlayerUsedWordsString = string.Join("\n", enemyPlayerUsedWords);
-
-
             }
         }
     }
@@ -786,6 +764,7 @@ public class GameController : MonoBehaviour
                 }
             });
     }
+
     private void determinewinner(string roomId, string localplayerId)
     {
         databaseReference.Child("games").Child(roomId).Child("winner").SetValueAsync(localplayerId)
@@ -801,6 +780,7 @@ public class GameController : MonoBehaviour
                 }
             });
     }
+
     private void WinnerValueChangedListener(string roomId)
     {
         // Construct the reference to the winner node for the specific game
@@ -809,7 +789,6 @@ public class GameController : MonoBehaviour
         // Add the value changed listener
         winnerRef.ValueChanged += HandleWinnerChange;
     }
-
 
     private void HandleWinnerChange(object sender, ValueChangedEventArgs args)
     {
@@ -881,7 +860,6 @@ public class GameController : MonoBehaviour
             SetGameEnd(roomId);
         }
     }
-
 }
 
 public static class selectedTopicManager
