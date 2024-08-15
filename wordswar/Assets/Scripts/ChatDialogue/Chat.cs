@@ -34,7 +34,7 @@ public class Chat : MonoBehaviour
         string messageText = playerInput.text;
         if (!string.IsNullOrEmpty(messageText))
         {
-            GetMessage(messageText, true); // true indicates the local player
+            //GetMessage(messageText, true); // true indicates the local player
             playerInput.text = ""; // Clear the input field after sending the message
           
         }
@@ -45,13 +45,13 @@ public class Chat : MonoBehaviour
         string messageText = playerInput.text;
         if (!string.IsNullOrEmpty(messageText))
         {
-            GetMessage(messageText, false); // false indicates the enemy player
+         //   GetMessage(messageText, false); // false indicates the enemy player
             playerInput.text = ""; // Clear the input field after sending the message
             
         }
     }
 
-    public void GetMessage(string receivedMessage, bool isLocalPlayer)
+    public void GetMessage(string receivedMessage, bool isLocalPlayer, bool isCorrect)
     {
         GameObject messageObject = Instantiate(MessagePrefab, Content.transform);
         TextMeshProUGUI messageText = messageObject.GetComponentInChildren<TextMeshProUGUI>();
@@ -59,18 +59,35 @@ public class Chat : MonoBehaviour
         RectTransform rectTransform = messageObject.GetComponent<RectTransform>();
         Image background = messageObject.GetComponentInChildren<Image>();
 
-        // Set initial state for animation
-        messageObject.transform.localScale = Vector3.zero;
-       
+        // Get references to the correct and incorrect images
+        RawImage correctImage = messageObject.transform.Find("CorrectImage").GetComponent<RawImage>();
+        RawImage incorrectImage = messageObject.transform.Find("IncorrectImage").GetComponent<RawImage>();
+
+        // Adjust position of the correct and incorrect images
+        RectTransform correctRectTransform = correctImage.GetComponent<RectTransform>();
+        RectTransform incorrectRectTransform = incorrectImage.GetComponent<RectTransform>();
+
+        // Set the position and activate the correct or incorrect image based on the isCorrect parameter
+        if (isCorrect)
+        {
+            correctImage.gameObject.SetActive(true);
+            incorrectImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            correctImage.gameObject.SetActive(false);
+            incorrectImage.gameObject.SetActive(true);
+        }
 
         if (isLocalPlayer)
         {
             // Align to the right for local player
             rectTransform.anchorMin = new Vector2(1, 0.5f);
             rectTransform.anchorMax = new Vector2(1, 0.5f);
-            rectTransform.pivot = new Vector2(2.13f, 0.5f); // Changed pivot for local player
+            rectTransform.pivot = new Vector2(2.9f, 0.5f);
             messageText.alignment = TextAlignmentOptions.Right;
             messageText.margin = new Vector4(0, 0, 10, 0); // Add margin to the right
+
             
         }
         else
@@ -78,10 +95,13 @@ public class Chat : MonoBehaviour
             // Align to the left for non-local player
             rectTransform.anchorMin = new Vector2(0, 0.5f);
             rectTransform.anchorMax = new Vector2(0, 0.5f);
-            rectTransform.pivot = new Vector2(-1.4f, 0.5f); // Changed pivot for non-local player
+            rectTransform.pivot = new Vector2(-2.25f, 0.5f);
             messageText.alignment = TextAlignmentOptions.Left;
             messageText.margin = new Vector4(10, 0, 0, 0); // Add margin to the left
-         
+
+            // Position the correct/incorrect image for the non-local player at the specific X position
+            correctRectTransform.anchoredPosition = new Vector2(250, correctRectTransform.anchoredPosition.y);
+            incorrectRectTransform.anchoredPosition = new Vector2(250, incorrectRectTransform.anchoredPosition.y);
         }
 
         // Ensure the Content size is updated
@@ -105,5 +125,7 @@ public class Chat : MonoBehaviour
                 ScrollRect.verticalNormalizedPosition = val;
             });
     }
+
+
 
 }

@@ -663,6 +663,7 @@ public class GameController : MonoBehaviour
                     foreach (DataSnapshot categorySnapshot in playerSnapshot.Children)
                     {
                         string category = categorySnapshot.Key; // 'correct' or 'incorrect'
+                        bool isCorrect = category == "correct"; // Flag to indicate if the word is correct
 
                         foreach (DataSnapshot wordSnapshot in categorySnapshot.Children)
                         {
@@ -672,22 +673,14 @@ public class GameController : MonoBehaviour
                             if (!string.IsNullOrEmpty(usedWord))
                             {
                                 // Determine which player used the word and add it to the corresponding list
-                                if (playerId == localPlayerId)
-                                {
-                                    Debug.Log("The local player submitted: " + usedWord + " (" + category + ")");
-                                }
-                                else
-                                {
-                                    Debug.Log("The enemy player submitted: " + usedWord + " (" + category + ")");
-                                }
+                                bool isLocalPlayer = playerId == localPlayerId;
+                                Debug.Log((isLocalPlayer ? "The local player" : "The enemy player") + " submitted: " + usedWord + " (" + category + ")");
 
                                 // Check if the message has been displayed already
                                 if (!displayedMessages.Contains(usedWord))
                                 {
                                     // If not, display the message and add it to the set of displayed messages
-                                    ChatInstance.GetMessage(usedWord, playerId == localPlayerId);
-                                    // messageAnimator.ShowMessage(usedWord, playerId == localPlayerId);
-
+                                    ChatInstance.GetMessage(usedWord, isLocalPlayer, isCorrect);
                                     displayedMessages.Add(usedWord);
                                 }
                             }
@@ -697,6 +690,7 @@ public class GameController : MonoBehaviour
             }
             else
             {
+                Debug.Log("no words");
                 // If no used words are found, display a message or clear the UI elements
                 // Optionally handle this case
             }

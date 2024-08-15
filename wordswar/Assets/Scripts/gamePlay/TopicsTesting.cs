@@ -63,20 +63,24 @@ public class TopicsTesting : MonoBehaviour
         currentInput = NormalizeWord(currentInput);
         Debug.Log("your current input is : " + currentInput);
         wordExists = await CallCloudFunction(selectedTopic, currentInput);
-    //    ChatInstance.GetMessage(currentInput, islocalplayer);
+   
         if (wordExists)
         {
             submitButton.interactable = true;
             Debug.Log("your word is correct");
+            ChatInstance.GetMessage(currentInput, islocalplayer, true);
             feedbackManager.ShowFeedback("your word is correct");
         }else
         {
             submitButton.interactable = true;
             Debug.Log("your word is not correct");
+            ChatInstance.GetMessage(currentInput, islocalplayer, false);
             feedbackManager.ShowFeedback("your word in not correct");
         }
 
     }
+
+
 
     string NormalizeWord(string word)
     {
