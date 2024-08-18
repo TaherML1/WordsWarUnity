@@ -35,7 +35,6 @@ public class GameController : MonoBehaviour
     [SerializeField] TextMeshProUGUI topicText;
     [SerializeField] TextMeshProUGUI resultText;
     [SerializeField] TextMeshProUGUI invalidWordText;
-    [SerializeField] TextMeshProUGUI winnerText;
     [SerializeField] TextMeshProUGUI TurnLabel;
     [Header("EnemyPlayer")]
     [SerializeField] TextMeshProUGUI enemyScoreText;
@@ -58,6 +57,10 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject panelToHideKeyboard;
 
     [SerializeField] GameOverController gameOverController;
+
+    [Header("Game Over Panel")]
+    [SerializeField] TextMeshProUGUI winnerText;
+    [SerializeField]
 
     private string selectedTopic;
 
