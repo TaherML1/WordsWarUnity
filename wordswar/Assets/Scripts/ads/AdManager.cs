@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using GoogleMobileAds;
 using GoogleMobileAds.Api;
-using JetBrains.Annotations;
-using System;
 
 public class AdManager : MonoBehaviour
 {
@@ -12,8 +10,6 @@ public class AdManager : MonoBehaviour
     private InterstitialAd _interstitialAd;
     private RewardedAd _rewardedAdTicket;
     private RewardedAd _rewardedAdSpin;
-
-
 
     public string adUnitIdBanner;
     public string adUnitIdInterstitial;
@@ -28,58 +24,13 @@ public class AdManager : MonoBehaviour
         MobileAds.Initialize((InitializationStatus initStatus) =>
         {
             // This callback is called once the MobileAds SDK is initialized.
+            Debug.Log("Google Mobile Ads SDK initialized.");
+            // Request ads
+            RequestInterstitial();
+            RequestRewardedAds();
         });
 
-        // Commenting out the request for banner ads
-        // this.RequestBanner();
-
-        this.RequestInterstitial();
-        this.RequestRewardedAds();
-    }
-
-    // Banner ads
-    private void RequestBanner()
-    {
-#if UNITY_ANDROID
-        adUnitIdBanner = "ca-app-pub-3940256099942544/9214589741";
-#elif UNITY_IPHONE
-        adUnitIdBanner = "";
-#else
-        adUnitIdBanner = "unexpected_platform";
-#endif
-
-        Debug.Log("Creating banner view");
-
-        if (_bannerView != null)
-        {
-            DestroyAd();
-        }
-
-        _bannerView = new BannerView(adUnitIdBanner, AdSize.Banner, AdPosition.Top);
-        LoadBannerAd();
-    }
-
-    public void DestroyAd()
-    {
-        if (_bannerView != null)
-        {
-            Debug.Log("Destroying banner view.");
-            _bannerView.Destroy();
-            _bannerView = null;
-        }
-    }
-
-    public void LoadBannerAd()
-    {
-        if (_bannerView == null)
-        {
-            Debug.Log("Creating banner view");
-            _bannerView = new BannerView(adUnitIdBanner, AdSize.Banner, AdPosition.Top);
-        }
-
-        var adRequest = new AdRequest();
-        Debug.Log("Loading banner ad.");
-        _bannerView.LoadAd(adRequest);
+        
     }
 
     // Interstitial Ads

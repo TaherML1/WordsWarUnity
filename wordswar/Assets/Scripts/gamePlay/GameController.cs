@@ -60,7 +60,20 @@ public class GameController : MonoBehaviour
 
     [Header("Game Over Panel")]
     [SerializeField] TextMeshProUGUI winnerText;
-    [SerializeField]
+
+    [Header("Game Over Panel - Enemy Player")]
+    [SerializeField] TextMeshProUGUI gameOverEnemyScoreText;
+    [SerializeField] TextMeshProUGUI gameOverEnemyNameText;
+    [SerializeField] Image gameOverEnemyProfileImage;
+    [SerializeField] TextMeshProUGUI gameOverCoinsText;
+    [SerializeField] TextMeshProUGUI gameOverXPText;
+
+
+    [Header("Game Over Panel - Local Player")]
+    [SerializeField] TextMeshProUGUI gameOverLocalPlayScoreText;
+    [SerializeField] TextMeshProUGUI gameOverLocalPlayerNameText;
+    [SerializeField] Image gameOverLocalPlayerProfileImage;
+
 
     private string selectedTopic;
 
@@ -822,6 +835,21 @@ public class GameController : MonoBehaviour
         {
             // Activate the game over panel
             gameOverPanel.SetActive(true);
+
+            gameOverLocalPlayScoreText.text = localPlayScoreText.text;
+            gameOverLocalPlayerNameText.text = localPlayerNameText.text;
+            gameOverLocalPlayerProfileImage.sprite = localPlayerProfileImage.sprite;
+
+            gameOverEnemyScoreText.text = enemyScoreText.text;
+            gameOverEnemyNameText.text = enemyNameText.text;
+            gameOverEnemyProfileImage.sprite = enemyProfileImage.sprite;
+
+            // Display immediate rewards
+            int coinsEarned = isWinner ? 20 : 10;
+            int xpEarned = isWinner ? 25 : 15;
+            gameOverCoinsText.text = $"{coinsEarned} x";
+            gameOverXPText.text = $" {xpEarned} x";
+
         }
         else
         {
