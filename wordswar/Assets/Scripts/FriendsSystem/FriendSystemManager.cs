@@ -89,6 +89,38 @@ public class FriendSystemManager : MonoBehaviour
             });
     }
 
+    public void SendFriendRequestAU(string receiverId, Action<bool> onRequestSent)
+    {
+        onRequestSent?.Invoke(true);
+        string senderId = auth.CurrentUser.UserId;
+
+        Debug.Log("Attempting to send friend request...");
+
+        // Create the data payload to send to the Cloud Function
+        Dictionary<string, object> data = new Dictionary<string, object>
+    {
+        { "senderId", senderId },
+        { "receiverId", receiverId }
+    };
+
+        // Call the Cloud Function
+        functions.GetHttpsCallable("sendFriendRequestAU")
+            .CallAsync(data)
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("Error sending friend request: " + task.Exception.Flatten().InnerException.Message);
+                    onRequestSent?.Invoke(false);
+                }
+                else if (task.IsCompleted)
+                {
+                    Debug.Log("Friend request sent successfully.");
+
+                }
+            });
+    }
+
 
     public void AcceptFriendRequest(string senderId, string documentId, GameObject requestInstance)
     {

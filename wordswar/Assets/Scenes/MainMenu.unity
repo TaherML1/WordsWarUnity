@@ -4727,7 +4727,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -10, y: -825}
+  m_AnchoredPosition: {x: -72, y: -827}
   m_SizeDelta: {x: 750, y: 1700}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &360814106
@@ -7352,7 +7352,10 @@ PrefabInstance:
     - {fileID: 1865655777068739240, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
     - {fileID: 4844761048363838820, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
     - {fileID: 5816822691967115042, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1803264881083791115, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 576883152}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 63080b46ff7912b4d8c758fc92d9327f, type: 3}
 --- !u!1 &504972488
@@ -8522,8 +8525,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   adUnitIdBanner: 
   adUnitIdInterstitial: 
-  adUnitIdRewardedTicket: 
-  adUnitIdRewardedSpin: 
+  adUnitIdRewardedTicket: ca-app-pub-8174773242665808/5141384415
+  adUnitIdRewardedCoins: ca-app-pub-8174773242665808/5684145598
+  adUnitIdRewardedSpin: ca-app-pub-8174773242665808/6885231999
   timerManager: {fileID: 554094271}
   spinWheel: {fileID: 565715179}
 --- !u!114 &554094273
@@ -8741,11 +8745,11 @@ RectTransform:
   - {fileID: 2038234787}
   - {fileID: 112819260}
   - {fileID: 2073931477}
-  m_Father: {fileID: 1939404666}
+  m_Father: {fileID: 1173729325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -46.768986, y: -151.33734}
+  m_AnchoredPosition: {x: 46.230988, y: 724.47015}
   m_SizeDelta: {x: 1080.525, y: 137.45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &576883153
@@ -20645,10 +20649,10 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 936233906}
+      addedObject: {fileID: 1718871799}
     - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1718871799}
+      addedObject: {fileID: 936233906}
     - targetCorrespondingSourceObject: {fileID: 2230961183166010637, guid: 8b42e8dea396a36498a64d514ba721c0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 543735953}
@@ -30265,7 +30269,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 576883152}
   - {fileID: 1837153573}
   - {fileID: 1564047016}
   - {fileID: 326658658}

@@ -10,10 +10,12 @@ public class AdManager : MonoBehaviour
     private InterstitialAd _interstitialAd;
     private RewardedAd _rewardedAdTicket;
     private RewardedAd _rewardedAdSpin;
+    private RewardedAd _rewardedAdCoins;
 
     public string adUnitIdBanner;
     public string adUnitIdInterstitial;
     public string adUnitIdRewardedTicket;
+    public string adUnitIdRewardedCoins;
     public string adUnitIdRewardedSpin;
     public TimerManager timerManager;
     public SpinWheel spinWheel;
@@ -28,6 +30,7 @@ public class AdManager : MonoBehaviour
             // Request ads
             RequestInterstitial();
             RequestRewardedAds();
+            RequestRewardedAdCoins();
         });
 
         
@@ -87,7 +90,8 @@ public class AdManager : MonoBehaviour
     {
 #if UNITY_ANDROID
         adUnitIdRewardedTicket = "ca-app-pub-8174773242665808/5141384415"; // Ticket reward ad unit
-        adUnitIdRewardedSpin = "ca-app-pub-8174773242665808/6885231999"; // Spin reward ad unit (replace with actual ID)
+        adUnitIdRewardedSpin = "ca-app-pub-8174773242665808/6885231999"; // Spin reward ad unit 
+        adUnitIdRewardedCoins = "ca-app-pub-8174773242665808/5684145598"; // coind reward ad unit
 #elif UNITY_IPHONE
         adUnitIdRewardedTicket = "";
         adUnitIdRewardedSpin = "";
@@ -150,6 +154,31 @@ public class AdManager : MonoBehaviour
             });
     }
 
+    private void RequestRewardedAdCoins()
+    {
+        if (_rewardedAdCoins != null)
+        {
+            _rewardedAdCoins.Destroy();
+            _rewardedAdCoins = null;
+        }
+
+        Debug.Log("Loading the rewarded ad for coins.");
+
+        var adRequest = new AdRequest();
+        RewardedAd.Load(adUnitIdRewardedCoins, adRequest,
+            (RewardedAd ad, LoadAdError error) =>
+            {
+                if (error != null || ad == null)
+                {
+                    Debug.LogError("Rewarded ad for coins failed to load an ad with error: " + error);
+                    return;
+                }
+
+                Debug.Log("Rewarded ad for coins loaded with response: " + ad.GetResponseInfo());
+                _rewardedAdCoins = ad;
+            });
+    }
+
     public void ShowRewardedAdTicket()
     {
         if (_rewardedAdTicket != null && _rewardedAdTicket.CanShowAd())
@@ -183,6 +212,22 @@ public class AdManager : MonoBehaviour
         else
         {
             Debug.LogError("Rewarded ad for spin is not ready yet.");
+        }
+    }
+    public void ShowRewardedAd(System.Action onAdCompleted)
+    {
+        if (_rewardedAdCoins != null && _rewardedAdCoins.CanShowAd())
+        {
+            _rewardedAdCoins.Show(reward =>
+            {
+                Debug.Log("Rewarded ad completed.");
+                onAdCompleted?.Invoke();
+                RequestRewardedAdCoins(); // Reload the ad after it is shown
+            });
+        }
+        else
+        {
+            Debug.LogError("Rewarded ad is not ready yet.");
         }
     }
 }

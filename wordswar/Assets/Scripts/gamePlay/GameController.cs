@@ -60,6 +60,8 @@ public class GameController : MonoBehaviour
 
     [Header("Game Over Panel")]
     [SerializeField] TextMeshProUGUI winnerText;
+    [SerializeField] Button friendRequestButton;
+    [SerializeField] RawImage friendRequestSent;
 
     [Header("Game Over Panel - Enemy Player")]
     [SerializeField] TextMeshProUGUI gameOverEnemyScoreText;
@@ -844,18 +846,34 @@ public class GameController : MonoBehaviour
             gameOverEnemyNameText.text = enemyNameText.text;
             gameOverEnemyProfileImage.sprite = enemyProfileImage.sprite;
 
-            // Display immediate rewards
+            // Determine the rewards
             int coinsEarned = isWinner ? 20 : 10;
             int xpEarned = isWinner ? 25 : 15;
-            gameOverCoinsText.text = $"{coinsEarned} x";
-            gameOverXPText.text = $" {xpEarned} x";
 
+            // Update the coinsEarned in GameOverController
+            if (gameOverController != null)
+            {
+                gameOverController.SetCoinsEarned(coinsEarned);
+                gameOverController.AnimateNumber(gameOverCoinsText, coinsEarned, 1.5f); // 1.5 seconds animation duration
+                gameOverController.AnimateNumber(gameOverXPText, xpEarned, 1.5f); // 1.5 seconds animation duration
+            }
+
+            friendRequestButton.onClick.AddListener(() => FriendSystemManager.Instance.SendFriendRequestAU(enemyPlayerId, requestSentSuccess =>
+            {
+                Debug.Log("request sent");
+                feedbackManager.ShowFeedback("لقد تم ارسال طلب الصداقة");
+                friendRequestButton.gameObject.SetActive(false);
+                friendRequestSent.gameObject.SetActive(true);
+
+            }));
         }
         else
         {
             Debug.LogWarning("gameOverPanel is null!");
         }
     }
+
+
 
     async void listenForTime(string roomId)
     {
