@@ -10352,7 +10352,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1465354455}
         m_TargetAssemblyTypeName: GameOverController, Assembly-CSharp
-        m_MethodName: DoubleCoins
+        m_MethodName: ShowCoinsAd
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -10991,7 +10991,6 @@ GameObject:
   - component: {fileID: 1465354458}
   - component: {fileID: 1465354459}
   - component: {fileID: 1465354460}
-  - component: {fileID: 1465354461}
   m_Layer: 0
   m_Name: MasterControl
   m_TagString: Untagged
@@ -11078,7 +11077,7 @@ MonoBehaviour:
   winnerText: {fileID: 0}
   gameOverCoinsText: {fileID: 1808855025}
   gameOverXPText: {fileID: 546150222}
-  adManager: {fileID: 1465354461}
+  adManager: {fileID: 0}
   watchadButton: {fileID: 1400947418}
 --- !u!114 &1465354456
 MonoBehaviour:
@@ -11161,25 +11160,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   messagePrefab: {fileID: 1482425717240588003, guid: 1193a1595e9bffa42be95e13dffcc5c2, type: 3}
   messagesContainer: {fileID: 2015655748}
---- !u!114 &1465354461
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1465354452}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d244b392782192448596afe25148236, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  adUnitIdBanner: 
-  adUnitIdInterstitial: 
-  adUnitIdRewardedTicket: ca-app-pub-8174773242665808/5141384415
-  adUnitIdRewardedCoins: ca-app-pub-8174773242665808/5684145598
-  adUnitIdRewardedSpin: ca-app-pub-8174773242665808/6885231999
-  timerManager: {fileID: 0}
-  spinWheel: {fileID: 0}
 --- !u!1 &1476698516
 GameObject:
   m_ObjectHideFlags: 0
