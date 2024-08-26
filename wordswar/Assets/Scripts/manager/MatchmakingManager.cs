@@ -44,7 +44,13 @@ public class MatchmakingManager : MonoBehaviour
         SetupPlayerValueListener();
 
         UserManager.Instance.OnUserHintsUpdated += UpdateUserTickets;
-        UserManager.Instance.CheckUserProfileCompletion();
+     
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events to avoid memory leaks
+        UserManager.Instance.OnUserHintsUpdated -= UpdateUserTickets;
     }
 
     private IEnumerator WaitForFirebaseInitialization()

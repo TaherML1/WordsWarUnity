@@ -24,6 +24,8 @@ public class InvitationManager : MonoBehaviour
 
     private string senderUsername;
     private int currentTickets;
+    int refreshedTickets;
+    int totalTickets;
     private Dictionary<string, GameObject> invitationSentInstances = new Dictionary<string, GameObject>();
 
     private void Start()
@@ -46,6 +48,14 @@ public class InvitationManager : MonoBehaviour
         databaseRef = FirebaseDatabase.DefaultInstance.RootReference;
         auth = FirebaseAuth.DefaultInstance;
         ListenForInvitations(auth.CurrentUser.UserId);
+
+        UserManager.Instance.OnUserHintsUpdated += UpdateUserTickets;
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events to avoid memory leaks
+        UserManager.Instance.OnUserHintsUpdated -= UpdateUserTickets;
     }
 
     private IEnumerator WaitForFirebaseInitialization()
@@ -60,44 +70,77 @@ public class InvitationManager : MonoBehaviour
         InitializeFirebaseComponents();
     }
 
+
+    private void UpdateUserTickets(Dictionary<string, object> userHints)
+    {
+        if (userHints.TryGetValue("tickets", out object TicketsObj))
+        {
+            currentTickets = Convert.ToInt32(TicketsObj);
+        }
+        else
+        {
+            Debug.LogError("Tickets key is missing in hintsData");
+        }
+
+        if (userHints.TryGetValue("refreshedTickets", out object refreshedTicketsObj))
+        {
+            refreshedTickets = Convert.ToInt32(refreshedTicketsObj);
+        }
+        else
+        {
+            Debug.LogError("RefreshedTickets key is missing in hintsData");
+        }
+
+        // Calculate total tickets as the sum of currentTickets and refreshedTickets
+        totalTickets = currentTickets + refreshedTickets;
+    }
+
+
+
     // Function to send an invitation
     public void SendInvitation(string toPlayerId)
 
         
     {
-       
-        GameListener.SetActive(true);
-        string fromPlayerId = auth.CurrentUser.UserId;
-
-        // Fetch the sender's username from UserManager
-        var userProfile = UserManager.Instance.GetUserProfile();
-        userProfile.TryGetValue("username", out object usernameObj);
-        senderUsername = Convert.ToString(usernameObj);
-
-        DatabaseReference invitationsRef = databaseRef.Child("invitations");
-        string invitationId = invitationsRef.Push().Key;
-
-        Dictionary<string, object> invitationData = new Dictionary<string, object>
+        if (totalTickets >0)
         {
-            ["from"] = fromPlayerId,
-            ["to"] = toPlayerId,
-            ["status"] = "pending",
-            ["senderName"] = senderUsername
-        };
+            GameListener.SetActive(true);
+            string fromPlayerId = auth.CurrentUser.UserId;
 
-        invitationsRef.Child(invitationId).SetValueAsync(invitationData).ContinueWith(task => {
-            if (task.IsCompleted)
+            // Fetch the sender's username from UserManager
+            var userProfile = UserManager.Instance.GetUserProfile();
+            userProfile.TryGetValue("username", out object usernameObj);
+            senderUsername = Convert.ToString(usernameObj);
+
+            DatabaseReference invitationsRef = databaseRef.Child("invitations");
+            string invitationId = invitationsRef.Push().Key;
+
+            Dictionary<string, object> invitationData = new Dictionary<string, object>
             {
-                Debug.Log("Invitation sent successfully.");
-                ShowInvitationSentPanel(toPlayerId, invitationId);
-                ListenForInvitationStatusChanges(invitationId); // Listen for status changes
-             
-            }
-            else
-            {
-                Debug.LogError("Failed to send invitation: " + task.Exception);
-            }
-        });
+                ["from"] = fromPlayerId,
+                ["to"] = toPlayerId,
+                ["status"] = "pending",
+                ["senderName"] = senderUsername
+            };
+
+            invitationsRef.Child(invitationId).SetValueAsync(invitationData).ContinueWith(task => {
+                if (task.IsCompleted)
+                {
+                    Debug.Log("Invitation sent successfully.");
+                    ShowInvitationSentPanel(toPlayerId, invitationId);
+                    ListenForInvitationStatusChanges(invitationId); // Listen for status changes
+
+                }
+                else
+                {
+                    Debug.LogError("Failed to send invitation: " + task.Exception);
+                }
+            });
+        }else
+        {
+            Debug.Log("you dont have enough coins to send invitation");
+        }
+        
     }
 
     // Function to listen for incoming invitations
