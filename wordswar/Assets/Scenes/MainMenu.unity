@@ -1289,8 +1289,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 554094268}
-        m_TargetAssemblyTypeName: FetchUserProfile, Assembly-CSharp
+      - m_Target: {fileID: 554094271}
+        m_TargetAssemblyTypeName: TimerManager, Assembly-CSharp
         m_MethodName: ShowTicketAd
         m_Mode: 1
         m_Arguments:
@@ -24351,8 +24351,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 554094268}
-        m_TargetAssemblyTypeName: FetchUserProfile, Assembly-CSharp
+      - m_Target: {fileID: 565715179}
+        m_TargetAssemblyTypeName: SpinWheel, Assembly-CSharp
         m_MethodName: ShowSpinTicketAd
         m_Mode: 1
         m_Arguments:

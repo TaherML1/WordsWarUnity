@@ -239,6 +239,10 @@ public class SpinWheel : MonoBehaviour
             }
         });
     }
+    public void ShowSpinTicketAd()
+    {
+        AdManager.Instance.ShowRewardedAdSpin(IncreaseSpinTicket);
+    }
 
 
 }

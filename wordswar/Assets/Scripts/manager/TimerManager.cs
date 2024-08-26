@@ -202,7 +202,7 @@ public class TimerManager : MonoBehaviour
         {
             if (refreshedTickets < 3)
             {
-                refreshedTickets += 1;
+                currentTickets+= 1;
                 Debug.Log("Refreshed tickets increased locally.");
                 CallCloudFunctionToUpdateTickets();
             }
@@ -255,5 +255,8 @@ public class TimerManager : MonoBehaviour
             }
         });
     }
-
+    public void ShowTicketAd()
+    {
+        AdManager.Instance.ShowRewardedAdTicket(IncreaseTicketsLocally);
+    }
 }

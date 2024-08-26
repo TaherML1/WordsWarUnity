@@ -14,10 +14,6 @@ public class AdManager : MonoBehaviour
     public string adUnitIdRewardedSpin;
     public string adUnitIdRewardedCoins;
 
-    private float adReloadInterval = 1800f; // 30 minutes
-    private int maxRetryAttempts = 3;
-    private float retryDelay = 5f; // 5 seconds
-
     void Awake()
     {
         if (Instance == null)
@@ -38,7 +34,6 @@ public class AdManager : MonoBehaviour
         {
             Debug.Log("Google Mobile Ads SDK initialized.");
             RequestRewardedAds();
-            StartCoroutine(ReloadAdsCoroutine());
         });
     }
 
@@ -51,70 +46,63 @@ public class AdManager : MonoBehaviour
 
     private void RequestRewardedAdTicket()
     {
-        StartCoroutine(LoadRewardedAdWithRetry(adUnitIdRewardedTicket, (ad) => _rewardedAdTicket = ad));
+        var adRequest = new AdRequest();
+        RewardedAd.Load(adUnitIdRewardedTicket, adRequest, (RewardedAd ad, LoadAdError error) =>
+        {
+            if (error != null || ad == null)
+            {
+                Debug.LogError("Rewarded ad for ticket failed to load with error: " + error);
+            }
+            else
+            {
+                Debug.Log("Rewarded ad for ticket loaded with response: " + ad.GetResponseInfo());
+                _rewardedAdTicket = ad;
+            }
+        });
     }
 
     private void RequestRewardedAdSpin()
     {
-        StartCoroutine(LoadRewardedAdWithRetry(adUnitIdRewardedSpin, (ad) => _rewardedAdSpin = ad));
+        var adRequest = new AdRequest();
+        RewardedAd.Load(adUnitIdRewardedSpin, adRequest, (RewardedAd ad, LoadAdError error) =>
+        {
+            if (error != null || ad == null)
+            {
+                Debug.LogError("Rewarded ad for spin failed to load with error: " + error);
+            }
+            else
+            {
+                Debug.Log("Rewarded ad for spin loaded with response: " + ad.GetResponseInfo());
+                _rewardedAdSpin = ad;
+            }
+        });
     }
 
     private void RequestRewardedAdCoins()
     {
-        StartCoroutine(LoadRewardedAdWithRetry(adUnitIdRewardedCoins, (ad) => _rewardedAdCoins = ad));
-    }
-
-    private IEnumerator LoadRewardedAdWithRetry(string adUnitId, System.Action<RewardedAd> onAdLoaded)
-    {
-        int retryAttempts = 0;
-        while (retryAttempts < maxRetryAttempts)
+        var adRequest = new AdRequest();
+        RewardedAd.Load(adUnitIdRewardedCoins, adRequest, (RewardedAd ad, LoadAdError error) =>
         {
-            var adRequest = new AdRequest();
-            RewardedAd.Load(adUnitId, adRequest,
-                (RewardedAd ad, LoadAdError error) =>
-                {
-                    if (error != null || ad == null)
-                    {
-                        Debug.LogError("Rewarded ad failed to load with error: " + error);
-                        retryAttempts++;
-                        if (retryAttempts < maxRetryAttempts)
-                        {
-                            StartCoroutine(RetryLoadAd(retryDelay));
-                        }
-                    }
-                    else
-                    {
-                        Debug.Log("Rewarded ad loaded with response: " + ad.GetResponseInfo());
-                        onAdLoaded(ad);
-                    }
-                });
-            yield return null;
-        }
+            if (error != null || ad == null)
+            {
+                Debug.LogError("Rewarded ad for coins failed to load with error: " + error);
+            }
+            else
+            {
+                Debug.Log("Rewarded ad for coins loaded with response: " + ad.GetResponseInfo());
+                _rewardedAdCoins = ad;
+            }
+        });
     }
 
-    private IEnumerator RetryLoadAd(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        RequestRewardedAds();
-    }
-
-    private IEnumerator ReloadAdsCoroutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(adReloadInterval);
-            RequestRewardedAds();
-        }
-    }
-
-    public void ShowRewardedAdTicket()
+    public void ShowRewardedAdTicket(System.Action onAdCompleted =null)
     {
         if (_rewardedAdTicket != null && _rewardedAdTicket.CanShowAd())
         {
             _rewardedAdTicket.Show(reward =>
             {
                 Debug.Log($"Rewarded ad for ticket rewarded the user. Type: {reward.Type}, amount: {reward.Amount}");
-                // Reload the ad after it is shown
+                onAdCompleted?.Invoke();
                 RequestRewardedAdTicket();
             });
         }
@@ -124,14 +112,14 @@ public class AdManager : MonoBehaviour
         }
     }
 
-    public void ShowRewardedAdSpin()
+    public void ShowRewardedAdSpin(System.Action onAdCompleted = null)
     {
         if (_rewardedAdSpin != null && _rewardedAdSpin.CanShowAd())
         {
             _rewardedAdSpin.Show(reward =>
             {
                 Debug.Log($"Rewarded ad for spin rewarded the user. Type: {reward.Type}, amount: {reward.Amount}");
-                // Reload the ad after it is shown
+                onAdCompleted?.Invoke(); // Call the additional action after the ad is shown
                 RequestRewardedAdSpin();
             });
         }
@@ -141,6 +129,7 @@ public class AdManager : MonoBehaviour
         }
     }
 
+
     public void ShowRewardedAd(System.Action onAdCompleted)
     {
         if (_rewardedAdCoins != null && _rewardedAdCoins.CanShowAd())
@@ -149,7 +138,7 @@ public class AdManager : MonoBehaviour
             {
                 Debug.Log("Rewarded ad completed.");
                 onAdCompleted?.Invoke();
-                RequestRewardedAdCoins(); // Reload the ad after it is shown
+                RequestRewardedAdCoins();
             });
         }
         else

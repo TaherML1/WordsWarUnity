@@ -13,7 +13,7 @@ public class FetchUserHints : MonoBehaviour
     private int extraTimeHints;
     private int tickets;
     private int refreshedTickets;
-    private int totalTickets;
+    public static int totalTickets { get; private set; }
 
     public static FetchUserHints Instance { get; private set; }
     void Start()
@@ -74,4 +74,5 @@ public class FetchUserHints : MonoBehaviour
     {
         return tickets > 0;
     }
+
 }

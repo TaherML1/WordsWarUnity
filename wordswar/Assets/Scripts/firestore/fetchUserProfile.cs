@@ -171,13 +171,6 @@ public class FetchUserProfile : MonoBehaviour
         textCopiedText.text = "";  // Clear the text after the delay
     }
 
-    public void ShowTicketAd()
-    {
-        AdManager.Instance.ShowRewardedAdTicket();
-    }
-    public void ShowSpinTicketAd()
-    {
-        AdManager.Instance.ShowRewardedAdSpin();
-    }
-
+  
+    
 }

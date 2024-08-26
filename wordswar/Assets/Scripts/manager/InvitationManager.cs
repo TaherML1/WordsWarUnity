@@ -23,6 +23,7 @@ public class InvitationManager : MonoBehaviour
     [SerializeField] GameObject GameListener;
 
     private string senderUsername;
+    private int currentTickets;
     private Dictionary<string, GameObject> invitationSentInstances = new Dictionary<string, GameObject>();
 
     private void Start()
@@ -61,7 +62,10 @@ public class InvitationManager : MonoBehaviour
 
     // Function to send an invitation
     public void SendInvitation(string toPlayerId)
+
+        
     {
+       
         GameListener.SetActive(true);
         string fromPlayerId = auth.CurrentUser.UserId;
 
