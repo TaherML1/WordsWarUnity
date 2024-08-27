@@ -22,6 +22,8 @@ public class InvitationManager : MonoBehaviour
     [SerializeField] GameObject BGPanel;
     [SerializeField] GameObject GameListener;
 
+    [SerializeField] GameObject purchaseTicketPanel;
+
     private string senderUsername;
     private int currentTickets;
     int refreshedTickets;
@@ -138,6 +140,7 @@ public class InvitationManager : MonoBehaviour
             });
         }else
         {
+            purchaseTicketPanel.SetActive(true);
             Debug.Log("you dont have enough coins to send invitation");
         }
         

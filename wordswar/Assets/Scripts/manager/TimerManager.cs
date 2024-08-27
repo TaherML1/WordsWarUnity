@@ -17,7 +17,7 @@ public class TimerManager : MonoBehaviour
     FirebaseFunctions functions;
     [SerializeField] Text timerText;
     [SerializeField] Text ticketsText;
-    [SerializeField] GameObject Panel;
+    [SerializeField] GameObject TimerPanel;
 
     int currentTickets;
     int refreshedTickets;
@@ -200,6 +200,7 @@ public class TimerManager : MonoBehaviour
         FirebaseUser user = auth.CurrentUser;
         if (user != null)
         {
+            
             if (refreshedTickets < 3)
             {
                 currentTickets+= 1;

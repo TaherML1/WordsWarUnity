@@ -6,6 +6,8 @@ public class AdManager : MonoBehaviour
 {
     public static AdManager Instance { get; private set; }
 
+    [SerializeField] FeedbackManager feedbackManager;
+
     private RewardedAd _rewardedAdTicket;
     private RewardedAd _rewardedAdSpin;
     private RewardedAd _rewardedAdCoins;
@@ -13,6 +15,8 @@ public class AdManager : MonoBehaviour
     public string adUnitIdRewardedTicket;
     public string adUnitIdRewardedSpin;
     public string adUnitIdRewardedCoins;
+
+    private float adRefreshInterval = 300f; // Refresh ads every 5 minutes
 
     void Awake()
     {
@@ -34,6 +38,7 @@ public class AdManager : MonoBehaviour
         {
             Debug.Log("Google Mobile Ads SDK initialized.");
             RequestRewardedAds();
+            StartCoroutine(RefreshAds());
         });
     }
 
@@ -52,6 +57,7 @@ public class AdManager : MonoBehaviour
             if (error != null || ad == null)
             {
                 Debug.LogError("Rewarded ad for ticket failed to load with error: " + error);
+                feedbackManager.ShowFeedback("Rewarded ad for ticket failed to load with error: " + error);
             }
             else
             {
@@ -69,6 +75,7 @@ public class AdManager : MonoBehaviour
             if (error != null || ad == null)
             {
                 Debug.LogError("Rewarded ad for spin failed to load with error: " + error);
+                feedbackManager.ShowFeedback("Rewarded ad for ticket failed to load with error: " + error);
             }
             else
             {
@@ -86,6 +93,7 @@ public class AdManager : MonoBehaviour
             if (error != null || ad == null)
             {
                 Debug.LogError("Rewarded ad for coins failed to load with error: " + error);
+                feedbackManager.ShowFeedback("Rewarded ad for ticket failed to load with error: " + error);
             }
             else
             {
@@ -95,7 +103,7 @@ public class AdManager : MonoBehaviour
         });
     }
 
-    public void ShowRewardedAdTicket(System.Action onAdCompleted =null)
+    public void ShowRewardedAdTicket(System.Action onAdCompleted = null)
     {
         if (_rewardedAdTicket != null && _rewardedAdTicket.CanShowAd())
         {
@@ -109,6 +117,7 @@ public class AdManager : MonoBehaviour
         else
         {
             Debug.LogError("Rewarded ad for ticket is not ready yet.");
+            feedbackManager.ShowFeedback("Rewarded ad for ticket is not ready yet.");
         }
     }
 
@@ -126,9 +135,9 @@ public class AdManager : MonoBehaviour
         else
         {
             Debug.LogError("Rewarded ad for spin is not ready yet.");
+            feedbackManager.ShowFeedback("Rewarded ad for ticket is not ready yet.");
         }
     }
-
 
     public void ShowRewardedAd(System.Action onAdCompleted)
     {
@@ -144,6 +153,16 @@ public class AdManager : MonoBehaviour
         else
         {
             Debug.LogError("Rewarded ad is not ready yet.");
+            feedbackManager.ShowFeedback("Rewarded ad for ticket is not ready yet.");
+        }
+    }
+
+    private IEnumerator RefreshAds()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(adRefreshInterval);
+            RequestRewardedAds();
         }
     }
 }
