@@ -13,8 +13,10 @@ using Firebase.Firestore;
 public class InvitationManager : MonoBehaviour
 {
     public static InvitationManager Instance { get; private set; }
+
     private DatabaseReference databaseRef;
     private FirebaseAuth auth;
+    [SerializeField] OverlayManager overlayManager;
     [SerializeField] GameObject invitationPrefab; // Reference to the invitation prefab
     [SerializeField] Transform invitationParent; // Parent to hold the invitation panels
     [SerializeField] GameObject invitationSentPrefab; // Reference to the invitation sent prefab
@@ -141,6 +143,7 @@ public class InvitationManager : MonoBehaviour
         }else
         {
             purchaseTicketPanel.SetActive(true);
+           // overlayManager.ShowOverlay();
             Debug.Log("you dont have enough coins to send invitation");
         }
         
@@ -200,8 +203,16 @@ public class InvitationManager : MonoBehaviour
         var acceptButton = acceptButtonTransform.GetComponent<Button>();
         acceptButton.onClick.AddListener(() =>
         {
-            AcceptInvitation(invitationId);
-            Destroy(invitationInstance);
+            if(totalTickets > 0)
+            {
+                AcceptInvitation(invitationId);
+                Destroy(invitationInstance);
+            }else
+            {
+                purchaseTicketPanel.SetActive(true);
+                Debug.Log("you dont have tickets to accept invitation");
+            }
+           
         });
 
         var declineButtonTransform = invitationInstance.transform.Find("DeclineButton");
