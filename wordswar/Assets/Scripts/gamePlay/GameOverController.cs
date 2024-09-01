@@ -140,15 +140,21 @@ public class GameOverController : MonoBehaviour
     public void ShowCoinsAd()
     {
         Debug.Log("DoubleCoins button clicked.");
-        AdManager.Instance.ShowRewardedAd(() =>
-        {
-            coinsEarned *= 2;
-            AnimateNumber(gameOverCoinsText, coinsEarned, 0.8f);
-            coinsDoubled = true; // Prevent further doubling
+        if (coinsDoubled == false) {
+            AdManager.Instance.ShowRewardedAd(() =>
+            {
+                coinsEarned *= 2;
+                AnimateNumber(gameOverCoinsText, coinsEarned, 0.8f);
+                coinsDoubled = true; // Prevent further doubling
 
-            // Call the cloud function to update the user's coins
-            IncrementCoinsInCloud(coinsEarned);
-        });
+                // Call the cloud function to update the user's coins
+                IncrementCoinsInCloud(coinsEarned);
+            });
+        }else
+        {
+            Debug.Log("you have alredy doubled your coins");
+        }
+        
     }
 }
 

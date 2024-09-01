@@ -11100,6 +11100,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   feedbackManager: {fileID: 1465354457}
+  gameController: {fileID: 1465354453}
   hintText: {fileID: 737134568}
 --- !u!114 &1465354457
 MonoBehaviour:

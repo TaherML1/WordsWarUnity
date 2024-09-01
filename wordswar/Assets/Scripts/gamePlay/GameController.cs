@@ -127,7 +127,7 @@ public class GameController : MonoBehaviour
 
         await FetchPlayerNameAsync(localPlayerId, localPlayerNameText, localPlayerProfileImage);
 
-        submitButton.onClick.AddListener(submitAnswer);
+        submitButton.onClick.AddListener(SubmitAnswerWrapper);
     }
 
     private void InitializeGame()
@@ -152,20 +152,25 @@ public class GameController : MonoBehaviour
     {
         topicText.text = ArabicFixer.Fix(topic) + ArabicFixer.Fix(" الموضوع : ");
     }
-
-    public async void submitAnswer()
+    public void SubmitAnswerWrapper()
+    {
+        submitAnswer();
+    }
+    public async void submitAnswer(string currentInput = null)
     {
         submitButton.interactable = false;
-        string currentInput = playerInput.text.ToLower();
-        currentInput = NormalizeWord(currentInput);
+
+        if (currentInput == null)
+        {
+            currentInput = playerInput.text.ToLower();
+            currentInput = NormalizeWord(currentInput);
+        }
 
         if (string.IsNullOrEmpty(currentInput))
         {
             Debug.LogWarning("Empty input word.");
-
             feedbackManager.ShowFeedback("Empty input word.");
             submitButton.interactable = true;
-
             return;
         }
 
@@ -720,16 +725,7 @@ public class GameController : MonoBehaviour
     }
 
 
-    private void StartListeningForUsedWords(string roomId, string localPlayerId)
-    {
-        // Construct the reference to the used words node for the specific game
-        DatabaseReference usedWordsRef = databaseReference.Child("games").Child(roomId).Child("gameInfo").Child("usedWords");
-
-        // Add a listener for child added event
-        usedWordsRef.ChildAdded += HandleUsedWordAdded;
-    }
-
-    private void HandleUsedWordAdded(object sender, ChildChangedEventArgs args)
+    private void HandleUsedWorddded(object sender, ChildChangedEventArgs args)
     {
         List<string> enemyPlayerUsedWords = new List<string>();
 
@@ -777,21 +773,7 @@ public class GameController : MonoBehaviour
             });
     }
 
-    private void determinewinner(string roomId, string localplayerId)
-    {
-        databaseReference.Child("games").Child(roomId).Child("winner").SetValueAsync(localplayerId)
-            .ContinueWith(task =>
-            {
-                if (task.IsFaulted)
-                {
-                    Debug.LogError("Failed to set winner: " + task.Exception);
-                }
-                else
-                {
-                    Debug.Log("you are the winner");
-                }
-            });
-    }
+  
 
     private void WinnerValueChangedListener(string roomId)
     {

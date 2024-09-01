@@ -12,6 +12,7 @@ using System;
 public class hints : MonoBehaviour
 {
     public FeedbackManager feedbackManager;
+    public GameController gameController; // Reference to the GameController script
 
     private FirebaseFunctions functions;
     private FirebaseAuth auth;
@@ -65,12 +66,8 @@ public class hints : MonoBehaviour
         }
     }
 
-
-
-
     public void onclickJokerButton()
     {
-
         if (jokerHints != 0)
         {
             GetJokerHint(roomId, selectedTopicManager.selectedTopic);
@@ -80,8 +77,6 @@ public class hints : MonoBehaviour
             feedbackManager.ShowFeedback("you dont have enough hints");
             Debug.Log("you dont have enough hints");
         }
-
-
     }
 
     void GetJokerHint(string gameId, string selectedTopic)
@@ -91,7 +86,6 @@ public class hints : MonoBehaviour
         {
             {"gameId", gameId},
             {"selectedTopic", selectedTopic}
-
         };
 
         // Call the Cloud Function
@@ -111,9 +105,10 @@ public class hints : MonoBehaviour
 
                     // Now you can use the result in your Unity application as needed
                     hintText.text = result;
-                    //hintListener();
+
+                    // Automatically submit the word
+                    gameController.submitAnswer(result);
                 }
             });
     }
-
 }

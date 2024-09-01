@@ -44,7 +44,8 @@ public class MatchmakingManager : MonoBehaviour
         SetupPlayerValueListener();
 
         UserManager.Instance.OnUserHintsUpdated += UpdateUserTickets;
-     
+        UserManager.Instance.CheckUserProfileCompletion();
+
     }
 
     private void OnDestroy()
@@ -84,7 +85,7 @@ public class MatchmakingManager : MonoBehaviour
 
         // Calculate total tickets as the sum of currentTickets and refreshedTickets
         totalTickets = currentTickets + refreshedTickets;
-        Debug.Log("total tickets : " + totalTickets);
+        Debug.Log("match making total tickets : " + totalTickets);
     }
 
     private void SetupPlayerValueListener()
