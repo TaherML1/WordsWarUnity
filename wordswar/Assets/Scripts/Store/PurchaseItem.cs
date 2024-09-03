@@ -66,7 +66,7 @@ public class PurchaseItem : MonoBehaviour
     private void OnUserProfileUpdated(Dictionary<string, object> userProfile)
     {
         playerCoins = userManager.GetCoins();
-        playerGems = userManager.GetGems();
+   
         Debug.Log($"Updated Player coins: {playerCoins}, Player gems: {playerGems}");
     }
 
@@ -209,7 +209,7 @@ public class PurchaseItem : MonoBehaviour
     private void getBalance()
     {
         playerCoins = userManager.GetCoins();
-        playerGems = userManager.GetGems();
+      
         Debug.Log($"Initial Player coins: {playerCoins}, Player gems: {playerGems}");
     }
 

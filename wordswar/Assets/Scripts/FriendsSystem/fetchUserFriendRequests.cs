@@ -403,11 +403,20 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
             TextMeshProUGUI scoreText = profileInstance.transform.Find("ScoreText")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI winPercentageText = profileInstance.transform.Find("WinPercentageText")?.GetComponent<TextMeshProUGUI>();
             Transform copyButtonTransform = profileInstance.transform.Find("CopyButton");
+            TextMeshProUGUI textCopied = profileInstance.transform.Find("copiedText")?.GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI playerIdText = copyButtonTransform?.Find("PlayerIdText")?.GetComponent<TextMeshProUGUI>();
             Button copyButton = copyButtonTransform?.GetComponent<Button>();
             Image profileImage = profileInstance.transform.Find("ProfileImage")?.GetComponent<Image>();
             Image winImage = profileInstance.transform.Find("WinImage")?.GetComponent<Image>();
             Image loseImage = profileInstance.transform.Find("LoseImage")?.GetComponent<Image>();
+
+            IEnumerator ShowCopiedText()
+            {
+              
+                textCopied.gameObject.SetActive(true);
+                yield return new WaitForSeconds(4f);
+                textCopied.gameObject.SetActive(false);
+            }
 
             if (usernameText != null)
             {
@@ -429,7 +438,9 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
                     copyButton.onClick.AddListener(() =>
                     {
                         GUIUtility.systemCopyBuffer = playerId;
+                        StartCoroutine(ShowCopiedText());
                         Debug.Log("Copied Player ID to clipboard: " + playerId);
+
                     });
                 }
             }
@@ -597,4 +608,5 @@ public class FetchUserFriendsAndRequests : MonoBehaviour
         });
     }
 
+    
 }

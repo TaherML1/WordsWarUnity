@@ -170,10 +170,7 @@ public class UserManager : MonoBehaviour
         return userProfile != null && userProfile.TryGetValue("coins", out object coinsObj) ? Convert.ToInt32(coinsObj) : 0;
     }
 
-    public int GetGems()
-    {
-        return userProfile != null && userProfile.TryGetValue("gems", out object gemsObj) ? Convert.ToInt32(gemsObj) : 0;
-    }
+    
 
     public int GetJoker()
     {

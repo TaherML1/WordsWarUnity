@@ -10,8 +10,7 @@ public class FetchUserProfile : MonoBehaviour
     public static FetchUserProfile instance;
     [SerializeField] TextMeshProUGUI usernameText;
     [SerializeField] TextMeshProUGUI playerIdText;
-    [SerializeField] TextMeshProUGUI coinsText;
-    [SerializeField] TextMeshProUGUI gemsText;
+    [SerializeField] TextMeshProUGUI coinsText;  
     [SerializeField] TextMeshProUGUI xpText;
     [SerializeField] TextMeshProUGUI levelText;
     [SerializeField] TextMeshProUGUI matchesLostText;
@@ -26,7 +25,7 @@ public class FetchUserProfile : MonoBehaviour
     [SerializeField] Image progressBarFill;
 
     private int coins;
-    private int gems;
+
     private int xp;
     private int level;
     private int requiredXPForNextLevel;
@@ -35,7 +34,7 @@ public class FetchUserProfile : MonoBehaviour
     private int scores;
     private string playerId;
 
-    public static event Action<int, int> OnBalanceChanged; // Event to notify balance changes
+    public static event Action<int> OnBalanceChanged; // Event to notify balance changes
 
     private void Start()
     {
@@ -96,11 +95,7 @@ public class FetchUserProfile : MonoBehaviour
             coinsText.text = coins.ToString();
         }
 
-        if (userProfile.TryGetValue("gems", out object gemsObj))
-        {
-            gems = Convert.ToInt32(gemsObj);
-            gemsText.text = gems.ToString();
-        }
+       
 
         if (userProfile.TryGetValue("xp", out object xpObj))
         {
@@ -135,7 +130,7 @@ public class FetchUserProfile : MonoBehaviour
         }
 
         UpdateProgressBar(xp, requiredXPForNextLevel);
-        OnBalanceChanged?.Invoke(coins, gems); // Notify listeners about the balance change
+        OnBalanceChanged?.Invoke(coins); // Notify listeners about the balance change
     }
 
     public void UpdateProgressBar(int playerXP, int requiredXP)
