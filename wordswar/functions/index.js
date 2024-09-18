@@ -1,99 +1,94 @@
-/* eslint-disable max-len */
-const {onCall, HttpsError} = require("firebase-functions/v2/https");
-const admin = require("firebase-admin");
+/* eslint-disable no-unreachable */
+// index.js
 
-// Initialize Firebase Admin SDK
-admin.initializeApp();
-const database = admin.database();
+const {onCall} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
-// Define the Gen 2 Cloud Function for getting a joker hint
-exports.getJokerHint2 = onCall(
-    {
-      // Optional: Add runtime options like memory, timeout, etc.
-      // Example: memory: '256MiB', timeoutSeconds: 120
-    },
-    async (request) => {
-      try {
-        console.log("Fetching joker hint...");
+initializeApp();
+const firestore = getFirestore();
 
-        // Ensure the user is authenticated
-        if (!request.auth) {
-          throw new HttpsError("unauthenticated", "You must be authenticated to use a joker hint.");
-        }
+exports.processSpinResult = onCall(async (request) => {
+  const {data, auth} = request;
 
-        const gameId = request.data.gameId; // ID of the current game
-        const selectedTopic = request.data.selectedTopic; // Selected topic for the game
+  try {
+    // Check if the request is authenticated
+    if (!auth) {
+      throw new Error("You must be authenticated to call this function.");
+    }
 
-        console.log("Game ID:", gameId);
-        console.log("Selected Topic:", selectedTopic);
+    // Get the user ID from the authenticated user
+    const userId = auth.uid;
 
-        // Fetch all used words for the current game from the database
-        const usedWordsSnapshot = await database.ref(`/games/${gameId}/gameInfo/usedwords`).once("value");
-        const usedWordsObject = usedWordsSnapshot.val() || {}; // If no used words, initialize as an empty object
+    // Get the spin result from the request data
+    const {reward} = data;
 
-        // Flatten used words from all players into a single array and convert to lowercase
-        const usedWords = Object.values(usedWordsObject).flatMap((playerWords) =>
-          Object.values(playerWords).flatMap((categoryWords) =>
-            Object.values(categoryWords).map((word) => word.toLowerCase()),
-          ),
-        );
+    // Define the document references
+    const userDocRef = firestore.collection("users").doc(userId);
+    const hintsDocRef = userDocRef.collection("hints").doc("hintsData");
 
-        console.log("Used Words:", usedWords);
+    // Start a transaction
+    await firestore.runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userDocRef);
 
-        // Fetch all words under the selected topic from the database
-        const topicSnapshot = await database.ref(`/topics/${selectedTopic}`).once("value");
-        const topicWords = topicSnapshot.val();
-
-        if (!topicWords) {
-          console.log(`Topic '${selectedTopic}' does not exist.`);
-          throw new HttpsError("not-found", `Topic '${selectedTopic}' does not exist.`);
-        }
-
-        console.log("Topic Words:", topicWords);
-
-        // Extract only primary words (keys of the topicWords object)
-        const primaryWords = Object.keys(topicWords).map((word) => word.toLowerCase());
-
-        console.log("Primary Words:", primaryWords);
-
-        // Filter out primary words that have been used
-        const availablePrimaryWords = primaryWords.filter((word) => !usedWords.includes(word));
-
-        console.log("Available Primary Words:", availablePrimaryWords);
-
-        // If no available primary words found after filtering, return an error
-        if (availablePrimaryWords.length === 0) {
-          console.log("No available primary words for joker hint.");
-          throw new HttpsError("failed-precondition", "No available primary words for joker hint.");
-        }
-
-        // Check if the user has enough hints available
-        const userId = request.auth.uid;
-        const userHintDocRef = admin.firestore().collection("users").doc(userId).collection("hints").doc("hintsData");
-        const userHintData = (await userHintDocRef.get()).data();
-        const userHintCount = userHintData ? userHintData["joker"] || 0 : 0;
-
-        if (userHintCount <= 0) {
-          console.log("User doesn't have enough hints.");
-          throw new HttpsError("failed-precondition", "You don't have enough hints.");
-        }
-
-        // Randomly select a primary word from the available primary words
-        const randomPrimaryWord = availablePrimaryWords[Math.floor(Math.random() * availablePrimaryWords.length)];
-
-        console.log("Selected Joker Hint Primary Word:", randomPrimaryWord);
-
-        // Decrease the hint count for the user
-        await userHintDocRef.update({
-          ["joker"]: admin.firestore.FieldValue.increment(-1),
-        });
-
-        console.log("Hint count decreased.");
-
-        return randomPrimaryWord; // Return just the joker hint primary word
-      } catch (error) {
-        console.error("Error fetching joker hint:", error);
-        throw new HttpsError("internal", "An error occurred while fetching joker hint.", error);
+      if (!userDoc.exists) {
+        throw new Error("User document does not exist.");
       }
-    },
-);
+
+      const userData = userDoc.data();
+      const spinTickets = userData.spinTicket || 0;
+
+      // Check if the user has any spin tickets left
+      if (spinTickets < 1) {
+        throw new Error("No spin tickets available.");
+      }
+
+      // Decrement the spin ticket count
+      transaction.update(userDocRef, {spinTicket: FieldValue.increment(-1)});
+
+      // Initialize an update object
+      let updateData = {};
+
+      // Determine the update based on the reward
+      switch (reward) {
+        case "100xp":
+          updateData = {xp: FieldValue.increment(100)};
+          break;
+        case "10 coins":
+          updateData = {coins: FieldValue.increment(10)};
+          break;
+        case "2 tickets":
+          transaction.update(hintsDocRef, {tickets: FieldValue.increment(2)});
+          return {success: true, message: "You won two tickets !"};
+          break;
+        case "bad luck":
+          // No reward
+          return {success: true, message: "Better luck next time!"};
+        case "100 coins":
+          updateData = {coins: FieldValue.increment(100)};
+          break;
+        case "extra hint":
+          transaction.update(hintsDocRef, {extraTime: FieldValue.increment(1)});
+          return {success: true, message: "You won an extra hint!"};
+        case "1 ticket":
+          transaction.update(hintsDocRef, {tickets: FieldValue.increment(1)});
+          return {success: true, message: "You won one tickets !"};
+          break;
+        case "joker":
+          transaction.update(hintsDocRef, {joker: FieldValue.increment(1)});
+          return {success: true, message: "You won a Joker!"};
+        default:
+          throw new Error("Invalid reward type");
+      }
+
+      // Update the user's document with the reward
+      transaction.update(userDocRef, updateData);
+    });
+
+    return {success: true, message: `You won ${reward}!`};
+  } catch (error) {
+    // Handle errors
+    console.error("Error processing spin result:", error);
+    throw new Error("An error occurred while processing the spin result.");
+  }
+});

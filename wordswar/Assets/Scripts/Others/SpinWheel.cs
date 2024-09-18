@@ -28,11 +28,11 @@ public class SpinWheel : MonoBehaviour
     [Header("Prize sprites")]
     [SerializeField]  Sprite xpSprite;
     [SerializeField] Sprite coins10Sprite;
-    [SerializeField] Sprite gems10Sprite;
+    [SerializeField] Sprite twoTickets;
     [SerializeField] Sprite badLuckSprite;
     [SerializeField] Sprite coins100Sprite;
     [SerializeField] Sprite hintSprite;
-    [SerializeField] Sprite gems100Sprite;
+    [SerializeField] Sprite oneTicket;
     [SerializeField] Sprite jokerSprite;
 
     [Header("Sound")]
@@ -64,11 +64,11 @@ public class SpinWheel : MonoBehaviour
         {
             { "100xp", xpSprite },
             { "10 coins", coins10Sprite },
-            { "10 gems", gems10Sprite },
+            { "2 tickets", twoTickets },
             { "bad luck", badLuckSprite },
             { "100 coins", coins100Sprite },
             { "extra hint", hintSprite },
-            { "100 gems", gems100Sprite },
+            { "1 ticket", oneTicket },
             { "joker", jokerSprite }
         };
     }
@@ -166,11 +166,11 @@ public class SpinWheel : MonoBehaviour
         {
             case 0: return "100xp";
             case 1: return "10 coins";
-            case 2: return "10 gems";
+            case 2: return "2 tickets";
             case 3: return "bad luck";
             case 4: return "100 coins";
             case 5: return "extra hint";
-            case 6: return "100 gems";
+            case 6: return "1 ticket";
             case 7: return "joker";
             default: return "Unknown";
         }
