@@ -12,11 +12,12 @@ using Firebase.Auth;
 
 public class ImageLoader : MonoBehaviour
 {
-    public GameObject imageContainer; // Container for RawImage components
-    public GameObject imagePrefab; // Prefab for RawImage
-    public List<string> imageNames; // List of image names to load from Firebase Storage
-    public RawImage profileImage; // Profile image to be updated
-
+    [SerializeField] GameObject imageContainer; // Container for RawImage components
+    [SerializeField] GameObject imagePrefab; // Prefab for RawImage
+    [SerializeField] List<string> imageNames; // List of image names to load from Firebase Storage
+    [SerializeField] RawImage profileImage; // Profile image to be updated
+    [SerializeField] Button AvatarChangeButton;
+    [SerializeField] GameObject avatarsPanel;
     FirebaseStorage storage;
     StorageReference storageReference;
     FirebaseFirestore db;
@@ -52,13 +53,14 @@ public class ImageLoader : MonoBehaviour
 
         // Get the current user ID dynamically
         currentUserID = auth.CurrentUser.UserId;
-
+        AvatarChangeButton.onClick.AddListener(LoadAvatarContainer);
         // Fetch the profile image
         FetchProfileImage();
     }
 
     private IEnumerator WaitForFirebaseInitialization()
     {
+
         while (FirebaseManager.Instance == null || !FirebaseManager.Instance.IsFirebaseInitialized)
         {
             yield return null;
@@ -68,6 +70,17 @@ public class ImageLoader : MonoBehaviour
 
     public void LoadAvatarContainer()
     {
+        // Disable the button to prevent spamming
+        AvatarChangeButton.interactable = false;
+
+        // Clear the image container to remove previously loaded images
+        foreach (Transform child in imageContainer.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        avatarsPanel.SetActive(true);
+
         // Load and display each image
         foreach (string imageName in imageNames)
         {
@@ -77,6 +90,7 @@ public class ImageLoader : MonoBehaviour
         // Adjust the container size to fit all images
         AdjustContainerSize();
     }
+
 
     private void LoadAndDisplayImage(string imageName)
     {
@@ -215,5 +229,11 @@ public class ImageLoader : MonoBehaviour
 
         // Optionally, you can set the position to start at the left-most point
         containerRect.anchoredPosition = new Vector2(0, containerRect.anchoredPosition.y);
+    }
+    public void CloseAvatarContainer()
+    {
+        avatarsPanel.SetActive(false);
+     
+        AvatarChangeButton.interactable = true;
     }
 }

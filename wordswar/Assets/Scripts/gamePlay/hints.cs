@@ -20,7 +20,7 @@ public class hints : MonoBehaviour
     string roomId;
     int jokerHints;
     int extraTimeHints;
-    public TextMeshProUGUI hintText;
+  
 
     void Start()
     {
@@ -104,7 +104,7 @@ public class hints : MonoBehaviour
                     Debug.Log("Joker Hint Word: " + result);
 
                     // Now you can use the result in your Unity application as needed
-                    hintText.text = result;
+                 //   hintText.text = result;
 
                     // Automatically submit the word
                     gameController.submitAnswer(result);
